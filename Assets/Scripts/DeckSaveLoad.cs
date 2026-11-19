@@ -10,7 +10,8 @@ using UnityEditor;
 public class DeckSaveLoad : MonoBehaviour
 {
     private const int DeckSize = 30;
-    private const int BuildingSlotCount = 5;
+    private const int DefaultBuildingSlotCount = 5;
+    private const string BuildingCountKey = "CompositionScene.BuildingCount.v1";
     private const string LegacySaveKey = "CompositionScene.SavedDeck.v1";
     private const string SaveKeyPrefix = "CompositionScene.SavedDeck.v2.";
 
@@ -28,9 +29,19 @@ public class DeckSaveLoad : MonoBehaviour
     public TMP_Text statusText;
     public TMP_InputField deckNameTextbox;
 
+    [Header("編成保存枠の増減")]
+    [Tooltip("空の場合は Plus という名前のボタンを探します。")]
+    public Button plusButton;
+    [Tooltip("空の場合は Minus という名前のボタンを探します。")]
+    public Button minusButton;
+
     private readonly List<TMP_Text> formationNameLabels = new List<TMP_Text>();
     private readonly List<TMP_Text> formationNumberLabels = new List<TMP_Text>();
     private readonly List<GameObject> contentPanels = new List<GameObject>();
+    private readonly List<Transform> buildingObjects = new List<Transform>();
+    private ScrollRect deckScrollRect;
+    private RectTransform defaultScrollContent;
+    private int buildingSlotCount = DefaultBuildingSlotCount;
     private int selectedBuildingIndex = -1;
     private int copySourceBuildingIndex = -1;
 
@@ -56,6 +67,7 @@ public class DeckSaveLoad : MonoBehaviour
             rosterList = FindAnyObjectByType<CharacterFullRosterListDisplay>();
 
         MigrateLegacyDeck();
+        buildingSlotCount = Mathf.Max(0, PlayerPrefs.GetInt(BuildingCountKey, DefaultBuildingSlotCount));
         if (!InitializeBuildingSlots())
             return;
 
@@ -66,6 +78,16 @@ public class DeckSaveLoad : MonoBehaviour
         if (loadButton != null)
             loadButton.onClick.AddListener(OpenBuildPanel);
 
+        ResolveCountButtons();
+        if (plusButton != null)
+            plusButton.onClick.AddListener(OnPlusClicked);
+        else
+            Debug.LogWarning("Plus ボタンが見つかりません。", this);
+        if (minusButton != null)
+            minusButton.onClick.AddListener(OnMinusClicked);
+        else
+            Debug.LogWarning("Minus ボタンが見つかりません。", this);
+
         UpdateBuildingSlotLabels();
     }
 
@@ -75,6 +97,10 @@ public class DeckSaveLoad : MonoBehaviour
             saveButton.onClick.RemoveListener(SaveDeck);
         if (loadButton != null)
             loadButton.onClick.RemoveListener(OpenBuildPanel);
+        if (plusButton != null)
+            plusButton.onClick.RemoveListener(OnPlusClicked);
+        if (minusButton != null)
+            minusButton.onClick.RemoveListener(OnMinusClicked);
     }
 
     public void SaveDeck()
@@ -91,7 +117,7 @@ public class DeckSaveLoad : MonoBehaviour
         SetDeckControlsActive(false);
         error = null;
 
-        if (selectedBuildingIndex < 0 || selectedBuildingIndex >= BuildingSlotCount)
+        if (selectedBuildingIndex < 0 || selectedBuildingIndex >= buildingSlotCount)
             error = "保存先の編成枠を選択してから出撃してください。";
         else if (rosterBoardDisplay == null || rosterBoardDisplay.slotContainer == null)
             error = "編成盤面が見つかりません。";
@@ -411,24 +437,163 @@ public class DeckSaveLoad : MonoBehaviour
             return false;
         }
 
+        ResolveDeckScroll();
         SetBuildPanelActive(true);
-        List<Transform> buildingObjects = new List<Transform>();
+        buildingObjects.Clear();
         foreach (Transform child in buildPanel.transform)
         {
             if (child.name == "Building" || child.name.StartsWith("BuildingSlot_"))
                 buildingObjects.Add(child);
         }
 
-        for (int i = buildingObjects.Count; i < BuildingSlotCount; i++)
+        for (int i = buildingObjects.Count; i < buildingSlotCount; i++)
         {
             GameObject building = Instantiate(buildingPrefab, buildPanel.transform, false);
             buildingObjects.Add(building.transform);
         }
 
-        buildingObjects.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
+        buildingSlotCount = buildingObjects.Count;
+        buildingObjects.Sort(CompareBuildingOrder);
         formationNameLabels.Clear();
         formationNumberLabels.Clear();
-        for (int i = 0; i < BuildingSlotCount; i++)
+        foreach (Transform building in buildingObjects)
+        {
+            if (!SetupBuilding(building))
+                return false;
+        }
+
+        LayoutBuildings();
+        return true;
+    }
+
+    private static int GetBuildingNumber(string buildingName)
+    {
+        int underscore = buildingName.LastIndexOf('_');
+        if (underscore >= 0 &&
+            int.TryParse(buildingName.Substring(underscore + 1), out int number))
+            return number;
+        return 0;
+    }
+
+    private static int CompareBuildingOrder(Transform a, Transform b)
+    {
+        int byNumber = GetBuildingNumber(a.name).CompareTo(GetBuildingNumber(b.name));
+        return byNumber != 0 ? byNumber : string.CompareOrdinal(a.name, b.name);
+    }
+
+    private int GetBuildingIndex(Transform building)
+    {
+        return buildingObjects.IndexOf(building);
+    }
+
+    // One-time setup of a Building (buttons, click area, labels).
+    // Handlers look up their index when clicked, so removing a Building in the
+    // middle of the list does not require rewiring the others.
+    private bool SetupBuilding(Transform building)
+    {
+        foreach (Button childButton in building.GetComponentsInChildren<Button>(true))
+        {
+            if (childButton.gameObject == building.gameObject)
+                continue;
+
+            string buttonName = childButton.gameObject.name;
+            bool isSlotActionButton = buttonName == "FormationChange" ||
+                                      buttonName == "Detele" ||
+                                      buttonName == "Delete" ||
+                                      buttonName == "Copy";
+            childButton.enabled = isSlotActionButton;
+            Graphic childGraphic = childButton.GetComponent<Graphic>();
+            if (childGraphic != null)
+                childGraphic.raycastTarget = isSlotActionButton;
+        }
+        foreach (Graphic graphic in building.GetComponentsInChildren<Graphic>(true))
+            if (graphic.gameObject != building.gameObject &&
+                graphic.transform != building.Find("FormationChange") &&
+                graphic.transform != building.Find("Detele") &&
+                graphic.transform != building.Find("Delete") &&
+                graphic.transform != building.Find("Copy"))
+                graphic.raycastTarget = false;
+
+        GameObject clickArea = new GameObject("BuildingClickArea", typeof(RectTransform), typeof(Image), typeof(Button));
+        clickArea.transform.SetParent(building, false);
+        RectTransform clickAreaRect = clickArea.GetComponent<RectTransform>();
+        clickAreaRect.anchorMin = new Vector2(0f, 1f);
+        clickAreaRect.anchorMax = new Vector2(0f, 1f);
+        clickAreaRect.pivot = new Vector2(0.5f, 0.5f);
+        clickAreaRect.anchoredPosition = new Vector2(250f, -45f);
+        clickAreaRect.sizeDelta = new Vector2(1100f, 180f);
+        clickArea.transform.SetAsFirstSibling();
+        Image clickAreaImage = clickArea.GetComponent<Image>();
+        clickAreaImage.color = new Color(1f, 1f, 1f, 0f);
+        clickAreaImage.raycastTarget = true;
+        Button slotButton = clickArea.GetComponent<Button>();
+        slotButton.targetGraphic = clickAreaImage;
+        slotButton.transition = Selectable.Transition.None;
+        slotButton.onClick.RemoveAllListeners();
+        slotButton.onClick.AddListener(() => OnBuildingClicked(GetBuildingIndex(building)));
+
+        Transform formationChange = building.Find("FormationChange");
+        Button formationChangeButton = formationChange != null
+            ? formationChange.GetComponent<Button>()
+            : null;
+        if (formationChangeButton == null)
+        {
+            Debug.LogError("Building prefab requires a FormationChange Button.", building);
+            return false;
+        }
+
+        formationChangeButton.onClick.RemoveAllListeners();
+        formationChangeButton.onClick.AddListener(
+            () => OnFormationChangeClicked(GetBuildingIndex(building)));
+
+        Transform deleteTransform = building.Find("Detele");
+        if (deleteTransform == null)
+            deleteTransform = building.Find("Delete");
+        Button deleteButton = deleteTransform != null
+            ? deleteTransform.GetComponent<Button>()
+            : null;
+        if (deleteButton == null)
+        {
+            Debug.LogError("Building prefab requires a Detele Button.", building);
+            return false;
+        }
+
+        deleteButton.onClick.RemoveAllListeners();
+        deleteButton.onClick.AddListener(
+            () => OnDeleteBuildingClicked(GetBuildingIndex(building)));
+
+        Transform copyTransform = building.Find("Copy");
+        Button copyButton = copyTransform != null
+            ? copyTransform.GetComponent<Button>()
+            : null;
+        if (copyButton == null)
+        {
+            Debug.LogError("Building prefab requires a Copy Button.", building);
+            return false;
+        }
+
+        copyButton.onClick.RemoveAllListeners();
+        copyButton.onClick.AddListener(
+            () => OnCopyBuildingClicked(GetBuildingIndex(building)));
+
+        TMP_Text label = building.Find("FormationName")?.GetComponent<TMP_Text>();
+        if (label == null)
+        {
+            Debug.LogError("Building prefab requires a FormationName TMP_Text.", building);
+            return false;
+        }
+        formationNameLabels.Add(label);
+
+        TMP_Text numberLabel = building.Find("FormationNumber")?.GetComponent<TMP_Text>();
+        if (numberLabel == null)
+            numberLabel = CreateFormationNumberLabel(building, label);
+        formationNumberLabels.Add(numberLabel);
+        return true;
+    }
+
+    private void LayoutBuildings()
+    {
+        for (int i = 0; i < buildingObjects.Count; i++)
         {
             Transform building = buildingObjects[i];
             building.name = "BuildingSlot_" + (i + 1);
@@ -441,106 +606,140 @@ public class DeckSaveLoad : MonoBehaviour
                 rect.anchoredPosition = new Vector2(205f, -28f - i * 108f);
                 rect.localScale = Vector3.one * 0.72f;
             }
+        }
+    }
 
-            foreach (Button childButton in building.GetComponentsInChildren<Button>(true))
-            {
-                if (childButton.gameObject == building.gameObject)
-                    continue;
+    private void ResolveCountButtons()
+    {
+        if (plusButton == null)
+            plusButton = FindButtonByName("Plus");
+        if (minusButton == null)
+            minusButton = FindButtonByName("Minus");
+    }
 
-                string buttonName = childButton.gameObject.name;
-                bool isSlotActionButton = buttonName == "FormationChange" ||
-                                          buttonName == "Detele" ||
-                                          buttonName == "Delete" ||
-                                          buttonName == "Copy";
-                childButton.enabled = isSlotActionButton;
-                Graphic childGraphic = childButton.GetComponent<Graphic>();
-                if (childGraphic != null)
-                    childGraphic.raycastTarget = isSlotActionButton;
-            }
-            foreach (Graphic graphic in building.GetComponentsInChildren<Graphic>(true))
-                if (graphic.gameObject != building.gameObject &&
-                    graphic.transform != building.Find("FormationChange") &&
-                    graphic.transform != building.Find("Detele") &&
-                    graphic.transform != building.Find("Delete") &&
-                    graphic.transform != building.Find("Copy"))
-                    graphic.raycastTarget = false;
-
-            GameObject clickArea = new GameObject("BuildingClickArea", typeof(RectTransform), typeof(Image), typeof(Button));
-            clickArea.transform.SetParent(building, false);
-            RectTransform clickAreaRect = clickArea.GetComponent<RectTransform>();
-            clickAreaRect.anchorMin = new Vector2(0f, 1f);
-            clickAreaRect.anchorMax = new Vector2(0f, 1f);
-            clickAreaRect.pivot = new Vector2(0.5f, 0.5f);
-            clickAreaRect.anchoredPosition = new Vector2(250f, -45f);
-            clickAreaRect.sizeDelta = new Vector2(1100f, 180f);
-            clickArea.transform.SetAsFirstSibling();
-            Image clickAreaImage = clickArea.GetComponent<Image>();
-            clickAreaImage.color = new Color(1f, 1f, 1f, 0f);
-            clickAreaImage.raycastTarget = true;
-            Button slotButton = clickArea.GetComponent<Button>();
-            slotButton.targetGraphic = clickAreaImage;
-            slotButton.transition = Selectable.Transition.None;
-            int slotIndex = i;
-            slotButton.onClick.RemoveAllListeners();
-            slotButton.onClick.AddListener(() => OnBuildingClicked(slotIndex));
-
-            Transform formationChange = building.Find("FormationChange");
-            Button formationChangeButton = formationChange != null
-                ? formationChange.GetComponent<Button>()
-                : null;
-            if (formationChangeButton == null)
-            {
-                Debug.LogError("Building prefab requires a FormationChange Button.", building);
-                return false;
-            }
-
-            formationChangeButton.onClick.RemoveAllListeners();
-            formationChangeButton.onClick.AddListener(
-                () => OnFormationChangeClicked(slotIndex));
-
-            Transform deleteTransform = building.Find("Detele");
-            if (deleteTransform == null)
-                deleteTransform = building.Find("Delete");
-            Button deleteButton = deleteTransform != null
-                ? deleteTransform.GetComponent<Button>()
-                : null;
-            if (deleteButton == null)
-            {
-                Debug.LogError("Building prefab requires a Detele Button.", building);
-                return false;
-            }
-
-            deleteButton.onClick.RemoveAllListeners();
-            deleteButton.onClick.AddListener(() => OnDeleteBuildingClicked(slotIndex));
-
-            Transform copyTransform = building.Find("Copy");
-            Button copyButton = copyTransform != null
-                ? copyTransform.GetComponent<Button>()
-                : null;
-            if (copyButton == null)
-            {
-                Debug.LogError("Building prefab requires a Copy Button.", building);
-                return false;
-            }
-
-            copyButton.onClick.RemoveAllListeners();
-            copyButton.onClick.AddListener(() => OnCopyBuildingClicked(slotIndex));
-
-            TMP_Text label = building.Find("FormationName")?.GetComponent<TMP_Text>();
-            if (label == null)
-            {
-                Debug.LogError("Building prefab requires a FormationName TMP_Text.", building);
-                return false;
-            }
-            formationNameLabels.Add(label);
-
-            TMP_Text numberLabel = building.Find("FormationNumber")?.GetComponent<TMP_Text>();
-            if (numberLabel == null)
-                numberLabel = CreateFormationNumberLabel(building, label);
-            formationNumberLabels.Add(numberLabel);
+    private static Button FindButtonByName(string objectName)
+    {
+        foreach (Button button in FindObjectsByType<Button>(
+                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (button.gameObject.name == objectName)
+                return button;
         }
 
-        return true;
+        return null;
+    }
+
+    // Adds one Building at the bottom.
+    private void OnPlusClicked()
+    {
+        if (buildPanel == null || !buildPanel.activeSelf || buildingPrefab == null)
+            return;
+
+        GameObject building = Instantiate(buildingPrefab, buildPanel.transform, false);
+        buildingObjects.Add(building.transform);
+        if (!SetupBuilding(building.transform))
+        {
+            buildingObjects.Remove(building.transform);
+            Destroy(building);
+            return;
+        }
+
+        buildingSlotCount = buildingObjects.Count;
+        SaveBuildingCount();
+        LayoutBuildings();
+        UpdateBuildingSlotLabels();
+        RefreshScrollLayout();
+    }
+
+    // Removes the bottom-most Building that shows 0/30. Does nothing if there is none.
+    private void OnMinusClicked()
+    {
+        if (buildPanel == null || !buildPanel.activeSelf)
+            return;
+
+        int removeIndex = -1;
+        for (int i = buildingObjects.Count - 1; i >= 0; i--)
+        {
+            if (GetSavedCharacterCount(i) == 0)
+            {
+                removeIndex = i;
+                break;
+            }
+        }
+
+        if (removeIndex < 0)
+            return;
+
+        RemoveBuilding(removeIndex);
+    }
+
+    private void RemoveBuilding(int removeIndex)
+    {
+        int lastIndex = buildingObjects.Count - 1;
+
+        // Saves are stored by index, so move the ones below up by one.
+        for (int i = removeIndex; i < lastIndex; i++)
+        {
+            string sourceKey = GetSaveKey(i + 1);
+            string destinationKey = GetSaveKey(i);
+            if (PlayerPrefs.HasKey(sourceKey))
+                PlayerPrefs.SetString(destinationKey, PlayerPrefs.GetString(sourceKey));
+            else
+                PlayerPrefs.DeleteKey(destinationKey);
+        }
+        PlayerPrefs.DeleteKey(GetSaveKey(lastIndex));
+
+        Transform removed = buildingObjects[removeIndex];
+        buildingObjects.RemoveAt(removeIndex);
+        formationNameLabels.RemoveAt(removeIndex);
+        formationNumberLabels.RemoveAt(removeIndex);
+        removed.gameObject.SetActive(false);
+        Destroy(removed.gameObject);
+
+        selectedBuildingIndex = AdjustIndexAfterRemoval(selectedBuildingIndex, removeIndex);
+        copySourceBuildingIndex = AdjustIndexAfterRemoval(copySourceBuildingIndex, removeIndex);
+
+        buildingSlotCount = buildingObjects.Count;
+        SaveBuildingCount();
+        LayoutBuildings();
+        UpdateBuildingSlotLabels();
+        RefreshScrollLayout();
+    }
+
+    private static int AdjustIndexAfterRemoval(int index, int removedIndex)
+    {
+        if (index == removedIndex)
+            return -1;
+        return index > removedIndex ? index - 1 : index;
+    }
+
+    private void SaveBuildingCount()
+    {
+        PlayerPrefs.SetInt(BuildingCountKey, buildingSlotCount);
+        PlayerPrefs.Save();
+    }
+
+    // Number of characters in a saved deck: 0 when empty or unsaved, -1 if unreadable.
+    private int GetSavedCharacterCount(int buildingIndex)
+    {
+        string saveKey = GetSaveKey(buildingIndex);
+        if (!PlayerPrefs.HasKey(saveKey))
+            return 0;
+
+        try
+        {
+            SavedDeck deck = JsonUtility.FromJson<SavedDeck>(PlayerPrefs.GetString(saveKey));
+            int count = 0;
+            if (deck != null && deck.slots != null)
+                foreach (SavedSlot slot in deck.slots)
+                    if (slot != null && !string.IsNullOrEmpty(slot.characterAssetName))
+                        count++;
+            return count;
+        }
+        catch (Exception)
+        {
+            return -1;
+        }
     }
 
     private void SetBuildPanelActive(bool isActive)
@@ -551,6 +750,66 @@ public class DeckSaveLoad : MonoBehaviour
         foreach (GameObject contentPanel in contentPanels)
             if (contentPanel != null)
                 contentPanel.SetActive(!isActive);
+
+        UpdateScrollContent(isActive);
+    }
+
+    // The DeckSpace ScrollRect scrolls whichever of Content / Build is shown.
+    private void ResolveDeckScroll()
+    {
+        if (buildPanel == null)
+            return;
+
+        deckScrollRect = buildPanel.GetComponentInParent<ScrollRect>(true);
+        if (deckScrollRect == null)
+            return;
+
+        defaultScrollContent = deckScrollRect.content;
+        if (defaultScrollContent == null || defaultScrollContent == buildPanel.transform)
+        {
+            Transform sibling = buildPanel.transform.parent != null
+                ? buildPanel.transform.parent.Find("Content")
+                : null;
+            defaultScrollContent = sibling as RectTransform;
+        }
+
+        // Build must grow with its Buildings (ContentSizeFitter) from the top.
+        RectTransform buildRect = buildPanel.transform as RectTransform;
+        if (buildRect != null && buildPanel.GetComponent<ContentSizeFitter>() != null)
+        {
+            buildRect.anchorMin = new Vector2(0f, 1f);
+            buildRect.anchorMax = new Vector2(1f, 1f);
+            buildRect.pivot = new Vector2(0f, 1f);
+            buildRect.anchoredPosition = Vector2.zero;
+            buildRect.sizeDelta = new Vector2(buildRect.sizeDelta.x, 0f);
+        }
+    }
+
+    private void UpdateScrollContent(bool buildActive)
+    {
+        if (deckScrollRect == null || buildPanel == null)
+            return;
+
+        RectTransform target = buildActive
+            ? buildPanel.transform as RectTransform
+            : defaultScrollContent;
+        if (target == null)
+            return;
+
+        deckScrollRect.StopMovement();
+        deckScrollRect.content = target;
+        RefreshScrollLayout();
+        deckScrollRect.verticalNormalizedPosition = 1f;
+    }
+
+    private void RefreshScrollLayout()
+    {
+        if (deckScrollRect == null || deckScrollRect.content == null)
+            return;
+
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(deckScrollRect.content);
+        Canvas.ForceUpdateCanvases();
     }
 
     private void SetDeckControlsActive(bool isActive)
