@@ -326,6 +326,9 @@ public class ShopManager : MonoBehaviour
     {
         // Enemies appear (EnemyManager) and the shop cards refresh on this same event.
         UpdateStageCountLabel();
+        BattleManager battleManager = FindAnyObjectByType<BattleManager>();
+        if (battleManager != null)
+            battleManager.ClearBattleLog();
 
         currentSelection = selectedButton;
         if (selectedButton == StageManager.StageSelectionButton.SelectB)

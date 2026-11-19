@@ -390,6 +390,21 @@ public class BattleManager : MonoBehaviour
             attackerDisplay.SetAttackLighting(active);
     }
 
+    // Called when the next stage begins (stage label, enemies and shop cards refresh).
+    public void ClearBattleLog()
+    {
+        if (logText == null)
+        {
+            GameObject logObject = GameObject.Find("LogText");
+            if (logObject != null)
+                logText = logObject.GetComponent<TMP_Text>() ??
+                    logObject.GetComponentInChildren<TMP_Text>(true);
+        }
+
+        if (logText != null)
+            logText.text = string.Empty;
+    }
+
     private void SetBattleLog(string message)
     {
         if (logText == null)
