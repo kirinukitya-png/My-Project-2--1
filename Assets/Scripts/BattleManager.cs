@@ -1879,15 +1879,25 @@ public class BattleManager : MonoBehaviour
         }
     }
 
+    // How long the defeat log stays on screen before the battle moves on.
+    private const float AutoDefeatLogHoldSeconds = 1f;
+    private const float FastDefeatLogHoldSeconds = 0.4f;
+
     private IEnumerator WaitForAutoDefeatLog(System.Func<float> getShownAt)
     {
-        if (playbackMode != BattlePlaybackMode.Auto)
+        // Manual mode waits for the step button instead. Auto and Fast must both
+        // wait until the defeat log has appeared; otherwise the next log (such as
+        // the gold reward) is shown first and the late defeat log overwrites it.
+        if (playbackMode == BattlePlaybackMode.Manual)
             yield break;
 
         while (getShownAt() < 0f)
             yield return null;
 
-        float remainingTime = 1f - (Time.unscaledTime - getShownAt());
+        float holdSeconds = playbackMode == BattlePlaybackMode.Auto
+            ? AutoDefeatLogHoldSeconds
+            : FastDefeatLogHoldSeconds;
+        float remainingTime = holdSeconds - (Time.unscaledTime - getShownAt());
         if (remainingTime > 0f)
             yield return new WaitForSecondsRealtime(remainingTime);
     }

@@ -324,6 +324,9 @@ public class ShopManager : MonoBehaviour
 
     private void CompleteStageSelection(StageManager.StageSelectionButton selectedButton)
     {
+        // Enemies appear (EnemyManager) and the shop cards refresh on this same event.
+        UpdateStageCountLabel();
+
         currentSelection = selectedButton;
         if (selectedButton == StageManager.StageSelectionButton.SelectB)
         {
@@ -365,7 +368,9 @@ public class ShopManager : MonoBehaviour
 
         bool completedBossRound = currentStageIndex % 5 == 3;
         currentStageIndex++;
-        UpdateStageCountText();
+        // The stage label is updated later, when the next enemies appear and the
+        // shop cards refresh (see CompleteStageSelection).
+        UpdateCostProbabilityWidths();
         int experienceReward = GetExperienceReward(completedBossRound);
         GainExperience(experienceReward);
 
@@ -445,7 +450,11 @@ public class ShopManager : MonoBehaviour
     void UpdateStageCountText()
     {
         UpdateCostProbabilityWidths();
+        UpdateStageCountLabel();
+    }
 
+    void UpdateStageCountLabel()
+    {
         if (stageCountText == null)
             return;
 
