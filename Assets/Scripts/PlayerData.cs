@@ -1,26 +1,36 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class PlayerData : MonoBehaviour
 {
-    [Header("�����R�C��")]
+    [Header("所持コイン")]
     public int gold = 10;
     public TMP_Text goldText;
 
     [Header("HP")]
     public int hp;
     public TMP_Text hpCount;
+    public Slider hpBar;
+    private int initialHp;
+    public int InitialHp => initialHp;
 
-    [Header("�����L�����N�^�[")]
+    [Header("所持キャラクター")]
     public List<OwnedCharacter> ownedCharacters =
         new List<OwnedCharacter>();
 
-    [Header("�莝��")]
+    [Header("手持ち")]
     public HandManager handManager;
+
+    private void Awake()
+    {
+        initialHp = Mathf.Max(0, hp);
+    }
 
     private void Start()
     {
+        ResolveHpBar();
         UpdateHPUI();
     }
 
@@ -40,15 +50,11 @@ public class PlayerData : MonoBehaviour
         if (!ownedCharacters.Contains(character))
         {
             Debug.LogError(
-                "���p�Ώۂ̃L�����N�^�[���������X�g�ɑ��݂��܂���I"
+                "売却対象のキャラクターが所持リストに存在しません！"
             );
 
             return false;
         }
-
-        // �����_�ł͍w�����i�����̂܂ܔ��p�z�Ƃ���
-        int sellPrice =
-            character.data.cost;
 
         int returnedCopies = 1;
         if (character.star == 2)
@@ -59,6 +65,8 @@ public class PlayerData : MonoBehaviour
         {
             returnedCopies = 9;
         }
+
+        int sellPrice = character.data.cost * returnedCopies;
 
         ShopManager shopManager =
             FindAnyObjectByType<ShopManager>();
@@ -81,9 +89,9 @@ public class PlayerData : MonoBehaviour
 
         Debug.Log(
             character.data.characterName +
-            " �� " +
+            " を " +
             sellPrice +
-            "G �Ŕ��p���܂����I"
+            "G で売却しました！"
         );
 
         return true;
@@ -93,13 +101,37 @@ public class PlayerData : MonoBehaviour
     {
         if (goldText != null)
         {
-            goldText.text = "GOLD: " + gold;
+            goldText.text = gold.ToString();
         }
     }
 
     public void UpdateHPUI()
     {
         if (hpCount != null)
-            hpCount.text = hp.ToString();
+            hpCount.text = Mathf.Max(0, hp) + "/" + initialHp;
+
+        if (hpBar != null)
+        {
+            hpBar.maxValue = initialHp;
+            hpBar.value = Mathf.Clamp(hp, 0, initialHp);
+        }
+    }
+
+    private void ResolveHpBar()
+    {
+        if (hpBar != null)
+            return;
+
+        foreach (Slider candidate in FindObjectsByType<Slider>(
+                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (candidate.gameObject.name == "HPBar")
+            {
+                hpBar = candidate;
+                return;
+            }
+        }
+
+        Debug.LogWarning("HPBar Slider was not found. Assign it to PlayerData or name it 'HPBar'.", this);
     }
 }

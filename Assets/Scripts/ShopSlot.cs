@@ -92,9 +92,7 @@ public class ShopSlot : MonoBehaviour, IPointerClickHandler
             return;
         }
 
-        if (eventData.button == PointerEventData.InputButton.Left)
-            boardManager.SelectShopCharacter(characterData, shopCard);
-        else if (eventData.button == PointerEventData.InputButton.Right)
+        if (eventData.button == PointerEventData.InputButton.Right)
             boardManager.ShowShopCharacterDetail(characterData, shopCard);
     }
 }

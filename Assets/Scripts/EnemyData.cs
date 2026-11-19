@@ -12,8 +12,12 @@ public class EnemyData : ScriptableObject
     public int attack;
     public int defense;
     public int health;
+    [Header("Enemy Effects")]
+    [Tooltip("EffectData.effectId values. Multiple IDs can be comma-separated.")]
     public string cip;
+    [Tooltip("EffectData.effectId values. Multiple IDs can be comma-separated.")]
     public string ae;
+    [Tooltip("EffectData.effectId values. Multiple IDs can be comma-separated.")]
     public string pig;
     public string target;
 

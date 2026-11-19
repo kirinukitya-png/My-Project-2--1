@@ -1,11 +1,10 @@
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-/// One independent planning-board slot. Clicking it places or replaces its card.
+/// One independent planning-board slot that accepts dragged roster cards.
 /// </summary>
-public class RosterBoardSlot : MonoBehaviour, IPointerClickHandler
+public class RosterBoardSlot : MonoBehaviour
 {
     private RosterBoardDisplay owner;
     private GameObject displayedCard;
@@ -22,12 +21,6 @@ public class RosterBoardSlot : MonoBehaviour, IPointerClickHandler
         if (background != null) background.raycastTarget = true;
     }
 
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        if (eventData.button == PointerEventData.InputButton.Left)
-            ClickSlot();
-    }
-
     public void ClickSlot()
     {
         if (owner != null)
@@ -38,12 +31,6 @@ public class RosterBoardSlot : MonoBehaviour, IPointerClickHandler
     {
         if (owner != null)
             owner.SelectCharacterFromSlot(this);
-    }
-
-    public void HandleCardLeftClick()
-    {
-        if (owner != null)
-            owner.HandleBoardSlotCardClick(this);
     }
 
     public void ShowCharacterDetail()

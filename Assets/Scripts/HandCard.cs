@@ -188,21 +188,6 @@ public class HandCard :
                 if (detailPanel != null)
                     detailPanel.ShowShopCharacter(readOnlyCharacterData);
             }
-            else if (eventData.button == PointerEventData.InputButton.Left &&
-                     readOnlyCharacterData != null)
-            {
-                if (rosterBoardSlot != null)
-                {
-                    rosterBoardSlot.HandleCardLeftClick();
-                }
-                else
-                {
-                    RosterBoardDisplay rosterBoard = FindAnyObjectByType<RosterBoardDisplay>();
-                    if (rosterBoard != null)
-                        rosterBoard.SelectCharacter(readOnlyCharacterData);
-                }
-            }
-
             return;
         }
 
@@ -218,16 +203,6 @@ public class HandCard :
             return;
         }
 
-        // 左クリック
-        if (eventData.button ==
-            PointerEventData.InputButton.Left)
-        {
-            handSlot.ClickSlot();
-
-            return;
-        }
-
-        // 右クリック
         if (eventData.button ==
             PointerEventData.InputButton.Right)
         {
@@ -280,8 +255,10 @@ public class HandCard :
             return;
         }
 
+        boardManager.NotifyCharacterDragStarted();
+
         // ドラッグ中のキャラクターを選択状態にする
-        boardManager.ClearSelection();
+        boardManager.ClearSelection(clearCharacterDetail: false);
 
         boardManager.selectionType =
             BoardManager.SelectionType.Hand;
@@ -346,6 +323,11 @@ public class HandCard :
         isDragging = false;
         UIDragCardPreview.End(ref dragPreviewSession);
 
+        BoardManager boardManager =
+            FindAnyObjectByType<BoardManager>();
+        if (boardManager != null)
+            boardManager.NotifyCharacterDragEnded();
+
         GameObject targetObject =
             eventData.pointerCurrentRaycast.gameObject;
 
@@ -356,9 +338,6 @@ public class HandCard :
 
         if (UIDragCardPreview.IsRosterBoardTarget(targetObject))
             return;
-
-        BoardManager boardManager =
-            FindAnyObjectByType<BoardManager>();
 
         if (boardManager == null)
         {
@@ -376,7 +355,8 @@ public class HandCard :
         {
             boardManager.MoveHandCharacter(
                 handSlot,
-                targetHandSlot
+                targetHandSlot,
+                clearCharacterDetail: false
             );
 
             return;
@@ -391,7 +371,7 @@ public class HandCard :
 
         if (targetBoardSlot != null)
         {
-            boardManager.ClearSelection();
+            boardManager.ClearSelection(clearCharacterDetail: false);
 
             boardManager.selectionType =
                 BoardManager.SelectionType.Hand;
@@ -400,7 +380,8 @@ public class HandCard :
                 handSlot;
 
             boardManager.PlaceSelectedHandCharacter(
-                targetBoardSlot
+                targetBoardSlot,
+                clearCharacterDetail: false
             );
 
             return;

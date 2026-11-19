@@ -11,6 +11,11 @@ public class OwnedCharacter
     public int defense;
     [System.NonSerialized] public int battleAttackBonus;
     [System.NonSerialized] public int battleDefenseBonus;
+    [System.NonSerialized] private bool hasTemporaryStar;
+    [System.NonSerialized] private int starBeforeTemporaryEffect;
+    [System.NonSerialized] private int attackBeforeTemporaryEffect;
+    [System.NonSerialized] private int defenseBeforeTemporaryEffect;
+    [System.NonSerialized] private bool hadRolledStatsBeforeTemporaryEffect;
     public bool hasRolledStats;
 
     public OwnedCharacter(
@@ -45,6 +50,40 @@ public class OwnedCharacter
 
         star = newStar;
         return true;
+    }
+
+    public bool TrySetTemporaryStar(int newStar, CharacterStatSettings statSettings)
+    {
+        bool wasAlreadyTemporary = hasTemporaryStar;
+        if (!wasAlreadyTemporary)
+        {
+            starBeforeTemporaryEffect = star;
+            attackBeforeTemporaryEffect = attack;
+            defenseBeforeTemporaryEffect = defense;
+            hadRolledStatsBeforeTemporaryEffect = hasRolledStats;
+        }
+
+        if (!TrySetStar(newStar, statSettings))
+        {
+            if (!wasAlreadyTemporary)
+                hasTemporaryStar = false;
+            return false;
+        }
+
+        hasTemporaryStar = true;
+        return true;
+    }
+
+    public void RevertTemporaryStar()
+    {
+        if (!hasTemporaryStar)
+            return;
+
+        star = starBeforeTemporaryEffect;
+        attack = attackBeforeTemporaryEffect;
+        defense = defenseBeforeTemporaryEffect;
+        hasRolledStats = hadRolledStatsBeforeTemporaryEffect;
+        hasTemporaryStar = false;
     }
 
     public bool EnsureStats(CharacterStatSettings statSettings)

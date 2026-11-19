@@ -14,6 +14,8 @@ public class EnemyManager : MonoBehaviour
     public EnemyData[] enemyDataBySlot = new EnemyData[6];
     public EnemyFormationData currentFormation;
     public Sprite enemyFrameSprite;
+    [Tooltip("Used for enemies with an AE effect or a target other than T002.")]
+    public Sprite specialEnemyFrameSprite;
     public EnemyDetailPanel enemyDetailPanel;
     public StageManager stageManager;
 
@@ -21,6 +23,11 @@ public class EnemyManager : MonoBehaviour
     private int[] battleAttackBonusBySlot;
     private int[] battleDefenseBonusBySlot;
     private int[] battleHealthBonusBySlot;
+    private int[] battleGapBonusBySlot;
+    private int[] permanentAttackBonusBySlot;
+    private int[] permanentDefenseBonusBySlot;
+    private int[] permanentHealthBonusBySlot;
+    private int[] permanentGapBonusBySlot;
 
     private void OnEnable()
     {
@@ -129,7 +136,7 @@ public class EnemyManager : MonoBehaviour
         if (hasManualStageChoice)
             return;
 
-        string category = stageManager.CurrentRoundNumber == 5
+        string category = stageManager.CurrentRoundNumber == 4
             ? "Boss"
             : "Normal";
         ApplyEncounterForCurrentRound(category);
@@ -220,7 +227,7 @@ public class EnemyManager : MonoBehaviour
         RefreshEnemySlots();
     }
 
-    public bool TryApplyItemEffect(BoardSlot slot, string effect, int value)
+    public bool TryApplyItemEffect(BoardSlot slot, string effect, int value, bool immediateEffect = false)
     {
         if (slot == null || slot.enemyData == null || boardArea == null) return false;
         BoardSlot[] slots = boardArea.GetComponentsInChildren<BoardSlot>(true);
@@ -229,28 +236,38 @@ public class EnemyManager : MonoBehaviour
         EnsureItemBonusArrays();
         switch (effect)
         {
-            case "Attack": battleAttackBonusBySlot[index] += value; break;
-            case "Def": battleDefenseBonusBySlot[index] += value; break;
-            case "Damage": battleHealthBonusBySlot[index] -= value; break;
+            case "Attack":
+                AddItemBonus(battleAttackBonusBySlot, permanentAttackBonusBySlot, index, value, immediateEffect);
+                break;
+            case "Def":
+                AddItemBonus(battleDefenseBonusBySlot, permanentDefenseBonusBySlot, index, value, immediateEffect);
+                break;
+            case "Damage":
+                AddItemBonus(battleHealthBonusBySlot, permanentHealthBonusBySlot, index, -value, immediateEffect);
+                break;
+            case "Gap":
+                AddItemBonus(battleGapBonusBySlot, permanentGapBonusBySlot, index, value, immediateEffect);
+                break;
             default: return false;
         }
         RefreshEnemySlots();
         return true;
     }
 
-    public bool ApplyItemEffectToAllEnemies(string effect, int value)
+    public bool ApplyItemEffectToAllEnemies(string effect, int value, bool immediateEffect = false)
     {
         if (enemyDataBySlot == null) return false;
         bool applied = false;
         BoardSlot[] slots = boardArea != null ? boardArea.GetComponentsInChildren<BoardSlot>(true) : new BoardSlot[0];
         foreach (BoardSlot slot in slots)
-            if (slot != null && slot.enemyData != null) applied |= TryApplyItemEffect(slot, effect, value);
+            if (slot != null && slot.enemyData != null) applied |= TryApplyItemEffect(slot, effect, value, immediateEffect);
         return applied;
     }
 
-    public int GetBattleAttackBonus(int index) => ReadBonus(battleAttackBonusBySlot, index);
-    public int GetBattleDefenseBonus(int index) => ReadBonus(battleDefenseBonusBySlot, index);
-    public int GetBattleHealthBonus(int index) => ReadBonus(battleHealthBonusBySlot, index);
+    public int GetBattleAttackBonus(int index) => ReadBonus(battleAttackBonusBySlot, index) + ReadBonus(permanentAttackBonusBySlot, index);
+    public int GetBattleDefenseBonus(int index) => ReadBonus(battleDefenseBonusBySlot, index) + ReadBonus(permanentDefenseBonusBySlot, index);
+    public int GetBattleHealthBonus(int index) => ReadBonus(battleHealthBonusBySlot, index) + ReadBonus(permanentHealthBonusBySlot, index);
+    public int GetBattleGapBonus(int index) => ReadBonus(battleGapBonusBySlot, index) + ReadBonus(permanentGapBonusBySlot, index);
 
     public void ResetItemBonuses(bool refreshSlots = true)
     {
@@ -258,6 +275,22 @@ public class EnemyManager : MonoBehaviour
         battleAttackBonusBySlot = new int[count];
         battleDefenseBonusBySlot = new int[count];
         battleHealthBonusBySlot = new int[count];
+        battleGapBonusBySlot = new int[count];
+        permanentAttackBonusBySlot = new int[count];
+        permanentDefenseBonusBySlot = new int[count];
+        permanentHealthBonusBySlot = new int[count];
+        permanentGapBonusBySlot = new int[count];
+        if (refreshSlots)
+            RefreshEnemySlots();
+    }
+
+    public void ResetBattleItemBonuses(bool refreshSlots = true)
+    {
+        int count = enemyDataBySlot != null ? enemyDataBySlot.Length : Mathf.Max(0, columns * rows);
+        battleAttackBonusBySlot = new int[count];
+        battleDefenseBonusBySlot = new int[count];
+        battleHealthBonusBySlot = new int[count];
+        battleGapBonusBySlot = new int[count];
         if (refreshSlots)
             RefreshEnemySlots();
     }
@@ -268,15 +301,29 @@ public class EnemyManager : MonoBehaviour
         if (battleAttackBonusBySlot == null || battleAttackBonusBySlot.Length != count) battleAttackBonusBySlot = new int[count];
         if (battleDefenseBonusBySlot == null || battleDefenseBonusBySlot.Length != count) battleDefenseBonusBySlot = new int[count];
         if (battleHealthBonusBySlot == null || battleHealthBonusBySlot.Length != count) battleHealthBonusBySlot = new int[count];
+        if (battleGapBonusBySlot == null || battleGapBonusBySlot.Length != count) battleGapBonusBySlot = new int[count];
+        if (permanentAttackBonusBySlot == null || permanentAttackBonusBySlot.Length != count) permanentAttackBonusBySlot = new int[count];
+        if (permanentDefenseBonusBySlot == null || permanentDefenseBonusBySlot.Length != count) permanentDefenseBonusBySlot = new int[count];
+        if (permanentHealthBonusBySlot == null || permanentHealthBonusBySlot.Length != count) permanentHealthBonusBySlot = new int[count];
+        if (permanentGapBonusBySlot == null || permanentGapBonusBySlot.Length != count) permanentGapBonusBySlot = new int[count];
     }
 
     private int ReadBonus(int[] values, int index) => values != null && index >= 0 && index < values.Length ? values[index] : 0;
+
+    private void AddItemBonus(int[] battleBonuses, int[] permanentBonuses, int index, int value, bool immediateEffect)
+    {
+        if (immediateEffect)
+            permanentBonuses[index] += value;
+        else
+            battleBonuses[index] += value;
+    }
 
     public void RefreshEnemyBattleState(
     int slotIndex,
     int currentHealth,
     int remainingGap,
-    int currentDefense)
+    int currentDefense,
+    int currentAttack = -1)
     {
         if (boardArea == null)
             return;
@@ -285,9 +332,17 @@ public class EnemyManager : MonoBehaviour
         if (slotIndex < 0 || slotIndex >= slots.Length || slots[slotIndex] == null)
             return;
 
-        BoardCharacter display = slots[slotIndex].GetComponentInChildren<BoardCharacter>(true);
-        if (display != null)
-            display.RefreshEnemyBattleState(currentHealth, remainingGap, currentDefense);
+        BoardCharacter[] displays =
+            slots[slotIndex].GetComponentsInChildren<BoardCharacter>(true);
+        foreach (BoardCharacter display in displays)
+        {
+            if (display == null || !display.IsDisplayingEnemy(slots[slotIndex].enemyData))
+                continue;
+
+            display.RefreshEnemyBattleState(
+                currentHealth, remainingGap, currentDefense, currentAttack);
+            break;
+        }
     }
 
     public BoardCharacter GetEnemyBoardCharacter(int slotIndex)
@@ -330,19 +385,34 @@ public class EnemyManager : MonoBehaviour
                 i < currentFormation.slots.Length &&
                 currentFormation.slots[i] != null)
             {
-                gap = currentFormation.slots[i].gap;
+                gap = Mathf.Max(0, currentFormation.slots[i].gap + GetBattleGapBonus(i));
             }
 
+            EnemyData enemy = enemyDataBySlot != null && i < enemyDataBySlot.Length
+                ? enemyDataBySlot[i]
+                : null;
             slot.SetEnemyData(
-                enemyDataBySlot != null && i < enemyDataBySlot.Length
-                    ? enemyDataBySlot[i]
-                    : null,
-                enemyFrameSprite,
+                enemy,
+                GetEnemyFrameSprite(enemy),
                 enemyDetailPanel,
                 gap,
                 ReadBonus(battleAttackBonusBySlot, i),
                 ReadBonus(battleDefenseBonusBySlot, i),
                 ReadBonus(battleHealthBonusBySlot, i));
         }
+    }
+
+    private Sprite GetEnemyFrameSprite(EnemyData enemy)
+    {
+        if (enemy != null &&
+            (!string.IsNullOrWhiteSpace(enemy.ae) ||
+             !string.Equals((enemy.target ?? string.Empty).Trim(), "T002", System.StringComparison.Ordinal)))
+        {
+            return specialEnemyFrameSprite != null
+                ? specialEnemyFrameSprite
+                : enemyFrameSprite;
+        }
+
+        return enemyFrameSprite;
     }
 }

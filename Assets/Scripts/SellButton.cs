@@ -7,15 +7,19 @@ public class SellButton :
     IDropHandler
 {
     private Button button;
+    private CanvasGroup canvasGroup;
 
     void Awake()
     {
         button = GetComponent<Button>();
+        canvasGroup = GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
         if (button == null)
         {
             Debug.LogError(
-                "SellButton‚ÉButtonƒRƒ“ƒ|[ƒlƒ“ƒg‚ª‚ ‚è‚Ü‚¹‚ñI"
+                "SellButtonã«Buttonã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆãŒã‚ã‚Šã¾ã›ã‚“ï¼"
             );
         }
 
@@ -46,8 +50,8 @@ public class SellButton :
         OwnedCharacter character =
             boardManager.GetSelectedCharacter();
 
-        // è‚¿E”Õ–Ê‚ÌƒLƒƒƒ‰ƒNƒ^[‚ğ
-        // ‘I‘ğ‚µ‚Ä‚¢‚éê‡‚Ì‚İ”„‹p‰Â”\
+        // æ‰‹æŒã¡ãƒ»ç›¤é¢ã®ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ãŒ
+        // é¸æŠã—ã¦ã„ã‚‹å ´åˆã®ã¿å£²å´å¯èƒ½
         bool canSellItem = boardManager.selectionType == BoardManager.SelectionType.Hand &&
                            boardManager.selectedHandSlot != null &&
                            boardManager.selectedHandSlot.itemData != null;
@@ -56,6 +60,8 @@ public class SellButton :
              boardManager.selectionType == BoardManager.SelectionType.Board));
 
         SetInteractable(canSell);
+        SetVisible(!boardManager.IsShowingCharacterDetailOnly &&
+                   !boardManager.IsSellButtonSuppressedAfterDrag);
     }
 
     void SetInteractable(bool interactable)
@@ -64,6 +70,15 @@ public class SellButton :
         {
             button.interactable = interactable;
         }
+    }
+
+    void SetVisible(bool visible)
+    {
+        if (canvasGroup == null)
+            return;
+
+        canvasGroup.alpha = visible ? 1f : 0f;
+        canvasGroup.blocksRaycasts = visible;
     }
 
     public void Sell()
@@ -80,7 +95,7 @@ public class SellButton :
         if (boardManager == null)
         {
             Debug.LogError(
-                "BoardManager‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñI"
+                "BoardManagerãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ï¼"
             );
 
             return;
@@ -92,7 +107,7 @@ public class SellButton :
             ItemData soldItem = boardManager.selectedHandSlot.RemoveItem();
             boardManager.ClearSelection();
             SetInteractable(false);
-            Debug.Log("Item " + soldItem.itemName + " ‚ğ0G‚Å”„‹p‚µ‚Ü‚µ‚½B");
+            Debug.Log("Item " + soldItem.itemName + " ã‚’0Gã§å£²å´ã—ã¾ã—ãŸã€‚");
             return;
         }
 
@@ -105,19 +120,19 @@ public class SellButton :
         if (player == null)
         {
             Debug.LogError(
-                "PlayerData‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñI"
+                "PlayerDataãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ï¼"
             );
 
             return;
         }
 
-        // ”„‹pˆ—
+        // å£²å´å‡¦ç†
         if (!player.SellCharacter(character))
         {
             return;
         }
 
-        // è‚¿‚ğ”„‹p‚µ‚½ê‡
+        // æ‰‹æŒã¡ã‚’å£²å´ã—ãŸå ´åˆ
         if (boardManager.selectionType ==
             BoardManager.SelectionType.Hand)
         {
@@ -127,7 +142,7 @@ public class SellButton :
             }
         }
 
-        // ”Õ–Ê‚ğ”„‹p‚µ‚½ê‡
+        // ç›¤é¢ã‚’å£²å´ã—ãŸå ´åˆ
         if (boardManager.selectionType ==
             BoardManager.SelectionType.Board)
         {
@@ -137,10 +152,10 @@ public class SellButton :
             }
         }
 
-        // ‘I‘ğ‰ğœ
+        // é¸æŠè§£é™¤
         boardManager.ClearSelection();
 
-        // ”„‹p’¼Œã‚ÍŠmÀ‚É–³Œø‰»
+        // å£²å´ç›´å¾Œã¯ç¢ºå®Ÿã«ç„¡åŠ¹åŒ–
         SetInteractable(false);
     }
 
@@ -163,14 +178,14 @@ public class SellButton :
         if (boardManager == null)
         {
             Debug.LogError(
-                "BoardManager‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñI"
+                "BoardManagerãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ï¼"
             );
 
             return;
         }
 
         // -----------------------------------------
-        // è‚¿ƒLƒƒƒ‰ƒNƒ^[
+        // æ‰‹æŒã¡ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼
         // -----------------------------------------
 
         HandSlot handSlot =
@@ -192,7 +207,7 @@ public class SellButton :
                 handSlot;
 
             Debug.Log(
-                "è‚¿ƒLƒƒƒ‰ƒNƒ^[‚ğ”„‹p‘ÎÛ‚É‚µ‚Ü‚µ‚½B"
+                "æ‰‹æŒã¡ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã‚’å£²å´å¯¾è±¡ã«ã—ã¾ã—ãŸã€‚"
             );
 
             SellDraggedCharacter();
@@ -201,7 +216,7 @@ public class SellButton :
         }
 
         // -----------------------------------------
-        // ”Õ–ÊƒLƒƒƒ‰ƒNƒ^[
+        // ç›¤é¢ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼
         // -----------------------------------------
 
         BoardSlot boardSlot =
@@ -223,7 +238,7 @@ public class SellButton :
                 boardSlot;
 
             Debug.Log(
-                "”Õ–ÊƒLƒƒƒ‰ƒNƒ^[‚ğ”„‹p‘ÎÛ‚É‚µ‚Ü‚µ‚½B"
+                "ç›¤é¢ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã‚’å£²å´å¯¾è±¡ã«ã—ã¾ã—ãŸã€‚"
             );
 
             SellDraggedCharacter();
@@ -248,7 +263,7 @@ public class SellButton :
             ItemData soldItem = boardManager.selectedHandSlot.RemoveItem();
             boardManager.ClearSelection();
             SetInteractable(false);
-            Debug.Log("Item " + soldItem.itemName + " ‚ğ0G‚Å”„‹p‚µ‚Ü‚µ‚½B");
+            Debug.Log("Item " + soldItem.itemName + " ã‚’0Gã§å£²å´ã—ã¾ã—ãŸã€‚");
             return;
         }
 
@@ -261,19 +276,19 @@ public class SellButton :
         if (player == null)
         {
             Debug.LogError(
-                "PlayerData‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñI"
+                "PlayerDataãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ï¼"
             );
 
             return;
         }
 
-        // ”„‹pˆ—
+        // å£²å´å‡¦ç†
         if (!player.SellCharacter(character))
         {
             return;
         }
 
-        // è‚¿‚ğ”„‹p‚µ‚½ê‡
+        // æ‰‹æŒã¡ã‚’å£²å´ã—ãŸå ´åˆ
         if (boardManager.selectionType ==
             BoardManager.SelectionType.Hand)
         {
@@ -283,7 +298,7 @@ public class SellButton :
             }
         }
 
-        // ”Õ–Ê‚ğ”„‹p‚µ‚½ê‡
+        // ç›¤é¢ã‚’å£²å´ã—ãŸå ´åˆ
         if (boardManager.selectionType ==
             BoardManager.SelectionType.Board)
         {
@@ -295,7 +310,7 @@ public class SellButton :
 
         Debug.Log(
             character.data.characterName +
-            " ‚ğƒhƒ‰ƒbƒO•ƒhƒƒbƒv‚Å”„‹p‚µ‚Ü‚µ‚½I"
+            " ã‚’ãƒ‰ãƒ©ãƒƒã‚°ï¼†ãƒ‰ãƒ­ãƒƒãƒ—ã§å£²å´ã—ã¾ã—ãŸï¼"
         );
 
         boardManager.ClearSelection();

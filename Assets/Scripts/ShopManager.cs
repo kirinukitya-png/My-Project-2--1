@@ -55,7 +55,10 @@ public class ShopManager : MonoBehaviour
     [Min(0)] public int stageGoldReward = 4;
     [Min(1)] public int goldPerInterest = 10;
     [Min(0)] public int interestGoldPerThreshold = 1;
-    [Min(0)] public int maxInterestGold = 5;
+    [Min(0)] public int maxInterestGold = 30;
+    [Header("HandSlot空き枠ボーナス")]
+    [Min(1)] public int emptyHandSlotsPerBonusGold = 1;
+    [Min(0)] public int bonusGoldPerEmptyHandSlots = 1;
 
     [Header("コスト別ショップ在庫数")]
     [Min(0)] public int[] initialPoolCountsByCost =
@@ -81,6 +84,10 @@ public class ShopManager : MonoBehaviour
         new StageCostAppearanceRate { cost1 = 0, cost2 = 10, cost3 = 45, cost4 = 45, cost5 = 0 }
     };
 
+    [Header("コスト出現率表示")]
+    [Tooltip("Cost1〜Cost5の確率バーです。未設定の場合はProbabilityCost1〜ProbabilityCost5という名前から検索します。")]
+    public Image[] probabilityCostImages = new Image[5];
+
     [Header("ステージ進行")]
     public TMP_Text stageCountText;
     public StageManager stageManager;
@@ -100,8 +107,24 @@ public class ShopManager : MonoBehaviour
     public Button xpUpButton;
     public TMP_Text xpCountText;
     public TMP_Text levelCountText;
-    [Min(0)] public int xpPurchaseGoldCost = 1;
+    [Min(0)] public int xpPurchaseGoldCost = 4;
     [Min(0)] public int xpPerPurchase = 1;
+    [Min(0)] public int xpSalePurchaseGoldCost = 1;
+    [Min(0)] public int xpSalePerPurchase = 1;
+
+    [Header("ステージ選択報酬")]
+    [Min(0)] public int selectAExperienceReward = 1;
+    [Min(0)] public int selectBGoldReward;
+    [Min(0)] public int selectBExperienceReward;
+    [Min(0)] public int selectCGoldReward = 6;
+    [Min(0)] public int selectCExperienceReward = 2;
+    [Min(0)] public int selectDGoldReward;
+    [Min(0)] public int selectDExperienceReward;
+    [Min(0)] public int selectDHealAmount = 5;
+
+    [Header("Boss報酬（各ステージ4ラウンド目）")]
+    [Min(0)] public int bossGoldReward = 8;
+    [Min(0)] public int bossExperienceReward = 3;
 
     [Header("スコア")]
     public TMP_Text scoreCountText;
@@ -114,7 +137,6 @@ public class ShopManager : MonoBehaviour
     private const float ScoreRefreshInterval = 0.2f;
     private int currentLevel = 1;
     private int currentLevelExperience;
-    private const int StageExperienceReward = 1;
     public int CurrentLevel => currentLevel;
 
     [Header("レベルごとの必要経験値")]
@@ -154,10 +176,11 @@ public class ShopManager : MonoBehaviour
     void Start()
     {
         ResolveScoreCountText();
-        if (xpUpButton != null)
-            xpUpButton.onClick.AddListener(PurchaseExperience);
         ResolveStageManagerReference();
         ResolveShopActionReferences();
+        ResolveProbabilityCostImages();
+        if (xpUpButton != null)
+            xpUpButton.onClick.AddListener(PurchaseExperienceForCurrentSelection);
         if (stageManager != null)
             stageManager.SelectionCompleted += CompleteStageSelection;
         UpdateStageCountText();
@@ -195,7 +218,7 @@ public class ShopManager : MonoBehaviour
     void OnDestroy()
     {
         if (xpUpButton != null)
-            xpUpButton.onClick.RemoveListener(PurchaseExperience);
+            xpUpButton.onClick.RemoveListener(PurchaseExperienceForCurrentSelection);
         if (stageManager != null)
             stageManager.SelectionCompleted -= CompleteStageSelection;
     }
@@ -216,16 +239,48 @@ public class ShopManager : MonoBehaviour
             Transform rerollButton = FindTransformIncludingInactive("RerollButton");
             if (rerollButton != null) rerollButtonObject = rerollButton.gameObject;
         }
-        if (xpBuyButtonObject == null)
+        if (xpUpButton == null)
         {
-            Transform xpBuyButton = FindTransformIncludingInactive("XPbuyButton", "XPBuyButton");
-            if (xpBuyButton != null) xpBuyButtonObject = xpBuyButton.gameObject;
+            Transform xpButtonTransform = FindTransformIncludingInactive("XPbuyButton", "XPBuyButton");
+            if (xpButtonTransform != null)
+                xpUpButton = xpButtonTransform.GetComponent<Button>();
         }
+        if (xpBuyButtonObject == null && xpUpButton != null)
+            xpBuyButtonObject = xpUpButton.gameObject;
 
         if (rerollButtonObject == null)
             Debug.LogError("RerollButtonが見つかりません。", this);
-        if (xpBuyButtonObject == null)
+        if (xpUpButton == null)
             Debug.LogError("XPBuyButtonが見つかりません。", this);
+
+        if (xpUpButton != null)
+        {
+            Transform buyLabel = xpUpButton.transform.Find("Buy");
+            Transform saleLabel = xpUpButton.transform.Find("Sale");
+            if (buyLabel == null || saleLabel == null)
+            {
+                Debug.LogError("XPbuyButtonにはBuyとSaleのTextオブジェクトが必要です。", xpUpButton);
+                return;
+            }
+
+            TMP_Text buyText = buyLabel.GetComponent<TMP_Text>();
+            TMP_Text saleText = saleLabel.GetComponent<TMP_Text>();
+            if (buyText == null || saleText == null)
+            {
+                Debug.LogError("XPbuyButtonのBuyとSaleにはTextMeshProコンポーネントが必要です。", xpUpButton);
+                return;
+            }
+
+            buyText.text =
+                "" +
+                Mathf.Max(0, xpPurchaseGoldCost);
+            saleText.text =
+                "" +
+                Mathf.Max(0, xpSalePurchaseGoldCost);
+            buyLabel.gameObject.SetActive(true);
+            saleLabel.gameObject.SetActive(false);
+            xpUpButton.gameObject.SetActive(false);
+        }
     }
 
     private Transform FindTransformIncludingInactive(params string[] objectNames)
@@ -272,10 +327,20 @@ public class ShopManager : MonoBehaviour
         currentSelection = selectedButton;
         if (selectedButton == StageManager.StageSelectionButton.SelectB)
         {
-            if (rerollButtonObject != null)
-                rerollButtonObject.SetActive(false);
-            if (xpBuyButtonObject != null)
-                xpBuyButtonObject.SetActive(true);
+            SetExperienceButtonMode(true);
+        }
+        else
+        {
+            SetExperienceButtonMode(false);
+        }
+
+        if (selectedButton == StageManager.StageSelectionButton.SelectD &&
+            player != null)
+        {
+            player.hp = Mathf.Min(
+                player.InitialHp,
+                player.hp + Mathf.Max(0, selectDHealAmount));
+            player.UpdateHPUI();
         }
 
         GenerateShop();
@@ -298,15 +363,21 @@ public class ShopManager : MonoBehaviour
         if (currentStageIndex >= TotalStages - 1)
             return 0;
 
+        bool completedBossRound = currentStageIndex % 5 == 3;
         currentStageIndex++;
         UpdateStageCountText();
-        GainExperience(StageExperienceReward);
+        int experienceReward = GetExperienceReward(completedBossRound);
+        GainExperience(experienceReward);
 
         int goldReward = 0;
         if (player != null)
         {
-            int interest = CalculateInterest(player.gold);
-            goldReward = Mathf.Max(0, stageGoldReward) + interest;
+            int baseGoldReward = GetGoldReward(completedBossRound);
+            int interest = baseGoldReward > 0 ? CalculateInterest(player.gold) : 0;
+            int emptyHandSlotBonus = baseGoldReward > 0
+                ? CalculateEmptyHandSlotBonus()
+                : 0;
+            goldReward = baseGoldReward + interest + emptyHandSlotBonus;
             player.gold += goldReward;
             player.UpdateGoldUI();
         }
@@ -331,20 +402,98 @@ public class ShopManager : MonoBehaviour
 
     int CalculateInterest(int currentGold)
     {
+        if (currentGold <= 0)
+            return 0;
+
         int threshold = Mathf.Max(1, goldPerInterest);
         int interestPerThreshold = Mathf.Max(0, interestGoldPerThreshold);
         int interestCap = Mathf.Max(0, maxInterestGold);
-        return Mathf.Min(currentGold / threshold * interestPerThreshold, interestCap);
+        int guaranteedInterest = Mathf.Min(
+            currentGold / threshold * interestPerThreshold,
+            interestCap);
+        if (guaranteedInterest >= interestCap ||
+            interestPerThreshold == 0)
+            return guaranteedInterest;
+
+        int remainingGold = currentGold % threshold;
+        if (remainingGold > 0 &&
+            Random.value < (float)remainingGold / threshold)
+        {
+            guaranteedInterest = Mathf.Min(
+                guaranteedInterest + interestPerThreshold,
+                interestCap);
+        }
+
+        return guaranteedInterest;
+    }
+
+    private int CalculateEmptyHandSlotBonus()
+    {
+        if (player.handManager == null)
+        {
+            Debug.LogError(
+                "HandManager is required to calculate the empty HandSlot bonus.",
+                this);
+            return 0;
+        }
+
+        int slotsPerBonus = Mathf.Max(1, emptyHandSlotsPerBonusGold);
+        int goldPerBonus = Mathf.Max(0, bonusGoldPerEmptyHandSlots);
+        return player.handManager.CountEmptySlots() / slotsPerBonus * goldPerBonus;
     }
 
     void UpdateStageCountText()
     {
+        UpdateCostProbabilityWidths();
+
         if (stageCountText == null)
             return;
 
         int stage = currentStageIndex / 5 + 1;
         int round = currentStageIndex % 5 + 1;
         stageCountText.text = stage + "-" + round;
+    }
+
+    private void ResolveProbabilityCostImages()
+    {
+        if (probabilityCostImages == null || probabilityCostImages.Length != 5)
+            probabilityCostImages = new Image[5];
+
+        for (int i = 0; i < probabilityCostImages.Length; i++)
+        {
+            if (probabilityCostImages[i] != null)
+                continue;
+
+            Transform imageTransform = FindTransformIncludingInactive("ProbabilityCost" + (i + 1));
+            if (imageTransform != null)
+                probabilityCostImages[i] = imageTransform.GetComponent<Image>();
+
+            if (probabilityCostImages[i] == null)
+                Debug.LogWarning("ProbabilityCost" + (i + 1) + " Image is not assigned or found.", this);
+        }
+    }
+
+    private void UpdateCostProbabilityWidths()
+    {
+        if (probabilityCostImages == null)
+            return;
+
+        int stageIndex = Mathf.Clamp(currentStageIndex / 5, 0, 4);
+        for (int i = 0; i < probabilityCostImages.Length; i++)
+        {
+            Image probabilityImage = probabilityCostImages[i];
+            if (probabilityImage == null)
+                continue;
+
+            RectTransform rectTransform = probabilityImage.rectTransform;
+            if (rectTransform == null)
+                continue;
+
+            int probabilityPercent = GetStageCostWeight(stageIndex, i + 1);
+            rectTransform.SetSizeWithCurrentAnchors(
+                RectTransform.Axis.Horizontal,
+                probabilityPercent * 5f);
+        }
     }
 
     int GetRequiredScoreForCurrentStage()
@@ -359,10 +508,47 @@ public class ShopManager : MonoBehaviour
         return Mathf.Max(0, requiredScoresByStage[currentStageIndex]);
     }
 
-    void PurchaseExperience()
+    private void PurchaseExperienceAtRegularPrice()
     {
-        int purchaseCost = Mathf.Max(0, xpPurchaseGoldCost);
-        int experienceAmount = Mathf.Max(0, xpPerPurchase);
+        PurchaseExperience(xpPurchaseGoldCost, xpPerPurchase);
+    }
+
+    private void PurchaseExperienceAtSalePrice()
+    {
+        PurchaseExperience(xpSalePurchaseGoldCost, xpSalePerPurchase);
+    }
+
+    private void PurchaseExperienceForCurrentSelection()
+    {
+        if (currentSelection == StageManager.StageSelectionButton.SelectB)
+            PurchaseExperienceAtSalePrice();
+        else
+            PurchaseExperienceAtRegularPrice();
+    }
+
+    private void SetExperienceButtonMode(bool saleMode)
+    {
+        if (xpBuyButtonObject != null)
+            xpBuyButtonObject.SetActive(true);
+        if (xpUpButton == null)
+            return;
+
+        Transform buyLabel = xpUpButton.transform.Find("Buy");
+        Transform saleLabel = xpUpButton.transform.Find("Sale");
+        if (buyLabel == null || saleLabel == null)
+        {
+            Debug.LogError("XPbuyButtonにはBuyとSaleのTextオブジェクトが必要です。", xpUpButton);
+            return;
+        }
+
+        buyLabel.gameObject.SetActive(!saleMode);
+        saleLabel.gameObject.SetActive(saleMode);
+    }
+
+    private void PurchaseExperience(int cost, int experience)
+    {
+        int purchaseCost = Mathf.Max(0, cost);
+        int experienceAmount = Mathf.Max(0, experience);
         if (currentLevel >= MaxLevel || player == null ||
             !player.CanBuy(purchaseCost))
         {
@@ -372,6 +558,46 @@ public class ShopManager : MonoBehaviour
         player.gold -= purchaseCost;
         player.UpdateGoldUI();
         GainExperience(experienceAmount);
+    }
+
+    private int GetExperienceReward(bool bossRound)
+    {
+        if (bossRound)
+            return Mathf.Max(0, bossExperienceReward);
+
+        switch (currentSelection)
+        {
+            case StageManager.StageSelectionButton.SelectA:
+                return Mathf.Max(0, selectAExperienceReward);
+            case StageManager.StageSelectionButton.SelectB:
+                return Mathf.Max(0, selectBExperienceReward);
+            case StageManager.StageSelectionButton.SelectC:
+                return Mathf.Max(0, selectCExperienceReward);
+            case StageManager.StageSelectionButton.SelectD:
+                return Mathf.Max(0, selectDExperienceReward);
+            default:
+                return 0;
+        }
+    }
+
+    private int GetGoldReward(bool bossRound)
+    {
+        if (bossRound)
+            return Mathf.Max(0, bossGoldReward);
+
+        switch (currentSelection)
+        {
+            case StageManager.StageSelectionButton.SelectA:
+                return Mathf.Max(0, stageGoldReward);
+            case StageManager.StageSelectionButton.SelectB:
+                return Mathf.Max(0, selectBGoldReward);
+            case StageManager.StageSelectionButton.SelectC:
+                return Mathf.Max(0, selectCGoldReward);
+            case StageManager.StageSelectionButton.SelectD:
+                return Mathf.Max(0, selectDGoldReward);
+            default:
+                return 0;
+        }
     }
 
     void GainExperience(int amount)

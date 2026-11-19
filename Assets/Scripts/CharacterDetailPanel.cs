@@ -29,12 +29,13 @@ public class CharacterDetailPanel : MonoBehaviour
     public Transform attributeList;
     public Button attributeButtonTemplate;
 
-    [Header("�o����ʂ̏W�v���i�ݒ莞�̂ݗL���j")]
+    [Header("出撃画面の集計元（設定時のみ有効）")]
     public CharacterFullRosterListDisplay fullRosterSource;
     public RosterBoardDisplay rosterBoardDisplay;
 
     private GameObject generatedDetailHandCard;
     private CharacterData currentCharacter;
+    private OwnedCharacter currentOwnedCharacter;
     private readonly List<GameObject> generatedStarImages = new List<GameObject>();
     private readonly List<Button> generatedUnitButtons = new List<Button>();
     private readonly List<TMP_Text> generatedUnitNameTexts = new List<TMP_Text>();
@@ -89,6 +90,7 @@ public class CharacterDetailPanel : MonoBehaviour
         ItemDetailPanel.HideOtherPanels(this);
         HideEnemyDetailPanel();
         currentCharacter = data;
+        currentOwnedCharacter = null;
         SetDetailIcon(data);
 
         if (nameText != null)
@@ -142,11 +144,12 @@ public class CharacterDetailPanel : MonoBehaviour
         ItemDetailPanel.HideOtherPanels(this);
         HideEnemyDetailPanel();
         currentCharacter = data;
+        currentOwnedCharacter = character;
 
-        // �A�C�R��
+        // アイコン
         SetDetailIcon(data);
 
-        // ��{���
+        // 基本情報
         if (nameText != null)
         {
             nameText.text =
@@ -161,7 +164,7 @@ public class CharacterDetailPanel : MonoBehaviour
                 "COST " + data.cost;
         }
 
-        // �X�e�[�^�X
+        // ステータス
         if (defenseText != null)
         {
             defenseText.text =
@@ -174,15 +177,38 @@ public class CharacterDetailPanel : MonoBehaviour
                 "ATK " + character.GetAttack(characterStatSettings);
         }
 
-        // ����
+        // 属性
         SetAttributeButtons(data);
 
-        // ���j�b�g
+        // ユニット
         SetCompleteUnitButtons(data.units);
 
         gameObject.SetActive(true);
         CharacterDetailTabs tabs = GetComponent<CharacterDetailTabs>();
         if (tabs != null) tabs.RefreshUnitLayout();
+    }
+
+    public bool TryToggleUnitAttributeFor(OwnedCharacter character)
+    {
+        if (!gameObject.activeInHierarchy ||
+            character == null ||
+            currentOwnedCharacter != character)
+            return false;
+
+        CharacterDetailTabs tabs = GetComponent<CharacterDetailTabs>();
+        return tabs != null && tabs.ToggleUnitAttribute();
+    }
+
+    public bool TryToggleUnitAttributeFor(CharacterData character)
+    {
+        if (!gameObject.activeInHierarchy ||
+            character == null ||
+            currentOwnedCharacter != null ||
+            currentCharacter != character)
+            return false;
+
+        CharacterDetailTabs tabs = GetComponent<CharacterDetailTabs>();
+        return tabs != null && tabs.ToggleUnitAttribute();
     }
 
     private string GetStatRangeText(int cost, int star, bool attack)
@@ -226,6 +252,17 @@ public class CharacterDetailPanel : MonoBehaviour
         SetCompleteUnitButtons(currentCharacter.units);
         CharacterDetailTabs tabs = GetComponent<CharacterDetailTabs>();
         if (tabs != null) tabs.RefreshUnitLayout();
+    }
+
+    public void RefreshDisplayedContent()
+    {
+        if (!gameObject.activeInHierarchy || currentCharacter == null)
+            return;
+
+        if (currentOwnedCharacter != null)
+            ShowCharacter(currentOwnedCharacter);
+        else
+            ShowShopCharacter(currentCharacter);
     }
 
     private void SetDetailIcon(CharacterData data)
@@ -901,6 +938,7 @@ public class CharacterDetailPanel : MonoBehaviour
     public void Clear()
     {
         currentCharacter = null;
+        currentOwnedCharacter = null;
         if (unitHoverInfoPanel != null)
         {
             unitHoverInfoPanel.Hide(null);

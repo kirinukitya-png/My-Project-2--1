@@ -1,7 +1,6 @@
 using UnityEngine;
-using UnityEngine.EventSystems;
 
-public class HandSlot : MonoBehaviour, IPointerClickHandler
+public class HandSlot : MonoBehaviour
 {
     public OwnedCharacter ownedCharacter;
     public ItemData itemData;
@@ -94,61 +93,4 @@ public class HandSlot : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        if (eventData.button == PointerEventData.InputButton.Left)
-            ClickSlot();
-    }
-
-    public void ClickSlot()
-    {
-        BoardManager boardManager = FindAnyObjectByType<BoardManager>();
-        if (boardManager == null)
-        {
-            Debug.LogError("BoardManagerが見つかりません。", this);
-            return;
-        }
-
-        if (boardManager.selectionType == BoardManager.SelectionType.Board)
-        {
-            if (boardManager.selectedBoardSlot != null)
-                boardManager.ReturnSelectedBoardCharacterToHand(this);
-            return;
-        }
-
-        if (boardManager.selectionType == BoardManager.SelectionType.Shop)
-        {
-            if (!IsEmpty())
-            {
-                Debug.Log("この手持ちスロットは使用中です。");
-                return;
-            }
-
-            if (boardManager.selectedShopItem != null)
-                boardManager.BuySelectedShopItemToHand(this);
-            else
-                boardManager.BuySelectedShopCharacterToHand(this);
-            return;
-        }
-
-        if (boardManager.selectionType == BoardManager.SelectionType.Hand)
-        {
-            if (boardManager.selectedHandSlot == this)
-            {
-                boardManager.ClearSelection();
-                return;
-            }
-
-            boardManager.MoveHandCharacter(boardManager.selectedHandSlot, this);
-            return;
-        }
-
-        if (!IsEmpty())
-        {
-            if (itemData != null)
-                boardManager.SelectHandItem(this);
-            else
-                boardManager.SelectHandCharacter(ownedCharacter, this);
-        }
-    }
 }

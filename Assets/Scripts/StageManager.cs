@@ -12,50 +12,12 @@ public class StageManager : MonoBehaviour
         SelectD
     }
 
-    [Serializable]
-    public class StageSelectionSettings
-    {
-        public bool showSelectionPanel = true;
-        public StageSelectionButton firstButton = StageSelectionButton.SelectA;
-        public StageSelectionButton secondButton = StageSelectionButton.SelectB;
-    }
-
     [Header("Stage Selection UI")]
     public GameObject popoutSelectStagePanel;
     public Button selectAButton;
     public Button selectBButton;
     public Button selectCButton;
     public Button selectDButton;
-
-    [Tooltip("要素0〜24が1-1〜5-5です。パネルを表示する場合は異なるボタンを2つ選びます。")]
-    public StageSelectionSettings[] stageSelectionSettings =
-    {
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings(),
-        new StageSelectionSettings()
-    };
 
     private const int TotalStages = 25;
     private int currentStageIndex;
@@ -96,19 +58,9 @@ public class StageManager : MonoBehaviour
     {
         currentStageIndex = Mathf.Clamp(stageIndex, 0, TotalStages - 1);
         StageStarting?.Invoke();
-        StageSelectionSettings settings = GetCurrentSettings();
-        SetSelectionButtonsVisible(false, settings);
+        SetSelectionButtonsVisible(false);
 
-        if (settings == null)
-        {
-            Debug.LogError("ステージ選択設定がありません。InspectorでStageManagerの設定を確認してください。", this);
-            awaitingStageSelection = true;
-            if (popoutSelectStagePanel != null)
-                popoutSelectStagePanel.SetActive(true);
-            return;
-        }
-
-        if (!settings.showSelectionPanel)
+        if (CurrentRoundNumber != 5)
         {
             awaitingStageSelection = false;
             if (popoutSelectStagePanel != null)
@@ -117,38 +69,22 @@ public class StageManager : MonoBehaviour
             return;
         }
 
-        if (settings.firstButton == settings.secondButton)
+        if (selectAButton == null ||
+            selectBButton == null ||
+            selectCButton == null ||
+            selectDButton == null)
         {
-            Debug.LogError("ステージ選択では異なるボタンを2つ選択してください。", this);
+            Debug.LogError("〇-5の選択にはSelectA〜Dのボタン参照がすべて必要です。", this);
             awaitingStageSelection = true;
             if (popoutSelectStagePanel != null)
                 popoutSelectStagePanel.SetActive(true);
             return;
         }
 
-        if (GetButton(settings.firstButton) == null ||
-            GetButton(settings.secondButton) == null)
-        {
-            Debug.LogError("StageManagerのステージ選択ボタン参照を確認してください。", this);
-            awaitingStageSelection = true;
-            if (popoutSelectStagePanel != null)
-                popoutSelectStagePanel.SetActive(true);
-            return;
-        }
-
-        SetSelectionButtonsVisible(true, settings);
+        SetSelectionButtonsVisible(true);
         awaitingStageSelection = true;
         if (popoutSelectStagePanel != null)
             popoutSelectStagePanel.SetActive(true);
-    }
-
-    private StageSelectionSettings GetCurrentSettings()
-    {
-        if (stageSelectionSettings == null ||
-            currentStageIndex >= stageSelectionSettings.Length)
-            return null;
-
-        return stageSelectionSettings[currentStageIndex];
     }
 
     private Button GetButton(StageSelectionButton button)
@@ -163,28 +99,12 @@ public class StageManager : MonoBehaviour
         }
     }
 
-    private void SetSelectionButtonsVisible(bool showSelectedButtons, StageSelectionSettings settings)
+    private void SetSelectionButtonsVisible(bool showButtons)
     {
-        SetButtonActive(
-            StageSelectionButton.SelectA,
-            showSelectedButtons && settings != null &&
-            (settings.firstButton == StageSelectionButton.SelectA ||
-             settings.secondButton == StageSelectionButton.SelectA));
-        SetButtonActive(
-            StageSelectionButton.SelectB,
-            showSelectedButtons && settings != null &&
-            (settings.firstButton == StageSelectionButton.SelectB ||
-             settings.secondButton == StageSelectionButton.SelectB));
-        SetButtonActive(
-            StageSelectionButton.SelectC,
-            showSelectedButtons && settings != null &&
-            (settings.firstButton == StageSelectionButton.SelectC ||
-             settings.secondButton == StageSelectionButton.SelectC));
-        SetButtonActive(
-            StageSelectionButton.SelectD,
-            showSelectedButtons && settings != null &&
-            (settings.firstButton == StageSelectionButton.SelectD ||
-             settings.secondButton == StageSelectionButton.SelectD));
+        SetButtonActive(StageSelectionButton.SelectA, showButtons);
+        SetButtonActive(StageSelectionButton.SelectB, showButtons);
+        SetButtonActive(StageSelectionButton.SelectC, showButtons);
+        SetButtonActive(StageSelectionButton.SelectD, showButtons);
     }
 
     private void SetButtonActive(StageSelectionButton button, bool active)
@@ -219,10 +139,7 @@ public class StageManager : MonoBehaviour
         if (!awaitingStageSelection)
             return;
 
-        StageSelectionSettings settings = GetCurrentSettings();
-        if (settings == null ||
-            (settings.firstButton != selectedButton &&
-             settings.secondButton != selectedButton))
+        if (CurrentRoundNumber != 5 || GetButton(selectedButton) == null)
             return;
 
         awaitingStageSelection = false;

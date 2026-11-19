@@ -6,6 +6,7 @@ public class ItemDetailPanel : MonoBehaviour
 {
     public TMP_Text itemText;
     public Image iconImage;
+    private ItemData currentItem;
 
     public static void HideOtherPanels(MonoBehaviour activePanel)
     {
@@ -33,6 +34,7 @@ public class ItemDetailPanel : MonoBehaviour
 
     public void ShowItem(ItemData item)
     {
+        currentItem = item;
         if (item == null) { Hide(); return; }
         HideOtherPanels(this);
         if (iconImage == null)
@@ -66,8 +68,15 @@ public class ItemDetailPanel : MonoBehaviour
         gameObject.SetActive(true);
     }
 
+    public void RefreshDisplayedContent()
+    {
+        if (gameObject.activeInHierarchy && currentItem != null)
+            ShowItem(currentItem);
+    }
+
     public void Hide()
     {
+        currentItem = null;
         GameObject visualRoot = FindVisualRoot();
         if (visualRoot != null && visualRoot != gameObject)
             visualRoot.SetActive(false);

@@ -11,8 +11,10 @@ public class EnemyDetailPanel : MonoBehaviour
     public TMP_Text defenseText;
     public TMP_Text healthText;
     public TMP_Text targetText;
+    private EnemyData currentEnemy;
+    private BoardSlot currentEnemySlot;
 
-    public void ShowEnemy(EnemyData enemy)
+    public void ShowEnemy(EnemyData enemy, BoardSlot sourceSlot = null)
     {
         if (enemy == null)
         {
@@ -21,6 +23,8 @@ public class EnemyDetailPanel : MonoBehaviour
         }
 
         ItemDetailPanel.HideOtherPanels(this);
+        currentEnemy = enemy;
+        currentEnemySlot = sourceSlot;
 
         if (iconImage != null)
             iconImage.sprite = enemy.icon;
@@ -28,17 +32,65 @@ public class EnemyDetailPanel : MonoBehaviour
         if (nameText != null)
             nameText.text = enemy.enemyName;
 
-        if (attackText != null)
-            attackText.text = "ATK " + enemy.attack;
-
-        if (defenseText != null)
-            defenseText.text = "DEF " + enemy.defense;
-
-        if (healthText != null)
-            healthText.text = "HP " + enemy.health;
+        RefreshCombatStats();
 
         UpdateTargetText(enemy.target);
         gameObject.SetActive(true);
+    }
+
+    public void RefreshDisplayedContent()
+    {
+        if (!gameObject.activeInHierarchy || currentEnemy == null)
+            return;
+
+        if (currentEnemySlot != null)
+        {
+            if (currentEnemySlot.enemyData == null)
+            {
+                Hide();
+                return;
+            }
+
+            currentEnemy = currentEnemySlot.enemyData;
+        }
+
+        if (nameText != null)
+            nameText.text = currentEnemy.enemyName;
+        if (iconImage != null)
+            iconImage.sprite = currentEnemy.icon;
+
+        RefreshCombatStats();
+        UpdateTargetText(currentEnemy.target);
+    }
+
+    private void RefreshCombatStats()
+    {
+        int attack = currentEnemy.attack;
+        int defense = currentEnemy.defense;
+        int health = currentEnemy.health;
+
+        if (currentEnemySlot != null)
+        {
+            BoardCharacter[] displays =
+                currentEnemySlot.GetComponentsInChildren<BoardCharacter>(true);
+            BoardCharacter display = System.Array.Find(
+                displays,
+                candidate => candidate != null && candidate.IsDisplayingEnemy(currentEnemy));
+            if (display != null &&
+                display.TryGetEnemyBattleStats(out int currentAttack, out int currentDefense, out int currentHealth))
+            {
+                attack = currentAttack;
+                defense = currentDefense;
+                health = currentHealth;
+            }
+        }
+
+        if (attackText != null)
+            attackText.text = "ATK " + attack;
+        if (defenseText != null)
+            defenseText.text = "DEF " + defense;
+        if (healthText != null)
+            healthText.text = "HP " + health;
     }
 
     private void UpdateTargetText(string targetValue)
@@ -111,6 +163,8 @@ public class EnemyDetailPanel : MonoBehaviour
 
     public void Hide()
     {
+        currentEnemy = null;
+        currentEnemySlot = null;
         gameObject.SetActive(false);
     }
 }

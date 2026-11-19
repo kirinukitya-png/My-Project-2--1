@@ -294,7 +294,9 @@ public class TargetDataTsvImporterWindow : EditorWindow
             for (int i = 2; i < parts.Length; i += 2)
             {
                 bool validPosition = parts[i] == "後列" || parts[i] == "中列" || parts[i] == "前列" ||
-                                     parts[i] == "直線" || parts[i] == "else" ||
+                                     parts[i] == "直線" || parts[i] == "前方人数0" ||
+                                     parts[i] == "前方人数1" || parts[i] == "前方人数2" ||
+                                     parts[i] == "else" ||
                                      (int.TryParse(parts[i], NumberStyles.Integer, CultureInfo.InvariantCulture, out int cell) && cell >= 1 && cell <= 9);
                 if (!validPosition ||
                     !int.TryParse(parts[i + 1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int weight) ||

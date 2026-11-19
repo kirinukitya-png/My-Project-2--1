@@ -24,11 +24,16 @@ public class BattleManager : MonoBehaviour
     public CharacterStatSettings characterStatSettings;
     public GameObject damagePopupPrefab;
     public TMP_Text logText;
+    public TMP_Text blockCountText;
+    public GameObject blockCountPanel;
 
     public bool LastBattleWasWin { get; private set; }
     public int Block { get; private set; }
     private int pendingPlayerHpDelta;
     private int pendingPlayerBlockBonus;
+    private int permanentPlayerBlockBonus;
+    private float blockPreviewRefreshTimer;
+    private const float BlockPreviewRefreshInterval = 0.2f;
 
     private class TargetedAttack
     {
@@ -49,11 +54,13 @@ public class BattleManager : MonoBehaviour
         public string name;
         public int attack;
         public int defense;
+        public int temporaryDefenseReduction;
         public int maxHealth;
         public int health;
         public int gap;
         public int cooldown;
         public int nextActionRound;
+        public int stunRounds;
         public int star;
         public BoardSlot boardSlot;
         public EnemyData enemyData;
@@ -125,6 +132,8 @@ public class BattleManager : MonoBehaviour
     private void Start()
     {
         EnsureDamagePopupPrefab();
+        ResolveBlockCountUI();
+        RefreshPreBattleBlockCount();
         if (player == null)
             player = FindAnyObjectByType<PlayerData>();
         if (shopManager == null)
@@ -173,6 +182,94 @@ public class BattleManager : MonoBehaviour
             fastBattleButton.onClick.AddListener(StartFastBattle);
             fastBattleButton.interactable = true;
         }
+    }
+
+    private void Update()
+    {
+        if (battleCoroutine != null)
+            return;
+
+        blockPreviewRefreshTimer += Time.unscaledDeltaTime;
+        if (blockPreviewRefreshTimer < BlockPreviewRefreshInterval)
+            return;
+
+        blockPreviewRefreshTimer = 0f;
+        RefreshPreBattleBlockCount();
+    }
+
+    private void ResolveBlockCountUI()
+    {
+        if (blockCountText == null)
+        {
+            foreach (TMP_Text candidate in FindObjectsByType<TMP_Text>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (candidate.gameObject.name == "BlockCount")
+                {
+                    blockCountText = candidate;
+                    break;
+                }
+            }
+        }
+
+        if (blockCountPanel == null)
+        {
+            foreach (Transform candidate in FindObjectsByType<Transform>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (candidate.name == "BlockCountPanel")
+                {
+                    blockCountPanel = candidate.gameObject;
+                    break;
+                }
+            }
+        }
+
+        if (blockCountPanel == null && blockCountText != null)
+        {
+            Transform parent = blockCountText.transform;
+            while (parent != null && parent.name != "BlockCountPanel")
+                parent = parent.parent;
+            if (parent != null)
+                blockCountPanel = parent.gameObject;
+        }
+
+        if (blockCountText == null)
+            Debug.LogWarning("BlockCount TMP_Text was not found. Assign it to BattleManager or name it 'BlockCount'.", this);
+        if (blockCountPanel == null)
+            Debug.LogWarning("BlockCountPanel was not found. Assign it to BattleManager or name it 'BlockCountPanel'.", this);
+    }
+
+    private void RefreshPreBattleBlockCount()
+    {
+        if (battleCoroutine != null)
+            return;
+
+        List<CharacterData> boardCharacters = new List<CharacterData>();
+        BoardManager boardManager = FindAnyObjectByType<BoardManager>();
+        if (boardManager != null && boardManager.boardArea != null)
+        {
+            BoardSlot[] slots = boardManager.boardArea.GetComponentsInChildren<BoardSlot>(true);
+            foreach (BoardSlot slot in slots)
+            {
+                if (slot != null && slot.placedCharacter != null &&
+                    slot.placedCharacter.data != null)
+                    boardCharacters.Add(slot.placedCharacter.data);
+            }
+        }
+
+        Block = Mathf.Max(
+            0,
+            CountActiveAttributeSynergies(boardCharacters) + pendingPlayerBlockBonus + permanentPlayerBlockBonus);
+        UpdateBlockCountUI();
+    }
+
+    private void UpdateBlockCountUI()
+    {
+        if (blockCountText != null)
+            blockCountText.text = Block.ToString();
+        if (blockCountPanel != null)
+            blockCountPanel.SetActive(Block > 0);
     }
 
     public void ResolveBattle()
@@ -334,10 +431,14 @@ public class BattleManager : MonoBehaviour
         List<UnitMove> activeUnitMoves = CreateActiveUnitMoves(playerUnits, boardManager);
         List<BattleUnit> enemies = CreateEnemyBattleUnits(enemyManager);
         Dictionary<string, TargetData> targetDataById = LoadTargetData();
+        Dictionary<string, EffectData> effectDataById = LoadEffectData();
         if (enemies.Count > 0 && !ValidateEnemyTargets(enemies, targetDataById))
             yield break;
+        if (enemies.Count > 0 && !ValidateEnemyEffects(enemies, effectDataById))
+            yield break;
         yield return WaitForBattleStep();
-        Block = Mathf.Max(0, CountActiveAttributeSynergies(playerUnits) + pendingPlayerBlockBonus);
+        Block = Mathf.Max(0, CountActiveAttributeSynergies(playerUnits) + pendingPlayerBlockBonus + permanentPlayerBlockBonus);
+        UpdateBlockCountUI();
         Debug.Log(
             "Battle started. Player HP: " + player.hp +
             ", Block gained from attribute synergies: " + Block + ".",
@@ -357,20 +458,30 @@ public class BattleManager : MonoBehaviour
             yield break;
         }
 
+        foreach (BattleUnit enemy in enemies)
+            ApplyEnemyEffects(
+                enemy.enemyData.cip, enemy, null, null, effectDataById, enemyManager);
+
         int round = 1;
         while (true)
         {
             yield return WaitForBattleStep();
             Debug.Log("Battle round " + round + " - Player turn.", this);
             bool healthChanged = false;
-            int enemyAttacksWithTargetsThisRound = 0;
-            int enemyAttacksWithoutTargetsThisRound = 0;
             UnitMoveRoundState unitMoveRoundState = new UnitMoveRoundState();
 
             foreach (BattleUnit attacker in playerUnits)
             {
                 if (enemies.Count == 0)
                     break;
+
+                if (attacker.stunRounds > 0)
+                {
+                    attacker.stunRounds--;
+                    yield return WaitForBattleStep();
+                    Debug.Log(attacker.name + " skips their action while stunned.", this);
+                    continue;
+                }
 
                 int participationLimit = Mathf.Clamp(attacker.star, 1, 3);
                 int participations = GetParticipationCount(unitMoveRoundState, attacker);
@@ -381,7 +492,6 @@ public class BattleManager : MonoBehaviour
                     continue;
                 }
 
-                bool performedUnitMove = false;
                 while (GetParticipationCount(unitMoveRoundState, attacker) < participationLimit &&
                        enemies.Count > 0)
                 {
@@ -393,7 +503,7 @@ public class BattleManager : MonoBehaviour
                         break;
 
                     yield return WaitForBattleStep();
-                    UnitMove selectedMove = availableMoves[Random.Range(0, availableMoves.Count)];
+                    UnitMove selectedMove = availableMoves[0];
                     unitMoveRoundState.usedMoves.Add(selectedMove);
                     int combinedAttack = 0;
                     List<string> participantNames = new List<string>();
@@ -424,6 +534,10 @@ public class BattleManager : MonoBehaviour
                     int actualDamage = previousHealth - target.health;
                     float defeatLogShownAt = -1f;
                     healthChanged |= actualDamage > 0;
+                    if (damage == 0)
+                        ReduceEnemyDefenseUntilEnemyTurn(
+                            target,
+                            selectedMove.participants.Count);
                     enemyManager.RefreshEnemyBattleState(
                         target.enemySlotIndex,
                         target.health,
@@ -445,8 +559,6 @@ public class BattleManager : MonoBehaviour
                     yield return FinishAttackPresentation(unitMoveAttackerDisplay, unitMoveParticipantDisplays);
                     if (target.health == 0 && unitMoveEnemyDisplay != null)
                         yield return WaitForAutoDefeatLog(() => defeatLogShownAt);
-                    performedUnitMove = true;
-
                     Debug.Log(
                         "UnitMove [" + selectedMove.name + "] by " +
                         string.Join(", ", participantNames.ToArray()) +
@@ -459,11 +571,19 @@ public class BattleManager : MonoBehaviour
                     {
                         yield return WaitForBattleStep();
                         Debug.Log(target.name + " was defeated.", this);
+                        ApplyEnemyEffects(
+                            target.enemyData.pig,
+                            target,
+                            attacker,
+                            new List<BattleUnit> { target },
+                            effectDataById,
+                            enemyManager);
                         enemies.Remove(target);
                     }
                 }
 
-                if (performedUnitMove || enemies.Count == 0)
+                if (GetParticipationCount(unitMoveRoundState, attacker) > 0 ||
+                    enemies.Count == 0)
                     continue;
 
                 yield return WaitForBattleStep();
@@ -509,6 +629,13 @@ public class BattleManager : MonoBehaviour
                 {
                     yield return WaitForBattleStep();
                     Debug.Log(normalAttackTarget.name + " was defeated.", this);
+                    ApplyEnemyEffects(
+                        normalAttackTarget.enemyData.pig,
+                        normalAttackTarget,
+                        attacker,
+                        new List<BattleUnit> { normalAttackTarget },
+                        effectDataById,
+                        enemyManager);
                     enemies.Remove(normalAttackTarget);
                 }
             }
@@ -523,6 +650,7 @@ public class BattleManager : MonoBehaviour
             yield return WaitForBattleStep();
 
             Debug.Log("Battle round " + round + " - Enemy turn.", this);
+            RestoreTemporaryEnemyDefenseReductions(enemies, enemyManager);
             bool enemyWaitingForFutureAction = false;
             foreach (BattleUnit enemy in enemies)
             {
@@ -558,47 +686,32 @@ public class BattleManager : MonoBehaviour
                     targetDataById);
                 if (enemyAttack == null)
                     yield break;
-                if (enemyAttack.targets.Count == 0)
-                {
-                    enemyAttacksWithoutTargetsThisRound++;
-                    Debug.Log(enemy.name + " has no character in the selected target cells; the attack ends.", this);
-                    enemy.nextActionRound = round + enemy.cooldown + 1;
-                    enemy.gap = Mathf.Max(0, enemy.cooldown);
-                    enemyManager.RefreshEnemyBattleState(
-                        enemy.enemySlotIndex,
-                        enemy.health,
-                        enemy.gap,
-                        enemy.defense);
-                    continue;
-                }
-
-                enemyAttacksWithTargetsThisRound++;
                 BoardCharacter enemyAttackerDisplay = enemyManager.GetEnemyBoardCharacter(enemy.enemySlotIndex);
                 yield return BeginAttackPresentation(enemyAttackerDisplay, null, enemy.name);
-                int totalDamage = 0;
+                int totalDefense = 0;
                 List<string> targetDescriptions = new List<string>();
                 foreach (BattleUnit target in enemyAttack.targets)
                 {
-                    int damage = CalculateBattleDamage(enemy.attack, target.defense);
-                    totalDamage += damage;
+                    totalDefense += target.defense;
                     if (target.boardSlot != null)
                     {
                         BoardCharacter targetDisplay = target.boardSlot.GetComponentInChildren<BoardCharacter>(true);
                         if (targetDisplay != null)
-                        {
                             targetDisplay.PlayDamageShake();
-                            targetDisplay.ShowDamagePopup(damagePopupPrefab, damage);
-                        }
                     }
                     targetDescriptions.Add(
                         target.name + " (BoardSlot " + (target.boardSlotIndex + 1) +
-                        ", DEF " + target.defense + "): " + damage);
+                        ", DEF " + target.defense + ")");
                 }
 
+                int totalDamage = CalculateBattleDamage(
+                    enemy.attack,
+                    enemyAttack.targets.Count > 0 ? totalDefense : 0);
                 SetBattleLog(totalDamage + "のダメージを与えた！");
 
                 int blockDamage = Mathf.Min(Block, totalDamage);
                 Block -= blockDamage;
+                UpdateBlockCountUI();
                 int hpDamage = Mathf.Max(0, totalDamage - blockDamage);
                 int previousPlayerHealth = player.hp;
                 player.hp = Mathf.Max(0, player.hp - hpDamage);
@@ -609,14 +722,23 @@ public class BattleManager : MonoBehaviour
 
                 string targetDescription = enemyAttack.targets.Count > 0
                     ? string.Join(", ", targetDescriptions.ToArray())
-                    : "no character (attack ends)";
+                    : "no character (direct attack on player)";
                 Debug.Log(
                     enemy.name + " uses " + enemyAttack.data.targetId + " (" +
                     enemyAttack.data.targetText + ") against " + targetDescription +
-                    ": total damage " + totalDamage + " (Block absorbed " +
+                    ": ATK " + enemy.attack + ", total target DEF " + totalDefense +
+                    ", damage " + totalDamage + " (Block absorbed " +
                     blockDamage + ", HP damage " + actualHpDamage +
                     "), Player HP " + player.hp + ", Block " + Block + ".",
                     this);
+
+                ApplyEnemyEffects(
+                    enemy.enemyData.ae,
+                    enemy,
+                    enemy,
+                    enemyAttack.targets,
+                    effectDataById,
+                    enemyManager);
 
                 if (player.hp == 0)
                 {
@@ -652,11 +774,24 @@ public class BattleManager : MonoBehaviour
 
     private int CountActiveAttributeSynergies(List<BattleUnit> playerUnits)
     {
-        Dictionary<string, int> attributeCounts = new Dictionary<string, int>();
+        List<CharacterData> characters = new List<CharacterData>();
         foreach (BattleUnit battleUnit in playerUnits)
         {
-            CharacterData character = battleUnit.boardSlot.placedCharacter.data;
-            if (character.attributes == null)
+            if (battleUnit.boardSlot != null &&
+                battleUnit.boardSlot.placedCharacter != null &&
+                battleUnit.boardSlot.placedCharacter.data != null)
+                characters.Add(battleUnit.boardSlot.placedCharacter.data);
+        }
+
+        return CountActiveAttributeSynergies(characters);
+    }
+
+    private int CountActiveAttributeSynergies(IEnumerable<CharacterData> characters)
+    {
+        Dictionary<string, int> attributeCounts = new Dictionary<string, int>();
+        foreach (CharacterData character in characters)
+        {
+            if (character == null || character.attributes == null)
                 continue;
 
             HashSet<string> attributesOnCharacter = new HashSet<string>();
@@ -761,19 +896,28 @@ public class BattleManager : MonoBehaviour
             !currentShopManager.IsUnitComplete(move.name) ||
             !AreUnitSlotsConnected(move.boardSlots, boardManager.columns));
 
-        List<UnitMove> completeUnitMoves = new List<UnitMove>(unitMoves);
-        unitMoves.RemoveAll(smallerMove =>
-        {
-            foreach (UnitMove largerMove in completeUnitMoves)
-            {
-                if (largerMove.rosterMembers.Count > smallerMove.rosterMembers.Count &&
-                    IsStrictSubset(smallerMove.rosterMembers, largerMove.rosterMembers))
-                    return true;
-            }
-            return false;
-        });
+        unitMoves.Sort(CompareUnitMovePriority);
 
         return unitMoves;
+    }
+
+    private int CompareUnitMovePriority(UnitMove left, UnitMove right)
+    {
+        int participantCountComparison =
+            right.participants.Count.CompareTo(left.participants.Count);
+        if (participantCountComparison != 0)
+            return participantCountComparison;
+
+        for (int i = 0; i < left.participants.Count; i++)
+        {
+            int slotComparison =
+                left.participants[i].boardSlotIndex.CompareTo(
+                    right.participants[i].boardSlotIndex);
+            if (slotComparison != 0)
+                return slotComparison;
+        }
+
+        return string.CompareOrdinal(left.name, right.name);
     }
 
     private bool CharacterHasUnit(CharacterData character, string unitName)
@@ -827,22 +971,6 @@ public class BattleManager : MonoBehaviour
         }
 
         return remaining.Count == 0;
-    }
-
-    private bool IsStrictSubset(
-        HashSet<CharacterData> candidate,
-        HashSet<CharacterData> container)
-    {
-        if (candidate.Count >= container.Count)
-            return false;
-
-        foreach (CharacterData character in candidate)
-        {
-            if (!container.Contains(character))
-                return false;
-        }
-
-        return true;
     }
 
     private List<UnitMove> FindAvailableUnitMoves(
@@ -908,7 +1036,7 @@ public class BattleManager : MonoBehaviour
                 EnemyFormationData.FormationSlot slot = formation.slots[i];
                 if (slot != null)
                 {
-                    gap = Mathf.Max(0, slot.gap);
+                    gap = Mathf.Max(0, slot.gap + enemyManager.GetBattleGapBonus(i));
                     cooldown = Mathf.Max(0, slot.cooldown);
                 }
             }
@@ -951,6 +1079,373 @@ public class BattleManager : MonoBehaviour
         }
 
         return targetDataById;
+    }
+
+    private Dictionary<string, EffectData> LoadEffectData()
+    {
+        Dictionary<string, EffectData> effectDataById =
+            new Dictionary<string, EffectData>(System.StringComparer.Ordinal);
+        EffectData[] effectDataAssets = Resources.LoadAll<EffectData>("EffectData");
+        foreach (EffectData effectData in effectDataAssets)
+        {
+            if (effectData == null || string.IsNullOrWhiteSpace(effectData.effectId))
+                continue;
+
+            if (effectDataById.ContainsKey(effectData.effectId))
+            {
+                Debug.LogError(
+                    "Duplicate EffectID found: " + effectData.effectId + ".",
+                    effectData);
+                continue;
+            }
+
+            effectDataById.Add(effectData.effectId, effectData);
+        }
+
+        return effectDataById;
+    }
+
+    private bool ValidateEnemyEffects(
+        List<BattleUnit> enemies,
+        Dictionary<string, EffectData> effectDataById)
+    {
+        foreach (BattleUnit enemy in enemies)
+        {
+            string[] effectLists =
+            {
+                enemy.enemyData.cip,
+                enemy.enemyData.ae,
+                enemy.enemyData.pig
+            };
+            for (int triggerIndex = 0; triggerIndex < effectLists.Length; triggerIndex++)
+            {
+                foreach (string effectId in GetEnemyEffectIds(effectLists[triggerIndex]))
+                {
+                    if (!effectDataById.TryGetValue(effectId, out EffectData effectData))
+                    {
+                        Debug.LogError(
+                            enemy.name + " references EffectID " + effectId +
+                            ", but no matching EffectData exists under Resources/EffectData.",
+                            enemy.enemyData);
+                        return false;
+                    }
+
+                    if (!IsValidEnemyEffect(effectData))
+                        return false;
+                    if (triggerIndex == 0 && effectData.target == "攻撃対象")
+                    {
+                        Debug.LogError(
+                            "CIP cannot target 攻撃対象 because no attack has occurred yet: " +
+                            effectData.effectId + ".",
+                            effectData);
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private bool IsValidEnemyEffect(EffectData effectData)
+    {
+        bool validDuration = effectData.duration == "このバトル中" ||
+                             effectData.duration == "即時効果";
+        bool targetsPlayer = effectData.target == "プレイヤー";
+        bool validEffectTarget =
+            (effectData.effect == "Attack" || effectData.effect == "Def") &&
+            (effectData.target == "攻撃者" || effectData.target == "攻撃対象") ||
+            effectData.effect == "Gap" &&
+            (effectData.target == "攻撃者" || effectData.target == "攻撃対象") ||
+            (effectData.effect == "Gold" || effectData.effect == "Damage" ||
+             effectData.effect == "Block") && targetsPlayer;
+
+        if (!validDuration || !validEffectTarget ||
+            (effectData.effect == "Gold" && effectData.duration != "即時効果") ||
+            (effectData.effect == "Gap" && effectData.target == "攻撃対象" &&
+             effectData.duration == "即時効果"))
+        {
+            Debug.LogError(
+                "Invalid EffectData configuration for EffectID " + effectData.effectId +
+                " (Effect: " + effectData.effect + ", Target: " + effectData.target +
+                ", Duration: " + effectData.duration + ").",
+                effectData);
+            return false;
+        }
+
+        return true;
+    }
+
+    private List<string> GetEnemyEffectIds(string effectValue)
+    {
+        List<string> effectIds = new List<string>();
+        if (string.IsNullOrWhiteSpace(effectValue))
+            return effectIds;
+
+        string[] values = effectValue.Split(
+            new[] { ',', ';', '|', '/', '、', ' ', '\t', '\r', '\n' },
+            System.StringSplitOptions.RemoveEmptyEntries);
+        foreach (string value in values)
+        {
+            string effectId = value.Trim();
+            if (!string.IsNullOrEmpty(effectId))
+                effectIds.Add(effectId);
+        }
+
+        return effectIds;
+    }
+
+    private void ApplyEnemyEffects(
+        string effectList,
+        BattleUnit effectOwner,
+        BattleUnit triggerActor,
+        List<BattleUnit> attackTargets,
+        Dictionary<string, EffectData> effectDataById,
+        EnemyManager enemyManager)
+    {
+        foreach (string effectId in GetEnemyEffectIds(effectList))
+        {
+            if (!effectDataById.TryGetValue(effectId, out EffectData effectData))
+            {
+                Debug.LogError("EffectID " + effectId + " was not loaded.", this);
+                continue;
+            }
+
+            ApplyEnemyEffect(
+                effectData, effectOwner, triggerActor, attackTargets, enemyManager);
+        }
+    }
+
+    private void ApplyEnemyEffect(
+        EffectData effectData,
+        BattleUnit effectOwner,
+        BattleUnit triggerActor,
+        List<BattleUnit> attackTargets,
+        EnemyManager enemyManager)
+    {
+        if (effectData == null)
+            return;
+
+        bool immediateEffect;
+        if (effectData.duration == "このバトル中")
+            immediateEffect = false;
+        else if (effectData.duration == "即時効果")
+            immediateEffect = true;
+        else
+        {
+            Debug.LogError(
+                "Unsupported duration '" + effectData.duration +
+                "' on EffectID " + effectData.effectId + ".",
+                effectData);
+            return;
+        }
+
+        Debug.Log(
+            "Enemy effect " + effectData.effectId + " activated: " +
+            effectData.description,
+            effectData);
+
+        string target = (effectData.target ?? string.Empty).Trim();
+        if (target == "プレイヤー")
+        {
+            ApplyEnemyEffectToPlayer(effectData, immediateEffect);
+            return;
+        }
+
+        List<BattleUnit> targets = target == "攻撃者"
+            ? new List<BattleUnit> { triggerActor ?? effectOwner }
+            : target == "攻撃対象" && attackTargets != null
+                ? attackTargets
+                : null;
+        if (targets == null)
+        {
+            Debug.LogError(
+                "Unsupported or unavailable target '" + effectData.target +
+                "' on EffectID " + effectData.effectId + ".",
+                effectData);
+            return;
+        }
+
+        foreach (BattleUnit targetUnit in targets)
+        {
+            if (targetUnit == null)
+                continue;
+
+            switch (effectData.effect)
+            {
+                case "Attack":
+                case "Def":
+                    ApplyEnemyEffectToUnit(
+                        targetUnit, effectData.effect, effectData.effectValue,
+                        immediateEffect, enemyManager, effectData);
+                    break;
+                case "Gap":
+                    if (targetUnit.enemyData != null)
+                    {
+                        targetUnit.gap = Mathf.Max(0, targetUnit.gap + effectData.effectValue);
+                        targetUnit.nextActionRound += Mathf.Max(0, effectData.effectValue);
+                        if (immediateEffect)
+                        {
+                            BoardSlot enemySlot = GetEnemyBoardSlot(
+                                enemyManager, targetUnit.enemySlotIndex);
+                            if (enemySlot == null ||
+                                !enemyManager.TryApplyItemEffect(
+                                    enemySlot, "Gap", effectData.effectValue, true))
+                                Debug.LogError(
+                                    "Could not apply permanent Gap effect to " + targetUnit.name + ".",
+                                    effectData);
+                        }
+                        enemyManager.RefreshEnemyBattleState(
+                            targetUnit.enemySlotIndex,
+                            targetUnit.health,
+                            targetUnit.gap,
+                            targetUnit.defense);
+                    }
+                    else
+                    {
+                        if (immediateEffect)
+                        {
+                            Debug.LogError(
+                                "Player-character Gap effects must use duration このバトル中: " +
+                                effectData.effectId + ".",
+                                effectData);
+                        }
+                        else
+                        {
+                            targetUnit.stunRounds += Mathf.Max(0, effectData.effectValue);
+                        }
+                    }
+                    break;
+                default:
+                    Debug.LogError(
+                        "Unsupported effect '" + effectData.effect +
+                        "' on EffectID " + effectData.effectId + ".",
+                        effectData);
+                    break;
+            }
+        }
+    }
+
+    private void ApplyEnemyEffectToPlayer(EffectData effectData, bool immediateEffect)
+    {
+        if (effectData.effect == "Gold")
+        {
+            if (!immediateEffect)
+                Debug.LogWarning(
+                    "Gold effects are persistent; set the duration to 即時効果 on " +
+                    effectData.effectId + ".",
+                    effectData);
+            player.gold = Mathf.Max(0, player.gold + effectData.effectValue);
+            player.UpdateGoldUI();
+            return;
+        }
+
+        if (effectData.effect == "Damage")
+        {
+            if (!ApplyPlayerItemEffect(effectData.effect, effectData.effectValue, immediateEffect))
+                Debug.LogError(
+                    "Could not apply " + effectData.effect +
+                    " to the player for EffectID " + effectData.effectId + ".",
+                    effectData);
+            return;
+        }
+
+        if (effectData.effect == "Block")
+        {
+            if (immediateEffect)
+                permanentPlayerBlockBonus += effectData.effectValue;
+            Block = Mathf.Max(0, Block + effectData.effectValue);
+            UpdateBlockCountUI();
+            return;
+        }
+
+        Debug.LogError(
+            "Effect '" + effectData.effect + "' cannot target the player for EffectID " +
+            effectData.effectId + ".",
+            effectData);
+    }
+
+    private void ApplyEnemyEffectToUnit(
+        BattleUnit target,
+        string effect,
+        int value,
+        bool immediateEffect,
+        EnemyManager enemyManager,
+        EffectData effectData)
+    {
+        if (target.enemyData != null)
+        {
+            if (immediateEffect)
+            {
+                BoardSlot enemySlot = GetEnemyBoardSlot(enemyManager, target.enemySlotIndex);
+                if (enemySlot == null ||
+                    !enemyManager.TryApplyItemEffect(enemySlot, effect, value, true))
+                {
+                    Debug.LogError(
+                        "Could not apply permanent " + effect + " effect to " + target.name + ".",
+                        effectData);
+                    return;
+                }
+            }
+
+            if (effect == "Attack")
+                target.attack += value;
+            else
+                target.defense += value;
+            enemyManager.RefreshEnemyBattleState(
+                target.enemySlotIndex,
+                target.health,
+                target.gap,
+                target.defense,
+                target.attack);
+            return;
+        }
+
+        if (target.boardSlot == null || target.boardSlot.placedCharacter == null)
+        {
+            Debug.LogError(
+                "Effect target has no player character for EffectID " + effectData.effectId + ".",
+                effectData);
+            return;
+        }
+
+        OwnedCharacter character = target.boardSlot.placedCharacter;
+        if (immediateEffect)
+        {
+            if (effect == "Attack")
+                character.attack += value;
+            else
+                character.defense += value;
+        }
+        else if (effect == "Attack")
+        {
+            character.battleAttackBonus += value;
+        }
+        else
+        {
+            character.battleDefenseBonus += value;
+        }
+
+        if (effect == "Attack")
+            target.attack += value;
+        else
+            target.defense += value;
+
+        BoardCharacter display =
+            target.boardSlot.GetComponentInChildren<BoardCharacter>(true);
+        if (display != null)
+            display.RefreshOwnedStats();
+
+        BoardManager.RefreshVisibleDetailPanels();
+    }
+
+    private BoardSlot GetEnemyBoardSlot(EnemyManager enemyManager, int slotIndex)
+    {
+        if (enemyManager == null || enemyManager.boardArea == null)
+            return null;
+
+        BoardSlot[] slots = enemyManager.boardArea.GetComponentsInChildren<BoardSlot>(true);
+        return slotIndex >= 0 && slotIndex < slots.Length ? slots[slotIndex] : null;
     }
 
     private bool ValidateEnemyTargets(
@@ -1044,7 +1539,8 @@ public class BattleManager : MonoBehaviour
             long totalWeight = 0;
             foreach (BattleUnit candidate in candidates)
             {
-                long weight = GetCandidateWeight(candidate, enemy, boardManager, enemyManager, rules);
+                long weight = GetCandidateWeight(
+                    candidate, enemy, playerUnits, boardManager, enemyManager, rules);
                 candidateWeights.Add(weight);
                 totalWeight += weight;
             }
@@ -1226,7 +1722,9 @@ public class BattleManager : MonoBehaviour
         for (int i = 2; i < parts.Length; i += 2)
         {
             bool validPosition = parts[i] == "後列" || parts[i] == "中列" || parts[i] == "前列" ||
-                                 parts[i] == "直線" || parts[i] == "else" ||
+                                 parts[i] == "直線" || parts[i] == "前方人数0" ||
+                                 parts[i] == "前方人数1" || parts[i] == "前方人数2" ||
+                                 parts[i] == "else" ||
                                  (int.TryParse(parts[i], out int cell) && cell >= 1 && cell <= 9);
             if (!validPosition || !int.TryParse(parts[i + 1], out int weight) || weight < 0)
                 return false;
@@ -1238,11 +1736,24 @@ public class BattleManager : MonoBehaviour
     private long GetCandidateWeight(
         BattleUnit candidate,
         BattleUnit enemy,
+        List<BattleUnit> playerUnits,
         BoardManager boardManager,
         EnemyManager enemyManager,
         List<TargetWeightRule> rules)
     {
-        return GetCandidateWeight(candidate.boardSlotIndex, enemy, boardManager, enemyManager, rules);
+        long? defaultWeight = null;
+        foreach (TargetWeightRule rule in rules)
+        {
+            if (rule.position == "else")
+            {
+                defaultWeight = rule.weight;
+                continue;
+            }
+            if (IsCandidateAtPosition(
+                    rule.position, candidate, playerUnits, enemy, boardManager, enemyManager))
+                return rule.weight;
+        }
+        return defaultWeight ?? 1;
     }
 
     private long GetCandidateWeight(
@@ -1264,6 +1775,37 @@ public class BattleManager : MonoBehaviour
                 return rule.weight;
         }
         return defaultWeight ?? 1;
+    }
+
+    private bool IsCandidateAtPosition(
+        string position,
+        BattleUnit candidate,
+        List<BattleUnit> playerUnits,
+        BattleUnit enemy,
+        BoardManager boardManager,
+        EnemyManager enemyManager)
+    {
+        if (position == "前方人数0" || position == "前方人数1" || position == "前方人数2")
+        {
+            int columns = boardManager.columns;
+            if (columns <= 0)
+                return false;
+
+            int candidateColumn = candidate.boardSlotIndex % columns;
+            int candidateRow = candidate.boardSlotIndex / columns;
+            int frontCharacterCount = 0;
+            foreach (BattleUnit ally in playerUnits)
+            {
+                int allyColumn = ally.boardSlotIndex % columns;
+                int allyRow = ally.boardSlotIndex / columns;
+                if (allyRow == candidateRow && allyColumn > candidateColumn)
+                    frontCharacterCount++;
+            }
+            return position == "前方人数" + frontCharacterCount;
+        }
+
+        return IsCandidateAtPosition(
+            position, candidate.boardSlotIndex, enemy, boardManager, enemyManager);
     }
 
     private bool IsCandidateAtPosition(
@@ -1301,6 +1843,42 @@ public class BattleManager : MonoBehaviour
         return Mathf.Max(0, attack - defense);
     }
 
+    private void ReduceEnemyDefenseUntilEnemyTurn(
+        BattleUnit enemy,
+        int reductionAmount = 1)
+    {
+        if (enemy == null ||
+            enemy.enemyData == null ||
+            reductionAmount <= 0 ||
+            enemy.defense <= 0)
+            return;
+
+        int actualReduction = Mathf.Min(enemy.defense, reductionAmount);
+        enemy.defense -= actualReduction;
+        enemy.temporaryDefenseReduction += actualReduction;
+    }
+
+    private void RestoreTemporaryEnemyDefenseReductions(
+        List<BattleUnit> enemies,
+        EnemyManager enemyManager)
+    {
+        foreach (BattleUnit enemy in enemies)
+        {
+            if (enemy == null || enemy.enemyData == null ||
+                enemy.temporaryDefenseReduction <= 0)
+                continue;
+
+            enemy.defense += enemy.temporaryDefenseReduction;
+            enemy.temporaryDefenseReduction = 0;
+            enemyManager.RefreshEnemyBattleState(
+                enemy.enemySlotIndex,
+                enemy.health,
+                enemy.gap,
+                enemy.defense,
+                enemy.attack);
+        }
+    }
+
     private IEnumerator WaitForAutoDefeatLog(System.Func<float> getShownAt)
     {
         if (playbackMode != BattlePlaybackMode.Auto)
@@ -1314,19 +1892,25 @@ public class BattleManager : MonoBehaviour
             yield return new WaitForSecondsRealtime(remainingTime);
     }
 
-    public bool ApplyPlayerItemEffect(string effect, int value)
+    public bool ApplyPlayerItemEffect(string effect, int value, bool immediateEffect = false)
     {
         if (effect == "Damage")
         {
             int previousHp = player.hp;
-            player.hp = Mathf.Max(0, player.hp - value);
-            pendingPlayerHpDelta += player.hp - previousHp;
+            player.hp = Mathf.Clamp(player.hp - value, 0, player.InitialHp);
+            if (!immediateEffect)
+                pendingPlayerHpDelta += player.hp - previousHp;
             player.UpdateHPUI();
             return true;
         }
         if (effect == "Block")
         {
-            pendingPlayerBlockBonus += value;
+            if (immediateEffect)
+                permanentPlayerBlockBonus += value;
+            else
+                pendingPlayerBlockBonus += value;
+            if (battleCoroutine == null)
+                RefreshPreBattleBlockCount();
             return true;
         }
         return false;
@@ -1349,15 +1933,17 @@ public class BattleManager : MonoBehaviour
                 if (slot == null || slot.placedCharacter == null) continue;
                 slot.placedCharacter.battleAttackBonus = 0;
                 slot.placedCharacter.battleDefenseBonus = 0;
+                slot.placedCharacter.RevertTemporaryStar();
                 BoardCharacter display = slot.GetComponentInChildren<BoardCharacter>(true);
                 if (display != null) display.RefreshOwnedStats();
             }
         }
         EnemyManager enemyManager = FindAnyObjectByType<EnemyManager>();
         if (enemyManager != null)
-            enemyManager.ResetItemBonuses(refreshSlots: !won);
+            enemyManager.ResetBattleItemBonuses(refreshSlots: !won);
         player?.UpdateHPUI();
         Block = 0;
+        UpdateBlockCountUI();
 
         if (won)
         {

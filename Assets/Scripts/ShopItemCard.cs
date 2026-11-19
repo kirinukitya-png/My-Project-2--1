@@ -33,6 +33,12 @@ public class ShopItemCard : MonoBehaviour, IPointerClickHandler, IBeginDragHandl
         if (priceText == null) priceText = FindText("CostText", "PriceText", "ItemPriceText");
         descriptionText = FindText("DescriptionText", "ItemDescriptionText");
 
+        Transform panel = FindDeep(transform, "Panel");
+        if (panel != null)
+            panel.gameObject.SetActive(false);
+        else
+            Debug.LogWarning("Panel was not found on the item shop card.", this);
+
         if (iconImage != null) iconImage.sprite = item.icon;
         if (nameText != null) nameText.text = item.itemName;
         if (priceText != null) priceText.text = item.purchasePrice.ToString();
@@ -51,10 +57,6 @@ public class ShopItemCard : MonoBehaviour, IPointerClickHandler, IBeginDragHandl
             if (manager != null) manager.ShowItemDetail(itemData);
             return;
         }
-        if (eventData.button != PointerEventData.InputButton.Left) return;
-        ShopSlot slot = GetComponentInParent<ShopSlot>();
-        if (slot != null && manager != null)
-            manager.SelectShopItem(itemData, slot);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -64,7 +66,7 @@ public class ShopItemCard : MonoBehaviour, IPointerClickHandler, IBeginDragHandl
         BoardManager manager = FindAnyObjectByType<BoardManager>();
         if (slot == null || manager == null) return;
 
-        manager.SelectShopItem(itemData, slot);
+        manager.SelectShopItem(itemData, slot, clearCharacterDetail: false);
         isDragging = true;
         dragPreviewSession = UIDragCardPreview.Begin(gameObject, eventData);
     }
@@ -86,12 +88,12 @@ public class ShopItemCard : MonoBehaviour, IPointerClickHandler, IBeginDragHandl
         HandSlot handSlot = target != null ? target.GetComponentInParent<HandSlot>() : null;
         if (handSlot != null)
         {
-            manager.BuySelectedShopItemToHand(handSlot);
+            manager.BuySelectedShopItemToHand(handSlot, clearCharacterDetail: false);
             return;
         }
         BoardSlot boardSlot = target != null ? target.GetComponentInParent<BoardSlot>() : null;
         if (boardSlot != null)
-            manager.BuySelectedShopItemToFirstEmptyHandSlot();
+            manager.BuySelectedShopItemToFirstEmptyHandSlot(clearCharacterDetail: false);
     }
 
     private Image FindImage(params string[] names)

@@ -36,7 +36,10 @@ public class BoardSlot : MonoBehaviour
         placedCharacter = null;
 
         if (enemyData == null)
+        {
+            BoardManager.RefreshVisibleDetailPanels();
             return;
+        }
 
         if (boardCharacterPrefab == null)
         {
@@ -56,6 +59,8 @@ public class BoardSlot : MonoBehaviour
         }
 
         boardCharacter.SetEnemyCharacter(enemyData, enemyFrameSprite, enemyDetailPanel, gap, attackBonus, defenseBonus, healthBonus);
+        boardCharacter.SetBoardSlot(this);
+        BoardManager.RefreshVisibleDetailPanels();
     }
 
     public void SetAcceptsPlayerCharacters(bool accepts)
@@ -72,6 +77,7 @@ public class BoardSlot : MonoBehaviour
         CreateCharacterVisual(
             character
         );
+        BoardManager.RefreshVisibleDetailPanels();
     }
 
     public void SetCharacterWithoutDataChange(
@@ -84,6 +90,7 @@ public class BoardSlot : MonoBehaviour
         CreateCharacterVisual(
             character
         );
+        BoardManager.RefreshVisibleDetailPanels();
     }
 
     public void ClearCharacterVisualOnly()
@@ -102,6 +109,7 @@ public class BoardSlot : MonoBehaviour
     {
         ClearCharacterVisualOnly();
         placedCharacter = null;
+        BoardManager.RefreshVisibleDetailPanels();
     }
 
     void CreateCharacterVisual(
@@ -130,72 +138,6 @@ public class BoardSlot : MonoBehaviour
 
     public void ClickSlot()
     {
-        if (!acceptsPlayerCharacters)
-            return;
-
-        BoardManager boardManager =
-            FindAnyObjectByType<BoardManager>();
-
-        if (boardManager == null)
-        {
-            Debug.LogError(
-                "BoardManager��������܂���I"
-            );
-
-            return;
-        }
-
-        // �莝���L�����N�^�[��I��
-        if (boardManager.selectionType ==
-            BoardManager.SelectionType.Hand)
-        {
-            if (boardManager.selectedHandSlot != null && boardManager.selectedHandSlot.itemData != null)
-                boardManager.UseHandItemOnBoard(boardManager.selectedHandSlot, this);
-            else
-                boardManager.PlaceSelectedHandCharacter(this);
-
-            return;
-        }
-
-        // �ՖʃL�����N�^�[��I��
-        if (boardManager.selectionType ==
-            BoardManager.SelectionType.Board)
-        {
-            if (boardManager.selectedBoardSlot ==
-                this)
-            {
-                boardManager.ClearSelection();
-
-                Debug.Log(
-                    "�I�����������܂����B"
-                );
-
-                return;
-            }
-
-            boardManager.MoveCharacter(
-                boardManager.selectedBoardSlot,
-                this
-            );
-
-            return;
-        }
-
-        // �V���b�v�L�����N�^�[��I��
-        if (boardManager.selectionType ==
-            BoardManager.SelectionType.Shop)
-        {
-            if (boardManager.selectedShopItem != null)
-                boardManager.BuySelectedShopItemToFirstEmptyHandSlot();
-            else
-                boardManager.BuySelectedShopCharacterToBoard(this);
-
-            return;
-        }
-
-        // �����I�����Ă��Ȃ�
-        // �󂫃}�X�Ȃ牽�����Ȃ�
-        // �L�����N�^�[������ꍇ����
-        // BoardCharacter������I�������
+        // Kept for existing Unity Button bindings; board transfers use drag-and-drop.
     }
 }

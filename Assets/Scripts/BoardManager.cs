@@ -34,6 +34,18 @@ public class BoardManager : MonoBehaviour
     [Header("現在の選択")]
     public SelectionType selectionType =
         SelectionType.None;
+    public bool IsShowingCharacterDetailOnly { get; private set; }
+    public bool IsSellButtonSuppressedAfterDrag { get; private set; }
+
+    public void NotifyCharacterDragStarted()
+    {
+        IsSellButtonSuppressedAfterDrag = false;
+    }
+
+    public void NotifyCharacterDragEnded()
+    {
+        IsSellButtonSuppressedAfterDrag = true;
+    }
 
     // 手持ちから選択中
     public HandSlot selectedHandSlot;
@@ -93,6 +105,8 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
+        IsSellButtonSuppressedAfterDrag = false;
+
         // すでに手持ちキャラクターを選択中
         if (selectionType ==
             SelectionType.Hand)
@@ -145,11 +159,16 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
+        if (characterDetailPanel != null &&
+            characterDetailPanel.TryToggleUnitAttributeFor(character))
+            return;
+
         HideItemDetailPanel();
         ClearSelection();
 
         selectionType =
             SelectionType.Hand;
+        IsShowingCharacterDetailOnly = true;
 
         selectedHandSlot =
             handSlot;
@@ -164,7 +183,7 @@ public class BoardManager : MonoBehaviour
 
 
     // 手持ちキャラクターを移動・交換
-    public void MoveHandCharacter(HandSlot fromSlot, HandSlot toSlot)
+    public void MoveHandCharacter(HandSlot fromSlot, HandSlot toSlot, bool clearCharacterDetail = true)
     {
         if (fromSlot == null || toSlot == null || fromSlot == toSlot || fromSlot.IsEmpty())
             return;
@@ -184,14 +203,15 @@ public class BoardManager : MonoBehaviour
         if (fromCharacter != null) toSlot.SetCharacter(fromCharacter);
         else if (fromItem != null) toSlot.SetItem(fromItem);
 
-        ClearSelection();
+        ClearSelection(clearCharacterDetail);
     }
 
 
     // 手持ち → 盤面
     // 空きなら移動、キャラクターがいれば交換
     public void PlaceSelectedHandCharacter(
-        BoardSlot slot)
+        BoardSlot slot,
+        bool clearCharacterDetail = true)
     {
         if (selectedHandSlot == null)
         {
@@ -247,7 +267,7 @@ public class BoardManager : MonoBehaviour
                 " を手持ちから盤面へ配置しました！"
             );
 
-            ClearSelection();
+            ClearSelection(clearCharacterDetail);
 
             return;
         }
@@ -277,7 +297,7 @@ public class BoardManager : MonoBehaviour
             " を手持ちと盤面で交換しました！"
         );
 
-        ClearSelection();
+        ClearSelection(clearCharacterDetail);
     }
 
 
@@ -294,6 +314,8 @@ public class BoardManager : MonoBehaviour
         {
             return;
         }
+
+        IsSellButtonSuppressedAfterDrag = false;
 
         // すでに盤面キャラクターを選択中
         if (selectionType ==
@@ -346,11 +368,16 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
+        if (characterDetailPanel != null &&
+            characterDetailPanel.TryToggleUnitAttributeFor(slot.placedCharacter))
+            return;
+
         HideItemDetailPanel();
         ClearSelection();
 
         selectionType =
             SelectionType.Board;
+        IsShowingCharacterDetailOnly = true;
 
         selectedBoardSlot =
             slot;
@@ -366,7 +393,7 @@ public class BoardManager : MonoBehaviour
 
     // 盤面キャラクターを移動
     // または交換
-    public void MoveCharacter(BoardSlot fromSlot, BoardSlot toSlot)
+    public void MoveCharacter(BoardSlot fromSlot, BoardSlot toSlot, bool clearCharacterDetail = true)
     {
         if (fromSlot == null || toSlot == null ||
             !fromSlot.acceptsPlayerCharacters || !toSlot.acceptsPlayerCharacters ||
@@ -378,10 +405,10 @@ public class BoardManager : MonoBehaviour
             OwnedCharacter character = fromSlot.placedCharacter;
             fromSlot.ClearCharacterVisual();
             toSlot.PlaceCharacter(character);
-            ClearSelection();
+            ClearSelection(clearCharacterDetail);
             return;
         }
-        SwapCharacters(fromSlot, toSlot);
+        SwapCharacters(fromSlot, toSlot, clearCharacterDetail);
     }
 
 
@@ -451,7 +478,8 @@ public class BoardManager : MonoBehaviour
     // 盤面キャラクターを交換
     public void SwapCharacters(
         BoardSlot slotA,
-        BoardSlot slotB)
+        BoardSlot slotB,
+        bool clearCharacterDetail = true)
     {
         if (slotA == null ||
             slotB == null)
@@ -486,14 +514,15 @@ public class BoardManager : MonoBehaviour
             " を交換しました！"
         );
 
-        ClearSelection();
+        ClearSelection(clearCharacterDetail);
     }
 
 
     // 盤面 → 手持ち
     // 空きなら移動、キャラクターがいれば交換
     public void ReturnSelectedBoardCharacterToHand(
-        HandSlot handSlot)
+        HandSlot handSlot,
+        bool clearCharacterDetail = true)
     {
         if (selectedBoardSlot == null)
         {
@@ -531,7 +560,7 @@ public class BoardManager : MonoBehaviour
                 " を盤面から手持ちへ移動しました！"
             );
 
-            ClearSelection();
+            ClearSelection(clearCharacterDetail);
 
             return;
         }
@@ -572,7 +601,7 @@ public class BoardManager : MonoBehaviour
             " を盤面と手持ちで交換しました！"
         );
 
-        ClearSelection();
+        ClearSelection(clearCharacterDetail);
     }
 
 
@@ -609,16 +638,16 @@ public class BoardManager : MonoBehaviour
         );
     }
 
-    public void SelectShopItem(ItemData item, ShopSlot sourceSlot)
+    public void SelectShopItem(ItemData item, ShopSlot sourceSlot, bool clearCharacterDetail = true)
     {
         if (item == null || sourceSlot == null) return;
-        ClearSelection();
+        ClearSelection(clearCharacterDetail);
         selectionType = SelectionType.Shop;
         selectedShopItem = item;
         selectedShopItemSlot = sourceSlot;
     }
 
-    public void BuySelectedShopItemToHand(HandSlot handSlot)
+    public void BuySelectedShopItemToHand(HandSlot handSlot, bool clearCharacterDetail = true)
     {
         if (selectedShopItem == null || selectedShopItemSlot == null ||
             handSlot == null || !handSlot.IsEmpty())
@@ -642,7 +671,7 @@ public class BoardManager : MonoBehaviour
         player.UpdateGoldUI();
         handSlot.SetItem(item);
         sourceSlot.ClearCharacter();
-        ClearSelection();
+        ClearSelection(clearCharacterDetail);
     }
 
     public HandSlot FindEmptyHandSlot()
@@ -651,19 +680,20 @@ public class BoardManager : MonoBehaviour
         return manager != null ? manager.FindEmptySlot() : null;
     }
 
-    public bool BuySelectedShopItemToFirstEmptyHandSlot()
+    public bool BuySelectedShopItemToFirstEmptyHandSlot(bool clearCharacterDetail = true)
     {
         HandSlot slot = FindEmptyHandSlot();
         if (slot == null || selectedShopItem == null || selectedShopItemSlot == null) return false;
-        BuySelectedShopItemToHand(slot);
+        BuySelectedShopItemToHand(slot, clearCharacterDetail);
         return slot.itemData != null;
     }
 
-    public bool UseHandItemOnBoard(HandSlot handSlot, BoardSlot dropSlot)
+    public bool UseHandItemOnBoard(HandSlot handSlot, BoardSlot dropSlot, bool clearCharacterDetail = true)
     {
         if (handSlot == null || handSlot.itemData == null || dropSlot == null) return false;
         ItemData item = handSlot.itemData;
         if (!TryResolveItemTarget(item.target, out string targetType)) return false;
+        if (!TryResolveItemDuration(item.duration, out bool immediateEffect)) return false;
         bool playerBoard = dropSlot.acceptsPlayerCharacters && boardArea != null && dropSlot.transform.IsChildOf(boardArea);
         EnemyManager enemyManager = FindAnyObjectByType<EnemyManager>();
         bool enemyBoard = enemyManager != null && enemyManager.boardArea != null && dropSlot.transform.IsChildOf(enemyManager.boardArea);
@@ -685,19 +715,39 @@ public class BoardManager : MonoBehaviour
 
         bool applied = false;
         for (int i = 0; i < item.effects.Length; i++)
-            applied |= ApplyItemEffectToTarget(targetType, dropSlot, item.effects[i], item.effectValues[i], enemyManager);
+            applied |= ApplyItemEffectToTarget(targetType, dropSlot, item.effects[i], item.effectValues[i], enemyManager, immediateEffect);
         if (!applied) return false;
+        RefreshVisibleDetailPanels();
         handSlot.RemoveItem();
-        ClearSelection();
+        ClearSelection(clearCharacterDetail);
         return true;
+    }
+
+    private bool TryResolveItemDuration(string duration, out bool immediateEffect)
+    {
+        string value = (duration ?? string.Empty).Trim();
+        if (value == "このバトル中")
+        {
+            immediateEffect = false;
+            return true;
+        }
+        if (value == "即時効果")
+        {
+            immediateEffect = true;
+            return true;
+        }
+
+        immediateEffect = false;
+        Debug.LogWarning("未対応のItem持続期間です: " + duration, this);
+        return false;
     }
 
     private bool TryResolveItemTarget(string target, out string resolved)
     {
         string value = (target ?? string.Empty).Trim();
-        if (value == "味方1体" || value == "Ally" || value == "OneAlly") resolved = "Ally";
+        if (value == "味方" || value == "味方1体" || value == "Ally" || value == "OneAlly") resolved = "Ally";
         else if (value == "全ての味方" || value == "すべての味方" || value == "Allies" || value == "AllAllies") resolved = "Allies";
-        else if (value == "敵1体" || value == "Enemy" || value == "OneEnemy") resolved = "Enemy";
+        else if (value == "敵" || value == "敵1体" || value == "Enemy" || value == "OneEnemy") resolved = "Enemy";
         else if (value == "全ての敵" || value == "すべての敵" || value == "Enemies" || value == "AllEnemies") resolved = "Enemies";
         else if (value == "プレイヤー" || value == "Player") resolved = "Player";
         else { resolved = null; Debug.LogWarning("未対応のItem対象です: " + target, this); }
@@ -706,46 +756,79 @@ public class BoardManager : MonoBehaviour
 
     private bool IsItemEffectSupported(string target, string effect)
     {
-        if (target == "Ally" || target == "Allies") return effect == "Attack" || effect == "Def";
-        if (target == "Enemy" || target == "Enemies") return effect == "Attack" || effect == "Def" || effect == "Damage";
+        if (target == "Ally") return effect == "Attack" || effect == "Def" || effect == "Star";
+        if (target == "Allies") return effect == "Attack" || effect == "Def";
+        if (target == "Enemy") return effect == "Attack" || effect == "Def" || effect == "Damage" || effect == "Gap";
+        if (target == "Enemies") return effect == "Attack" || effect == "Def" || effect == "Damage";
         if (target == "Player") return effect == "Damage" || effect == "Block";
         return false;
     }
 
-    private bool ApplyItemEffectToTarget(string target, BoardSlot dropSlot, string effect, int value, EnemyManager enemies)
+    private bool ApplyItemEffectToTarget(string target, BoardSlot dropSlot, string effect, int value, EnemyManager enemies, bool immediateEffect)
     {
-        if (target == "Ally") return ApplyItemEffectToCharacter(dropSlot.placedCharacter, effect, value, dropSlot);
+        if (target == "Ally") return ApplyItemEffectToCharacter(dropSlot.placedCharacter, effect, value, dropSlot, immediateEffect);
         if (target == "Allies")
         {
             bool any = false;
             foreach (BoardSlot slot in boardArea.GetComponentsInChildren<BoardSlot>(true))
-                if (slot != null && !slot.IsEmpty()) any |= ApplyItemEffectToCharacter(slot.placedCharacter, effect, value, slot);
+                if (slot != null && !slot.IsEmpty()) any |= ApplyItemEffectToCharacter(slot.placedCharacter, effect, value, slot, immediateEffect);
             return any;
         }
-        if (target == "Enemy") return enemies != null && enemies.TryApplyItemEffect(dropSlot, effect, value);
-        if (target == "Enemies") return enemies != null && enemies.ApplyItemEffectToAllEnemies(effect, value);
+        if (target == "Enemy") return enemies != null && enemies.TryApplyItemEffect(dropSlot, effect, value, immediateEffect);
+        if (target == "Enemies") return enemies != null && enemies.ApplyItemEffectToAllEnemies(effect, value, immediateEffect);
         if (target == "Player")
         {
             BattleManager battle = FindAnyObjectByType<BattleManager>();
-            return battle != null && battle.ApplyPlayerItemEffect(effect, value);
+            return battle != null && battle.ApplyPlayerItemEffect(effect, value, immediateEffect);
         }
         return false;
     }
 
-    private bool ApplyItemEffectToCharacter(OwnedCharacter character, string effect, int value, BoardSlot slot)
+    private bool ApplyItemEffectToCharacter(OwnedCharacter character, string effect, int value, BoardSlot slot, bool immediateEffect)
     {
         if (character == null || character.data == null) return false;
-        if (effect == "Attack") character.battleAttackBonus += value;
-        else if (effect == "Def") character.battleDefenseBonus += value;
+        if (effect == "Attack")
+        {
+            if (immediateEffect) character.attack += value;
+            else character.battleAttackBonus += value;
+        }
+        else if (effect == "Def")
+        {
+            if (immediateEffect) character.defense += value;
+            else character.battleDefenseBonus += value;
+        }
+        else if (effect == "Star")
+        {
+            if (value < 1 || value > 3)
+            {
+                Debug.LogWarning(
+                    "ItemのStar効果値は1から3で指定してください: " + value,
+                    character.data);
+                return false;
+            }
+
+            if (value != character.star &&
+                !(immediateEffect
+                    ? character.TrySetStar(value, CharacterStatSettings.FindForCurrentScene())
+                    : character.TrySetTemporaryStar(value, CharacterStatSettings.FindForCurrentScene())))
+            {
+                return false;
+            }
+
+            slot.SetCharacterWithoutDataChange(character);
+            return true;
+        }
         else return false;
         BoardCharacter display = slot.GetComponentInChildren<BoardCharacter>(true);
         if (display != null) display.RefreshOwnedStats();
+        RefreshVisibleDetailPanels();
         return true;
     }
 
     public void SelectHandItem(HandSlot handSlot)
     {
         if (handSlot == null || handSlot.itemData == null) return;
+        IsSellButtonSuppressedAfterDrag = false;
         ClearSelection();
         selectionType = SelectionType.Hand;
         selectedHandSlot = handSlot;
@@ -760,11 +843,16 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
+        if (characterDetailPanel != null &&
+            characterDetailPanel.TryToggleUnitAttributeFor(character))
+            return;
+
         HideItemDetailPanel();
         ClearSelection();
 
         selectionType =
             SelectionType.Shop;
+        IsShowingCharacterDetailOnly = true;
 
         selectedShopCharacter =
             character;
@@ -782,7 +870,8 @@ public class BoardManager : MonoBehaviour
 
     // ショップ → 手持ち
     public void BuySelectedShopCharacterToHand(
-    HandSlot handSlot)
+    HandSlot handSlot,
+    bool clearCharacterDetail = true)
     {
         if (selectedShopCharacter == null ||
             handSlot == null)
@@ -855,7 +944,7 @@ public class BoardManager : MonoBehaviour
                 " を購入して合成しました！"
             );
 
-            ClearSelection();
+            ClearSelection(clearCharacterDetail);
 
             return;
         }
@@ -902,13 +991,14 @@ public class BoardManager : MonoBehaviour
             shopSlot.ClearCharacter();
         }
 
-        ClearSelection();
+        ClearSelection(clearCharacterDetail);
     }
 
 
     // ショップ → 直接盤面
     public void BuySelectedShopCharacterToBoard(
-     BoardSlot slot)
+     BoardSlot slot,
+     bool clearCharacterDetail = true)
     {
         if (selectedShopCharacter == null ||
             slot == null)
@@ -985,7 +1075,7 @@ public class BoardManager : MonoBehaviour
                 " を購入して合成しました！"
             );
 
-            ClearSelection();
+            ClearSelection(clearCharacterDetail);
 
             return;
         }
@@ -1050,7 +1140,7 @@ public class BoardManager : MonoBehaviour
             shopSlot.ClearCharacter();
         }
 
-        ClearSelection();
+        ClearSelection(clearCharacterDetail);
     }
 
 
@@ -1058,8 +1148,9 @@ public class BoardManager : MonoBehaviour
     // 選択解除
     // =========================================================
 
-    public void ClearSelection()
+    public void ClearSelection(bool clearCharacterDetail = true)
     {
+        IsShowingCharacterDetailOnly = false;
         selectionType =
             SelectionType.None;
 
@@ -1073,7 +1164,7 @@ public class BoardManager : MonoBehaviour
         selectedShopItem = null;
         selectedShopItemSlot = null;
 
-        if (characterDetailPanel != null)
+        if (clearCharacterDetail && characterDetailPanel != null)
         {
             characterDetailPanel.Clear();
         }
@@ -1162,6 +1253,30 @@ public class BoardManager : MonoBehaviour
             : FindAnyObjectByType<EnemyDetailPanel>(FindObjectsInactive.Include);
         if (enemyPanel != null) enemyPanel.Hide();
         HideItemDetailPanel();
+    }
+
+    public static void RefreshVisibleDetailPanels()
+    {
+        foreach (CharacterDetailPanel panel in FindObjectsByType<CharacterDetailPanel>(
+                     FindObjectsInactive.Include))
+        {
+            if (panel != null && panel.gameObject.activeInHierarchy)
+                panel.RefreshDisplayedContent();
+        }
+
+        foreach (ItemDetailPanel panel in FindObjectsByType<ItemDetailPanel>(
+                     FindObjectsInactive.Include))
+        {
+            if (panel != null && panel.gameObject.activeInHierarchy)
+                panel.RefreshDisplayedContent();
+        }
+
+        foreach (EnemyDetailPanel panel in FindObjectsByType<EnemyDetailPanel>(
+                     FindObjectsInactive.Include))
+        {
+            if (panel != null && panel.gameObject.activeInHierarchy)
+                panel.RefreshDisplayedContent();
+        }
     }
 
     public void UpdateCharacterDetail()

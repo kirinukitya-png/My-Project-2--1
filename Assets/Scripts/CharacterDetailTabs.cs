@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class CharacterDetailTabs : MonoBehaviour
 {
-    [Header("ƒ^ƒu“à—e")]
+    [Header("ã‚¿ãƒ–å†…å®¹")]
     public GameObject basicPanel;
     public GameObject unitList;
     public GameObject attributePanel;
@@ -121,5 +121,22 @@ public class CharacterDetailTabs : MonoBehaviour
         unitList.SetActive(false);
         attributePanel.SetActive(true);
         SetSelectedTab(TabKind.Attribute);
+    }
+
+    public bool ToggleUnitAttribute()
+    {
+        if (unitList != null && unitList.activeSelf)
+        {
+            ShowAttribute();
+            return true;
+        }
+
+        if (attributePanel != null && attributePanel.activeSelf)
+        {
+            ShowUnit();
+            return true;
+        }
+
+        return false;
     }
 }

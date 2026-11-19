@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class UnitButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler,
-    IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
+    IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     private string tagName;
     private bool isUnit;
@@ -64,15 +64,6 @@ public class UnitButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExit
     {
         if (hoverPanel != null)
             hoverPanel.Hide(this);
-    }
-
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        if (eventData.button != PointerEventData.InputButton.Left) return;
-
-        RosterBoardDisplay rosterBoard = FindAnyObjectByType<RosterBoardDisplay>();
-        if (rosterBoard != null)
-            rosterBoard.SelectCharactersByTag(tagName, isUnit);
     }
 
     public void OnBeginDrag(PointerEventData eventData)

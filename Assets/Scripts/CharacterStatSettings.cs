@@ -8,6 +8,7 @@ public class CharacterStatSettings : ScriptableObject
     {
         [Min(0)] public int attack;
         [Min(0)] public int defense;
+        [Min(0)] public int weight = 1;
     }
 
     [System.Serializable]
@@ -19,7 +20,7 @@ public class CharacterStatSettings : ScriptableObject
         public StarStats[] star3Options = new StarStats[0];
     }
 
-    [Tooltip("Costと★ごとのATK/DEF候補です。候補から個体ごとに1組を抽選します。")]
+    [Tooltip("Costと★ごとのATK/DEF候補と抽選重みです。")]
     public CostStats[] costs =
     {
         new CostStats
@@ -137,7 +138,49 @@ public class CharacterStatSettings : ScriptableObject
             return false;
         }
 
-        StarStats selected = options[Random.Range(0, options.Length)];
+        long totalWeight = 0;
+        foreach (StarStats option in options)
+        {
+            if (option == null)
+                continue;
+            if (option.weight < 0)
+            {
+                Debug.LogError(
+                    "Stat option weight cannot be negative for Cost " + cost + ", Star " + star + ".",
+                    this);
+                return false;
+            }
+            if (option.weight == 0)
+                continue;
+
+            totalWeight += option.weight;
+        }
+
+        if (totalWeight <= 0 || totalWeight > int.MaxValue)
+        {
+            Debug.LogError(
+                "Stat option weights must sum to a value between 1 and " +
+                int.MaxValue + " for Cost " + cost + ", Star " + star + ".",
+                this);
+            return false;
+        }
+
+        int roll = Random.Range(0, (int)totalWeight);
+        StarStats selected = null;
+        foreach (StarStats option in options)
+        {
+            if (option == null || option.weight <= 0)
+                continue;
+
+            if (roll < option.weight)
+            {
+                selected = option;
+                break;
+            }
+
+            roll -= option.weight;
+        }
+
         if (selected == null)
             return false;
 
@@ -169,7 +212,7 @@ public class CharacterStatSettings : ScriptableObject
 
         foreach (StarStats option in options)
         {
-            if (option == null)
+            if (option == null || option.weight <= 0)
                 continue;
 
             minimumAttack = Mathf.Min(minimumAttack, option.attack);
@@ -179,6 +222,29 @@ public class CharacterStatSettings : ScriptableObject
         }
 
         return minimumAttack != int.MaxValue;
+    }
+
+    public bool TryGetStatOptions(int cost, int star, out StarStats[] options)
+    {
+        CostStats costStats = FindCostStats(cost);
+        if (costStats == null)
+        {
+            options = null;
+            return false;
+        }
+
+        options = GetStarOptions(costStats, star);
+        if (options == null)
+            return false;
+
+        foreach (StarStats option in options)
+        {
+            if (option != null && option.weight > 0)
+                return true;
+        }
+
+        options = null;
+        return false;
     }
 
     public static CharacterStatSettings FindForCurrentScene()

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -15,6 +16,8 @@ public class ShopCard :
     public TMP_Text nameText;
     public TMP_Text costText;
     public TMP_Text starText;
+    public TMP_Text atkDefText;
+    public CharacterStatSettings characterStatSettings;
 
     [Header("Cost Sprites")]
     public Sprite cost1Sprite;
@@ -37,6 +40,9 @@ public class ShopCard :
     private void Awake()
     {
         cardImage = GetComponent<Image>();
+        if (atkDefText == null)
+            atkDefText = FindText("AtkDefText");
+
         Transform lightingTransform = transform.Find("Lighting");
         lightingPanel = lightingTransform != null
             ? lightingTransform.gameObject
@@ -66,6 +72,8 @@ public class ShopCard :
 
         starText.text =
             "STAR 1";
+
+        UpdateStatTexts(data.cost);
 
         switch (data.cost)
         {
@@ -118,12 +126,59 @@ public class ShopCard :
         nameText.text = "";
         costText.text = "";
         starText.text = "";
+        if (atkDefText != null)
+            atkDefText.text = "";
 
         iconImage.sprite = null;
         if (lightingPanel != null)
             lightingPanel.SetActive(false);
 
         gameObject.SetActive(false);
+    }
+
+    private void UpdateStatTexts(int cost)
+    {
+        if (atkDefText == null)
+        {
+            Debug.LogError("AtkDefText is not assigned or found on ShopCard.", this);
+            return;
+        }
+
+        if (characterStatSettings == null)
+            characterStatSettings = CharacterStatSettings.FindForCurrentScene();
+
+        if (characterStatSettings == null ||
+            !characterStatSettings.TryGetStatOptions(
+                cost,
+                1,
+                out CharacterStatSettings.StarStats[] options))
+        {
+            Debug.LogError(
+                "Character stat options are missing for Cost " + cost + ", Star 1.",
+                this);
+            return;
+        }
+
+        List<string> statLines = new List<string>();
+        foreach (CharacterStatSettings.StarStats option in options)
+        {
+            if (option != null && option.weight > 0)
+                statLines.Add(option.attack + " " + option.defense);
+        }
+
+        atkDefText.text = string.Join("\n", statLines);
+    }
+
+    private TMP_Text FindText(string childName)
+    {
+        TMP_Text[] texts = GetComponentsInChildren<TMP_Text>(true);
+        foreach (TMP_Text text in texts)
+        {
+            if (text.gameObject.name == childName)
+                return text;
+        }
+
+        return null;
     }
 
     private void UpdateLighting()
@@ -213,27 +268,12 @@ public class ShopCard :
         if (boardManager == null)
         {
             Debug.LogError(
-                "BoardManager��������܂���I"
+                "BoardManagerが見つかりません！"
             );
 
             return;
         }
 
-        // ���N���b�N
-        if (eventData.button ==
-            PointerEventData.InputButton.Left)
-        {
-            boardManager.SelectShopCharacter(
-                characterData,
-                this
-            );
-
-            return;
-        }
-
-        // �E�N���b�N
-        // �� ���N���b�N�Ɠ����I������
-        // �� �w���͂��Ȃ�
         if (eventData.button ==
             PointerEventData.InputButton.Right)
         {
@@ -262,11 +302,14 @@ public class ShopCard :
         }
 
         isDragging = true;
+        BoardManager boardManager = FindAnyObjectByType<BoardManager>();
+        if (boardManager != null)
+            boardManager.NotifyCharacterDragStarted();
         dragPreviewSession = UIDragCardPreview.Begin(gameObject, eventData);
 
         Debug.Log(
             characterData.characterName +
-            " �̃h���b�O���J�n���܂����B"
+            " のドラッグを開始しました。"
         );
     }
 
@@ -291,6 +334,11 @@ public class ShopCard :
         isDragging = false;
         UIDragCardPreview.End(ref dragPreviewSession);
 
+        BoardManager boardManager =
+            FindAnyObjectByType<BoardManager>();
+        if (boardManager != null)
+            boardManager.NotifyCharacterDragEnded();
+
         GameObject targetObject =
             eventData.pointerCurrentRaycast.gameObject;
 
@@ -302,16 +350,13 @@ public class ShopCard :
         if (UIDragCardPreview.IsRosterBoardTarget(targetObject))
             return;
 
-        BoardManager boardManager =
-            FindAnyObjectByType<BoardManager>();
-
         if (boardManager == null)
         {
             return;
         }
 
         // -----------------------------------------
-        // �V���b�v �� �莝��
+        // ショップ → 手持ち
         // -----------------------------------------
 
         HandSlot targetHandSlot =
@@ -321,7 +366,7 @@ public class ShopCard :
         {
           
 
-            boardManager.ClearSelection();
+            boardManager.ClearSelection(clearCharacterDetail: false);
 
             boardManager.selectionType =
                 BoardManager.SelectionType.Shop;
@@ -333,14 +378,15 @@ public class ShopCard :
                 this;
 
             boardManager.BuySelectedShopCharacterToHand(
-                targetHandSlot
+                targetHandSlot,
+                clearCharacterDetail: false
             );
 
             return;
         }
 
         // -----------------------------------------
-        // �V���b�v �� �Ֆ�
+        // ショップ → 盤面
         // -----------------------------------------
 
         BoardSlot targetBoardSlot =
@@ -350,7 +396,7 @@ public class ShopCard :
         {
            
 
-            boardManager.ClearSelection();
+            boardManager.ClearSelection(clearCharacterDetail: false);
 
             boardManager.selectionType =
                 BoardManager.SelectionType.Shop;
@@ -362,7 +408,8 @@ public class ShopCard :
                 this;
 
             boardManager.BuySelectedShopCharacterToBoard(
-                targetBoardSlot
+                targetBoardSlot,
+                clearCharacterDetail: false
             );
 
             return;

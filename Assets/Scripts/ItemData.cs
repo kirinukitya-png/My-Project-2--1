@@ -8,6 +8,7 @@ public class ItemData : ScriptableObject
     public Sprite icon;
     [Min(0)] public int purchasePrice;
     public string[] effects;
+    [Tooltip("各効果の数値です。Star効果の場合は変更先の★ (1～3) を指定します。")]
     public int[] effectValues;
     public string target;
     public string duration;

@@ -162,6 +162,19 @@ public class RosterBoardDisplay : MonoBehaviour
             return;
         }
 
+        DeckSaveLoad deckSaveLoad = GetComponent<DeckSaveLoad>();
+        if (deckSaveLoad == null)
+        {
+            ShowLaunchAnnouncement("編成保存機能が見つかりません。");
+            return;
+        }
+
+        if (!deckSaveLoad.TrySaveSelectedDeckForLaunch(out string saveError))
+        {
+            ShowLaunchAnnouncement(saveError);
+            return;
+        }
+
         ShopManager.SetPendingSelectedRoster(selectedRoster.ToArray());
         ShowLaunchAnnouncement(string.Empty);
         SceneManager.LoadScene(shopSceneName);
@@ -290,22 +303,14 @@ public class RosterBoardDisplay : MonoBehaviour
         }
 
         if (characterDetailPanel != null)
+        {
+            if (characterDetailPanel.TryToggleUnitAttributeFor(character))
+                return;
+
             characterDetailPanel.ShowShopCharacter(character);
+        }
         else
             Debug.LogWarning("CharacterDetailPanel is not assigned to RosterBoardDisplay or CharacterFullRosterListDisplay.", this);
-    }
-
-    public void HandleBoardSlotCardClick(RosterBoardSlot clickedSlot)
-    {
-        if (clickedSlot == null || clickedSlot.characterData == null) return;
-
-        if (selectedSourceSlot != null && selectedSourceSlot != clickedSlot)
-        {
-            PlaceSelectedCharacter(clickedSlot);
-            return;
-        }
-
-        SelectCharacterFromSlot(clickedSlot);
     }
 
     public void SelectCharacterFromSlot(RosterBoardSlot sourceSlot)

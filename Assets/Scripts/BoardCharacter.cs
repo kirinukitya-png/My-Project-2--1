@@ -51,6 +51,9 @@ public class BoardCharacter :
     private EnemyData enemyData;
     private EnemyDetailPanel enemyDetailPanel;
     private bool isEnemyCharacter;
+    private int enemyAttack;
+    private int enemyDefense;
+    private int enemyHealth;
 
     public void SetCharacter(
         OwnedCharacter character)
@@ -186,10 +189,13 @@ public class BoardCharacter :
         isEnemyCharacter = true;
         enemyData = enemy;
         enemyDetailPanel = detailPanel;
-        SetCombatStats(enemy.attack + attackBonus, enemy.defense + defenseBonus);
+        enemyAttack = enemy.attack + attackBonus;
+        enemyDefense = enemy.defense + defenseBonus;
+        enemyHealth = Mathf.Max(0, enemy.health + healthBonus);
+        SetCombatStats(enemyAttack, enemyDefense);
         SetEnemyHpVisible(true);
         if (hpText != null)
-            hpText.text = Mathf.Max(0, enemy.health + healthBonus).ToString();
+            hpText.text = enemyHealth.ToString();
         SetEnemyGapVisible(gap != 0);
         if (gapText != null)
             gapText.text = gap.ToString();
@@ -219,22 +225,47 @@ public class BoardCharacter :
             frameImage.sprite = enemyFrameSprite;
     }
 
-    public void RefreshEnemyBattleState(int currentHealth, int remainingGap, int currentDefense)
+    public void RefreshEnemyBattleState(
+        int currentHealth,
+        int remainingGap,
+        int currentDefense,
+        int currentAttack = -1)
     {
         if (!isEnemyCharacter)
             return;
 
+        enemyHealth = Mathf.Max(0, currentHealth);
+        enemyDefense = Mathf.Max(0, currentDefense);
+        if (currentAttack >= 0)
+            enemyAttack = currentAttack;
+
         SetEnemyHpVisible(true);
         if (hpText != null)
-            hpText.text = Mathf.Max(0, currentHealth).ToString();
+            hpText.text = enemyHealth.ToString();
 
         SetEnemyGapVisible(remainingGap > 0);
         if (gapText != null)
             gapText.text = Mathf.Max(0, remainingGap).ToString();
 
-        // DEF表示の更新
-        if (defText != null)
-            defText.text = Mathf.Max(0, currentDefense).ToString();
+        SetCombatStats(enemyAttack, enemyDefense);
+
+        BoardManager.RefreshVisibleDetailPanels();
+    }
+
+    public bool TryGetEnemyBattleStats(
+        out int currentAttack,
+        out int currentDefense,
+        out int currentHealth)
+    {
+        currentAttack = enemyAttack;
+        currentDefense = enemyDefense;
+        currentHealth = enemyHealth;
+        return isEnemyCharacter;
+    }
+
+    public bool IsDisplayingEnemy(EnemyData enemy)
+    {
+        return isEnemyCharacter && enemyData == enemy;
     }
 
     private void Awake()
@@ -517,8 +548,12 @@ public class BoardCharacter :
 
     public void RefreshOwnedStats()
     {
-        if (ownedCharacter != null && characterStatSettings != null)
+        if (ownedCharacter == null)
+            return;
+
+        if (characterStatSettings != null)
             SetCombatStats(ownedCharacter.GetAttack(characterStatSettings) + ownedCharacter.battleAttackBonus, ownedCharacter.GetDefense(characterStatSettings) + ownedCharacter.battleDefenseBonus);
+        SetStarImages(ownedCharacter.star);
     }
 
     private void SetCombatStats(int attack, int defense)
@@ -655,134 +690,43 @@ public class BoardCharacter :
             {
                 BoardManager manager = FindAnyObjectByType<BoardManager>();
                 if (manager != null) manager.HideCharacterAndItemDetails();
-                enemyDetailPanel.ShowEnemy(enemyData);
+                enemyDetailPanel.ShowEnemy(enemyData, boardSlot);
             }
 
             return;
         }
 
+        if (eventData.button != PointerEventData.InputButton.Right)
+            return;
+
+        BoardManager boardManager = FindAnyObjectByType<BoardManager>();
         if (handSlot != null)
         {
-            HandleHandPointerClick(eventData);
+            if (boardManager == null)
+            {
+                Debug.LogError("BoardManager was not found.", this);
+                return;
+            }
+            if (handSlot.itemData != null)
+                boardManager.ShowItemDetail(handSlot.itemData);
+            else if (handSlot.ownedCharacter != null)
+                boardManager.ShowHandCharacterDetail(handSlot.ownedCharacter, handSlot);
             return;
         }
 
         if (boardSlot == null)
         {
-            Debug.LogError(
-                "BoardSlotが設定されていません！"
-            );
-
+            Debug.LogError("BoardSlot is not assigned.", this);
             return;
         }
 
-        BoardManager boardManager =
-            FindAnyObjectByType<BoardManager>();
-
-        if (boardManager == null)
-        {
-            Debug.LogError(
-                "BoardManagerが見つかりません！"
-            );
-
-            return;
-        }
-
-        // 左クリック
-        if (eventData.button ==
-            PointerEventData.InputButton.Left)
-        {
-            // 手持ちキャラクターを選択
-            // → 盤面に設置
-            if (boardManager.selectionType ==
-                BoardManager.SelectionType.Hand)
-            {
-                boardManager.PlaceSelectedHandCharacter(
-                    boardSlot
-                );
-
-                return;
-            }
-
-            // ショップキャラクターを選択
-            // → 購入して盤面に設置
-            if (boardManager.selectionType ==
-                BoardManager.SelectionType.Shop)
-            {
-                boardManager.BuySelectedShopCharacterToBoard(
-                    boardSlot
-                );
-
-                return;
-            }
-
-            // 盤面キャラクターを選択
-            // → 移動または選択解除
-            if (boardManager.selectionType ==
-                BoardManager.SelectionType.Board)
-            {
-                if (boardManager.selectedBoardSlot ==
-                    boardSlot)
-                {
-                    boardManager.ClearSelection();
-
-                    Debug.Log(
-                        "盤面キャラクターの選択を解除しました。"
-                    );
-
-                    return;
-                }
-
-                boardManager.MoveCharacter(
-                    boardManager.selectedBoardSlot,
-                    boardSlot
-                );
-
-                return;
-            }
-
-            // 何も選択していない
-            // → この盤面キャラクターを選択
-            boardManager.SelectBoardCharacter(
-                boardSlot
-            );
-
-            return;
-        }
-
-        // 右クリック
-        if (eventData.button ==
-            PointerEventData.InputButton.Right)
-        {
-            boardManager.ShowBoardCharacterDetail(
-                boardSlot
-            );
-
-            return;
-        }
-    }
-
-    private void HandleHandPointerClick(PointerEventData eventData)
-    {
-        if (handSlot.IsEmpty())
-            return;
-
-        BoardManager boardManager = FindAnyObjectByType<BoardManager>();
         if (boardManager == null)
         {
             Debug.LogError("BoardManager was not found.", this);
             return;
         }
 
-        if (eventData.button == PointerEventData.InputButton.Left)
-            handSlot.ClickSlot();
-        else if (eventData.button == PointerEventData.InputButton.Right)
-        {
-            if (handSlot.itemData != null)
-                boardManager.ShowItemDetail(handSlot.itemData);
-            else if (handSlot.ownedCharacter != null)
-                boardManager.ShowHandCharacterDetail(handSlot.ownedCharacter, handSlot);
-        }
+        boardManager.ShowBoardCharacterDetail(boardSlot);
     }
 
     private bool isDragging = false;
@@ -807,8 +751,10 @@ public class BoardCharacter :
             return;
         }
 
+        boardManager.NotifyCharacterDragStarted();
+
         // ドラッグ中のキャラクターを選択状態にする
-        boardManager.ClearSelection();
+        boardManager.ClearSelection(clearCharacterDetail: false);
 
         if (handSlot != null)
         {
@@ -851,6 +797,11 @@ public class BoardCharacter :
         isDragging = false;
         UIDragCardPreview.End(ref dragPreviewSession);
 
+        BoardManager boardManager =
+            FindAnyObjectByType<BoardManager>();
+        if (boardManager != null)
+            boardManager.NotifyCharacterDragEnded();
+
         GameObject targetObject =
             eventData.pointerCurrentRaycast.gameObject;
 
@@ -862,9 +813,6 @@ public class BoardCharacter :
         if (UIDragCardPreview.IsRosterBoardTarget(targetObject))
             return;
 
-        BoardManager boardManager =
-            FindAnyObjectByType<BoardManager>();
-
         if (boardManager == null)
         {
             return;
@@ -875,7 +823,7 @@ public class BoardCharacter :
             HandSlot handDropTarget = targetObject.GetComponentInParent<HandSlot>();
             if (handDropTarget != null)
             {
-                boardManager.MoveHandCharacter(handSlot, handDropTarget);
+                boardManager.MoveHandCharacter(handSlot, handDropTarget, clearCharacterDetail: false);
                 return;
             }
 
@@ -883,15 +831,15 @@ public class BoardCharacter :
             if (handSlot.itemData != null)
             {
                 if (boardDropTarget != null)
-                    boardManager.UseHandItemOnBoard(handSlot, boardDropTarget);
+                    boardManager.UseHandItemOnBoard(handSlot, boardDropTarget, clearCharacterDetail: false);
                 return;
             }
             if (boardDropTarget != null)
             {
-                boardManager.ClearSelection();
+                boardManager.ClearSelection(clearCharacterDetail: false);
                 boardManager.selectionType = BoardManager.SelectionType.Hand;
                 boardManager.selectedHandSlot = handSlot;
-                boardManager.PlaceSelectedHandCharacter(boardDropTarget);
+                boardManager.PlaceSelectedHandCharacter(boardDropTarget, clearCharacterDetail: false);
             }
             return;
         }
@@ -905,7 +853,7 @@ public class BoardCharacter :
 
         if (targetHandSlot != null)
         {
-            boardManager.ClearSelection();
+            boardManager.ClearSelection(clearCharacterDetail: false);
 
             boardManager.selectionType =
                 BoardManager.SelectionType.Board;
@@ -914,7 +862,8 @@ public class BoardCharacter :
                 boardSlot;
 
             boardManager.ReturnSelectedBoardCharacterToHand(
-                targetHandSlot
+                targetHandSlot,
+                clearCharacterDetail: false
             );
 
             return;
@@ -931,7 +880,8 @@ public class BoardCharacter :
         {
             boardManager.MoveCharacter(
                 boardSlot,
-                targetBoardSlot
+                targetBoardSlot,
+                clearCharacterDetail: false
             );
 
             return;
