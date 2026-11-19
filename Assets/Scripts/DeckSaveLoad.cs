@@ -11,6 +11,7 @@ public class DeckSaveLoad : MonoBehaviour
 {
     private const int DeckSize = 30;
     private const int DefaultBuildingSlotCount = 5;
+    private const int MaxBuildingSlotCount = 99;
     private const string BuildingCountKey = "CompositionScene.BuildingCount.v1";
     private const string LegacySaveKey = "CompositionScene.SavedDeck.v1";
     private const string SaveKeyPrefix = "CompositionScene.SavedDeck.v2.";
@@ -67,7 +68,10 @@ public class DeckSaveLoad : MonoBehaviour
             rosterList = FindAnyObjectByType<CharacterFullRosterListDisplay>();
 
         MigrateLegacyDeck();
-        buildingSlotCount = Mathf.Max(0, PlayerPrefs.GetInt(BuildingCountKey, DefaultBuildingSlotCount));
+        buildingSlotCount = Mathf.Clamp(
+            PlayerPrefs.GetInt(BuildingCountKey, DefaultBuildingSlotCount),
+            0,
+            MaxBuildingSlotCount);
         if (!InitializeBuildingSlots())
             return;
 
@@ -633,6 +637,8 @@ public class DeckSaveLoad : MonoBehaviour
     private void OnPlusClicked()
     {
         if (buildPanel == null || !buildPanel.activeSelf || buildingPrefab == null)
+            return;
+        if (buildingObjects.Count >= MaxBuildingSlotCount)
             return;
 
         GameObject building = Instantiate(buildingPrefab, buildPanel.transform, false);
