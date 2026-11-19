@@ -6,6 +6,8 @@ using UnityEngine.UI;
 public class EnemyDetailPanel : MonoBehaviour
 {
     public Image iconImage;
+    [Tooltip("Optional. If empty, the child named \"Frame\" is used.")]
+    public Image frameImage;
     public TMP_Text nameText;
     public TMP_Text attackText;
     public TMP_Text defenseText;
@@ -33,6 +35,7 @@ public class EnemyDetailPanel : MonoBehaviour
             nameText.text = enemy.enemyName;
 
         RefreshCombatStats();
+        RefreshFrameSprite();
 
         UpdateTargetText(enemy.target);
         gameObject.SetActive(true);
@@ -60,7 +63,30 @@ public class EnemyDetailPanel : MonoBehaviour
             iconImage.sprite = currentEnemy.icon;
 
         RefreshCombatStats();
+        RefreshFrameSprite();
         UpdateTargetText(currentEnemy.target);
+    }
+
+    // Matches the frame shown on the board, which EnemyManager chooses per enemy.
+    private void RefreshFrameSprite()
+    {
+        if (frameImage == null)
+        {
+            Transform frame = transform.Find("Frame");
+            if (frame != null)
+                frameImage = frame.GetComponent<Image>();
+        }
+
+        if (frameImage == null || currentEnemySlot == null)
+            return;
+
+        BoardCharacter[] displays =
+            currentEnemySlot.GetComponentsInChildren<BoardCharacter>(true);
+        BoardCharacter display = System.Array.Find(
+            displays,
+            candidate => candidate != null && candidate.IsDisplayingEnemy(currentEnemy));
+        if (display != null && display.frameImage != null && display.frameImage.sprite != null)
+            frameImage.sprite = display.frameImage.sprite;
     }
 
     private void RefreshCombatStats()
