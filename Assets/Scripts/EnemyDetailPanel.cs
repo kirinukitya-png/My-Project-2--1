@@ -13,6 +13,7 @@ public class EnemyDetailPanel : MonoBehaviour
     public TMP_Text defenseText;
     public TMP_Text healthText;
     public TMP_Text targetText;
+    public TMP_Text aeText;
     private EnemyData currentEnemy;
     private BoardSlot currentEnemySlot;
 
@@ -38,6 +39,7 @@ public class EnemyDetailPanel : MonoBehaviour
         RefreshFrameSprite();
 
         UpdateTargetText(enemy.target);
+        UpdateAeText(enemy.ae);
         gameObject.SetActive(true);
     }
 
@@ -65,6 +67,7 @@ public class EnemyDetailPanel : MonoBehaviour
         RefreshCombatStats();
         RefreshFrameSprite();
         UpdateTargetText(currentEnemy.target);
+        UpdateAeText(currentEnemy.ae);
     }
 
     // Matches the frame shown on the board, which EnemyManager chooses per enemy.
@@ -161,6 +164,63 @@ public class EnemyDetailPanel : MonoBehaviour
         targetText.text = targetIds.Count > 1
             ? "以下の行動をターン毎に繰り返す。\n" + descriptionText
             : descriptionText;
+    }
+
+    private void UpdateAeText(string aeValue)
+    {
+        if (aeText == null)
+        {
+            TMP_Text[] textComponents = GetComponentsInChildren<TMP_Text>(true);
+            foreach (TMP_Text textComponent in textComponents)
+            {
+                if (textComponent.gameObject.name == "AeText")
+                {
+                    aeText = textComponent;
+                    break;
+                }
+            }
+        }
+
+        if (aeText == null)
+        {
+            Debug.LogError("AeText was not found in EnemyDetailPanel.", this);
+            return;
+        }
+
+        List<string> effectIds = GetEffectIds(aeValue);
+        List<string> descriptions = new List<string>();
+        foreach (string effectId in effectIds)
+        {
+            EffectData effectData = Resources.Load<EffectData>("EffectData/" + effectId);
+            if (effectData == null)
+            {
+                Debug.LogWarning("EffectData was not found for EffectID " + effectId + ".", this);
+                descriptions.Add(effectId);
+                continue;
+            }
+
+            descriptions.Add(effectData.description);
+        }
+
+        aeText.text = string.Join("\n", descriptions.ToArray());
+    }
+
+    private List<string> GetEffectIds(string effectValue)
+    {
+        List<string> effectIds = new List<string>();
+        if (string.IsNullOrWhiteSpace(effectValue))
+            return effectIds;
+
+        string[] values = effectValue.Split(
+            new[] { ',', ';', '|', '/', '、', ' ', '\t', '\r', '\n' },
+            System.StringSplitOptions.RemoveEmptyEntries);
+        foreach (string value in values)
+        {
+            string effectId = value.Trim();
+            if (!string.IsNullOrEmpty(effectId))
+                effectIds.Add(effectId);
+        }
+        return effectIds;
     }
 
     private List<string> GetTargetIds(string targetValue)
