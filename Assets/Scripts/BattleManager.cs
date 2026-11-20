@@ -317,6 +317,22 @@ public class BattleManager : MonoBehaviour
             shopManager.stageManager.IsAwaitingStageSelection)
             return;
 
+        if (shopManager != null && battleCoroutine == null)
+        {
+            BoardManager limitBoard = FindAnyObjectByType<BoardManager>();
+            if (limitBoard != null)
+            {
+                int boardCount = limitBoard.GetBoardCharacterCount();
+                int level = shopManager.CurrentLevel;
+                if (boardCount > level)
+                {
+                    SetBattleLog("盤面にレベルの数より多い状態で戦闘に進めません(" +
+                                 boardCount + "/" + level + ")");
+                    return;
+                }
+            }
+        }
+
         playbackMode = mode;
         battleStepRequested = true;
         if (autoBattleButton != null)

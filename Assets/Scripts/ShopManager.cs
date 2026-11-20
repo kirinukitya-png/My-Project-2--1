@@ -41,6 +41,11 @@ public class ShopManager : MonoBehaviour
     [Tooltip("SelectBで並べるItemDataを設定します。")]
     public ItemData[] itemDataPool;
 
+    [Header("Event")]
+    [Tooltip("イベント(〇-〇.5)でEnemyAreaに置くアイテム。未設定ならItem Data Poolから下のIDで探します。")]
+    public ItemData eventItemData;
+    public string eventItemId = "Item006";
+
     [Header("プレイヤー")]
     public PlayerData player;
 
@@ -450,17 +455,53 @@ public class ShopManager : MonoBehaviour
         stageManager.BeginEventStage(currentStageIndex);
         UpdateStageCountLabel();
 
+        ItemData eventItem = ResolveEventItem();
+        EnemyManager enemyManager = FindAnyObjectByType<EnemyManager>();
+        bool itemPlaced = eventItem != null && enemyManager != null && enemyManager.PlaceEventItem(eventItem);
+        if (!itemPlaced)
+            Debug.LogWarning("イベントアイテムを配置できませんでした。ItemDataとEnemyManagerを確認してください。", this);
+
         BattleManager battleManager = FindAnyObjectByType<BattleManager>();
         if (battleManager != null)
-            battleManager.ShowEventLog("イベントが発生しました");
+            battleManager.ShowEventLog(itemPlaced
+                ? "イベントが発生しました！" + eventItem.itemName + "をキャラクターに使おう"
+                : "イベントが発生しました");
         else
             Debug.LogWarning("BattleManagerが見つからないためイベントログを表示できません。", this);
+    }
+
+    private ItemData ResolveEventItem()
+    {
+        if (eventItemData != null)
+            return eventItemData;
+        if (itemDataPool != null)
+        {
+            foreach (ItemData item in itemDataPool)
+                if (item != null && item.itemId == eventItemId)
+                    return item;
+        }
+        return null;
     }
 
     public void ContinuePastEvent()
     {
         if (!IsEventStage)
             return;
+
+        // EnemyAreaのイベントアイテムは使用するまで先へ進めない(使える味方がいない場合は破棄して進む)
+        EnemyManager enemyManager = FindAnyObjectByType<EnemyManager>();
+        if (enemyManager != null && enemyManager.HasEventItem)
+        {
+            BoardManager boardManager = FindAnyObjectByType<BoardManager>();
+            if (boardManager != null && boardManager.HasEventItemTarget())
+            {
+                BattleManager battleManager = FindAnyObjectByType<BattleManager>();
+                if (battleManager != null)
+                    battleManager.ShowEventLog("イベントアイテムを使ってから進んでください");
+                return;
+            }
+            enemyManager.ClearEventItem();
+        }
 
         IsEventStage = false;
         BeginStageSelection();

@@ -668,6 +668,10 @@ public class BoardCharacter :
         }
     }
 
+    // EnemyAreaに置かれたイベントアイテムかどうか
+    private bool IsEventItem =>
+        itemData != null && boardSlot != null && boardSlot.eventItemData != null;
+
     public void SetBoardSlot(
         BoardSlot slot)
     {
@@ -700,6 +704,13 @@ public class BoardCharacter :
             return;
 
         BoardManager boardManager = FindAnyObjectByType<BoardManager>();
+        if (IsEventItem)
+        {
+            if (boardManager != null)
+                boardManager.ShowItemDetail(itemData);
+            return;
+        }
+
         if (handSlot != null)
         {
             if (boardManager == null)
@@ -735,9 +746,10 @@ public class BoardCharacter :
     public void OnBeginDrag(
     PointerEventData eventData)
     {
+        bool eventItem = IsEventItem;
         if (isEnemyCharacter ||
             (boardSlot == null && handSlot == null) ||
-            (boardSlot != null && boardSlot.IsEmpty()) ||
+            (!eventItem && boardSlot != null && boardSlot.IsEmpty()) ||
             (handSlot != null && handSlot.IsEmpty()))
         {
             return;
@@ -759,6 +771,14 @@ public class BoardCharacter :
 
         // ドラッグ中のキャラクターを選択状態にする
         boardManager.ClearSelection(clearCharacterDetail: false);
+
+        if (eventItem)
+        {
+            // イベントアイテムは選択状態にせず(売却・Hand移動不可)、使用先へのドロップだけ受け付ける
+            isDragging = true;
+            dragPreviewSession = UIDragCardPreview.Begin(gameObject, eventData);
+            return;
+        }
 
         if (handSlot != null)
         {
@@ -819,6 +839,12 @@ public class BoardCharacter :
 
         if (boardManager == null)
         {
+            return;
+        }
+
+        if (IsEventItem)
+        {
+            boardManager.TryUseEventItem(boardSlot, targetObject);
             return;
         }
 

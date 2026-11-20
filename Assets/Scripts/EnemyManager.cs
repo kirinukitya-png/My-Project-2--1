@@ -19,6 +19,10 @@ public class EnemyManager : MonoBehaviour
     public EnemyDetailPanel enemyDetailPanel;
     public StageManager stageManager;
 
+    [Header("Event Item")]
+    [Tooltip("イベント(〇-〇.5)でアイテムを置くEnemyBoardのスロット番号(0始まり)。")]
+    public int eventItemSlotIndex = 2;
+
     private bool hasManualStageChoice;
     private int[] battleAttackBonusBySlot;
     private int[] battleDefenseBonusBySlot;
@@ -108,6 +112,7 @@ public class EnemyManager : MonoBehaviour
         hasManualStageChoice = false;
         currentFormation = null;
         enemyDataBySlot = new EnemyData[Mathf.Max(0, columns * rows)];
+        ClearEventItem();
         ResetItemBonuses();
         RefreshEnemySlots();
     }
@@ -391,6 +396,8 @@ public class EnemyManager : MonoBehaviour
             EnemyData enemy = enemyDataBySlot != null && i < enemyDataBySlot.Length
                 ? enemyDataBySlot[i]
                 : null;
+            if (enemy == null && slot.HasEventItem)
+                continue;
             slot.SetEnemyData(
                 enemy,
                 GetEnemyFrameSprite(enemy),
@@ -400,6 +407,43 @@ public class EnemyManager : MonoBehaviour
                 ReadBonus(battleDefenseBonusBySlot, i),
                 ReadBonus(battleHealthBonusBySlot, i));
         }
+    }
+
+    public bool HasEventItem
+    {
+        get
+        {
+            if (boardArea == null)
+                return false;
+            foreach (BoardSlot slot in boardArea.GetComponentsInChildren<BoardSlot>(true))
+                if (slot != null && slot.HasEventItem)
+                    return true;
+            return false;
+        }
+    }
+
+    public bool PlaceEventItem(ItemData item)
+    {
+        if (item == null || boardArea == null)
+            return false;
+
+        BoardSlot[] slots = boardArea.GetComponentsInChildren<BoardSlot>(true);
+        if (slots.Length == 0)
+            return false;
+
+        ClearEventItem();
+        BoardSlot slot = slots[Mathf.Clamp(eventItemSlotIndex, 0, slots.Length - 1)];
+        slot.SetEventItem(item);
+        return true;
+    }
+
+    public void ClearEventItem()
+    {
+        if (boardArea == null)
+            return;
+        foreach (BoardSlot slot in boardArea.GetComponentsInChildren<BoardSlot>(true))
+            if (slot != null && slot.HasEventItem)
+                slot.ClearEventItem();
     }
 
     private Sprite GetEnemyFrameSprite(EnemyData enemy)

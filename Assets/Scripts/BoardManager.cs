@@ -462,33 +462,24 @@ public class BoardManager : MonoBehaviour
     }
 
 
+    // 配置数の上限は戦闘開始時にチェックするため、配置自体は制限しない
     public bool CanAddCharacterToBoard(bool showWarning = true)
     {
-        ShopManager shopManager =
-            FindAnyObjectByType<ShopManager>();
+        return true;
+    }
 
-        if (shopManager == null || boardArea == null)
-            return true;
+    public int GetBoardCharacterCount()
+    {
+        if (boardArea == null)
+            return 0;
 
-        int boardCharacterCount = 0;
+        int count = 0;
         foreach (BoardSlot slot in boardArea.GetComponentsInChildren<BoardSlot>(true))
         {
             if (slot != null && !slot.IsEmpty())
-                boardCharacterCount++;
+                count++;
         }
-
-        if (boardCharacterCount < shopManager.CurrentLevel)
-            return true;
-
-        if (showWarning)
-        {
-            Debug.Log(
-                "レベル" + shopManager.CurrentLevel +
-                "の盤面配置上限に達しています。"
-            );
-        }
-
-        return false;
+        return count;
     }
 
     bool HasSameNameOnBoard(
@@ -843,7 +834,7 @@ public class BoardManager : MonoBehaviour
         return false;
     }
 
-    private bool ApplyItemEffectToCharacter(OwnedCharacter character, string effect, int value, BoardSlot slot, bool immediateEffect)
+    private bool ApplyItemEffectToCharacter(OwnedCharacter character, string effect, int value, BoardSlot slot, bool immediateEffect, HandSlot handSlot = null)
     {
         if (character == null || character.data == null) return false;
         if (effect == "Attack")
@@ -874,13 +865,103 @@ public class BoardManager : MonoBehaviour
                 return false;
             }
 
-            slot.SetCharacterWithoutDataChange(character);
+            if (slot != null) slot.SetCharacterWithoutDataChange(character);
+            else if (handSlot != null) handSlot.SetCharacter(character);
             return true;
         }
         else return false;
-        BoardCharacter display = slot.GetComponentInChildren<BoardCharacter>(true);
+        Transform displayParent = slot != null ? slot.transform : (handSlot != null ? handSlot.transform : null);
+        BoardCharacter display = displayParent != null ? displayParent.GetComponentInChildren<BoardCharacter>(true) : null;
         if (display != null) display.RefreshOwnedStats();
         RefreshVisibleDetailPanels();
+        return true;
+    }
+
+    // ------------------------------------------------------------
+    // イベントアイテム (EnemyAreaに置かれ、BoardかHandのCharacterにその場で使う)
+    // ------------------------------------------------------------
+
+    public bool HasEventItemTarget()
+    {
+        if (boardArea != null)
+        {
+            foreach (BoardSlot slot in boardArea.GetComponentsInChildren<BoardSlot>(true))
+                if (slot != null && !slot.IsEmpty()) return true;
+        }
+
+        foreach (HandSlot hand in FindObjectsByType<HandSlot>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            if (hand != null && hand.ownedCharacter != null && hand.ownedCharacter.data != null) return true;
+
+        return false;
+    }
+
+    private static void ShowEventLog(string message)
+    {
+        BattleManager battle = FindAnyObjectByType<BattleManager>();
+        if (battle != null) battle.ShowEventLog(message);
+        else Debug.Log(message);
+    }
+
+    public bool TryUseEventItem(BoardSlot eventSlot, GameObject dropTarget)
+    {
+        if (eventSlot == null || eventSlot.eventItemData == null || dropTarget == null) return false;
+        ItemData item = eventSlot.eventItemData;
+
+        BoardSlot boardTarget = dropTarget.GetComponentInParent<BoardSlot>();
+        HandSlot handTarget = dropTarget.GetComponentInParent<HandSlot>();
+        bool playerBoardTarget = boardTarget != null && boardArea != null &&
+                                 boardTarget.transform.IsChildOf(boardArea);
+
+        OwnedCharacter character = null;
+        if (playerBoardTarget && !boardTarget.IsEmpty())
+            character = boardTarget.placedCharacter;
+        else if (handTarget != null && handTarget.ownedCharacter != null && handTarget.ownedCharacter.data != null)
+            character = handTarget.ownedCharacter;
+        else
+            boardTarget = null;
+
+        if (character == null)
+        {
+            // Handや盤面の空きマス、敵などには使えない
+            if (handTarget != null || playerBoardTarget)
+                ShowEventLog(item.itemName + "はHandには置けません。BoardかHandのキャラクターに使ってください");
+            return false;
+        }
+
+        if (!TryResolveItemTarget(item.target, out string targetType) || targetType != "Ally")
+        {
+            ShowEventLog(item.itemName + "は味方1体に使うアイテムではないため、現在のイベントでは使用できません");
+            return false;
+        }
+        if (!TryResolveItemDuration(item.duration, out bool immediateEffect)) return false;
+        if (item.effects == null || item.effects.Length == 0 ||
+            item.effectValues == null || item.effectValues.Length != item.effects.Length)
+        {
+            Debug.LogWarning("ItemDataのEffectsとEffectValuesの数が一致しません: " + item.itemName, item);
+            return false;
+        }
+
+        for (int i = 0; i < item.effects.Length; i++)
+        {
+            if (!IsItemEffectSupported(targetType, item.effects[i])) return false;
+            if (item.effects[i] == "Star" && character.star >= item.effectValues[i])
+            {
+                ShowEventLog(character.data.characterName + "はすでに★" + character.star + "なので使えません");
+                return false;
+            }
+        }
+
+        bool applied = false;
+        for (int i = 0; i < item.effects.Length; i++)
+            applied |= ApplyItemEffectToCharacter(character, item.effects[i], item.effectValues[i],
+                boardTarget, immediateEffect, boardTarget == null ? handTarget : null);
+        if (!applied) return false;
+
+        string characterName = character.data.characterName;
+        eventSlot.ClearEventItem();
+        RefreshVisibleDetailPanels();
+        ClearSelection(false);
+        ShowEventLog(item.itemName + "を" + characterName + "に使用した！");
         return true;
     }
 

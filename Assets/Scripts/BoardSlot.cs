@@ -10,6 +10,12 @@ public class BoardSlot : MonoBehaviour
     public EnemyData enemyData;
     public bool acceptsPlayerCharacters = true;
 
+    [Header("Event Item")]
+    [Tooltip("イベント(〇-〇.5)でEnemyAreaに置かれるアイテム。Handに置けず売却もできず、キャラクターに使用する。")]
+    public ItemData eventItemData;
+
+    public bool HasEventItem => eventItemData != null;
+
     public bool IsEmpty()
     {
         return placedCharacter == null ||
@@ -32,6 +38,7 @@ public class BoardSlot : MonoBehaviour
         int healthBonus = 0)
     {
         enemyData = data;
+        eventItemData = null;
         ClearCharacterVisualOnly();
         placedCharacter = null;
 
@@ -60,6 +67,49 @@ public class BoardSlot : MonoBehaviour
 
         boardCharacter.SetEnemyCharacter(enemyData, enemyFrameSprite, enemyDetailPanel, gap, attackBonus, defenseBonus, healthBonus);
         boardCharacter.SetBoardSlot(this);
+        BoardManager.RefreshVisibleDetailPanels();
+    }
+
+    public void SetEventItem(ItemData item)
+    {
+        ClearCharacterVisualOnly();
+        enemyData = null;
+        placedCharacter = null;
+        eventItemData = item;
+        if (item == null)
+        {
+            BoardManager.RefreshVisibleDetailPanels();
+            return;
+        }
+
+        if (boardCharacterPrefab == null)
+        {
+            Debug.LogError("BoardSlot requires a BoardCharacter prefab to display an event item.", this);
+            return;
+        }
+
+        GameObject itemObject = Instantiate(boardCharacterPrefab, transform);
+        itemObject.transform.localPosition = Vector3.zero;
+        BoardCharacter boardCharacter = itemObject.GetComponent<BoardCharacter>();
+        if (boardCharacter == null)
+        {
+            Debug.LogError("BoardCharacter prefab must have a BoardCharacter component.", itemObject);
+            Destroy(itemObject);
+            return;
+        }
+
+        boardCharacter.SetItem(item);
+        boardCharacter.SetBoardSlot(this);
+        BoardManager.RefreshVisibleDetailPanels();
+    }
+
+    public void ClearEventItem()
+    {
+        if (eventItemData == null)
+            return;
+
+        eventItemData = null;
+        ClearCharacterVisualOnly();
         BoardManager.RefreshVisibleDetailPanels();
     }
 
