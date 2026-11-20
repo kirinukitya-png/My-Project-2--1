@@ -59,7 +59,7 @@ public class EnemyDataTsvImporterWindow : EditorWindow
         EditorGUILayout.LabelField("EnemyData TSV Importer", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox(
             "チェックボックスがTRUEの行だけをAssets/Data2/EnemyDataへ作成・更新します。EnemyIDで既存データを照合し、" +
-            "アセット名はEnemyNameにします。Icon列にはプロジェクト内画像のパスを指定してください。",
+            "アセット名はEnemyNameにします。Icon列は空欄、または画像未配置のパスでも取り込めます。画像がない場合はIcon未設定になります。",
             MessageType.Info);
 
         EditorGUILayout.BeginHorizontal();
@@ -380,12 +380,12 @@ public class EnemyDataTsvImporterWindow : EditorWindow
     {
         icon = null;
         if (string.IsNullOrWhiteSpace(inputPath))
-        {
-            errors.Add("行 " + lineNumber + ": Iconのパスが空です。");
-            return false;
-        }
+            return true;
 
         string normalizedPath = inputPath.Trim().Trim('"').Replace('\\', '/');
+        string projectRoot = Directory.GetParent(Application.dataPath).FullName
+            .Replace('\\', '/')
+            .TrimEnd('/');
         string assetPath;
         if (normalizedPath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
         {
@@ -393,9 +393,6 @@ public class EnemyDataTsvImporterWindow : EditorWindow
         }
         else if (Path.IsPathRooted(normalizedPath))
         {
-            string projectRoot = Directory.GetParent(Application.dataPath).FullName
-                .Replace('\\', '/')
-                .TrimEnd('/');
             string fullPath;
             try
             {
@@ -427,6 +424,22 @@ public class EnemyDataTsvImporterWindow : EditorWindow
             errors.Add("行 " + lineNumber + ": IconがAssetsフォルダー内にありません: " + inputPath);
             return false;
         }
+
+        string assetsRoot = Path.GetFullPath(Path.Combine(projectRoot, "Assets"))
+            .Replace('\\', '/')
+            .TrimEnd('/');
+        string fullAssetPath = Path.GetFullPath(
+                Path.Combine(projectRoot, assetPath.Replace('/', Path.DirectorySeparatorChar)))
+            .Replace('\\', '/');
+        if (!fullAssetPath.StartsWith(assetsRoot + "/", StringComparison.OrdinalIgnoreCase))
+        {
+            errors.Add("行 " + lineNumber + ": IconはAssetsフォルダー内を指定してください: " + inputPath);
+            return false;
+        }
+
+        // Enemy artwork may be added later. Keep importing the EnemyData with an empty icon.
+        if (!File.Exists(fullAssetPath))
+            return true;
 
         UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
         foreach (UnityEngine.Object asset in assets)

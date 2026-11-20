@@ -751,6 +751,10 @@ public class BoardCharacter :
             return;
         }
 
+        // Board characters cannot be moved during a battle.
+        if (handSlot == null && boardManager.IsBattleInProgress)
+            return;
+
         boardManager.NotifyCharacterDragStarted();
 
         // ドラッグ中のキャラクターを選択状態にする

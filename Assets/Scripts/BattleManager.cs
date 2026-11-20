@@ -28,6 +28,8 @@ public class BattleManager : MonoBehaviour
     public GameObject blockCountPanel;
 
     public bool LastBattleWasWin { get; private set; }
+    // True from the start of a battle until it has been fully resolved.
+    public bool IsBattleInProgress => battleCoroutine != null;
     public int Block { get; private set; }
     private int pendingPlayerHpDelta;
     private int pendingPlayerBlockBonus;

@@ -37,6 +37,50 @@ public class BoardManager : MonoBehaviour
     public bool IsShowingCharacterDetailOnly { get; private set; }
     public bool IsSellButtonSuppressedAfterDrag { get; private set; }
 
+    private BattleManager cachedBattleManager;
+    private ShopManager cachedShopManager;
+
+    // Board characters cannot be moved while a battle is being resolved.
+    public bool IsBattleInProgress
+    {
+        get
+        {
+            if (cachedBattleManager == null)
+                cachedBattleManager = FindAnyObjectByType<BattleManager>();
+            return cachedBattleManager != null && cachedBattleManager.IsBattleInProgress;
+        }
+    }
+
+    // Shop purchases, character sales and Reroll are locked between the
+    // confirmed gold reward and the next shop lineup.
+    public bool IsShopLocked
+    {
+        get
+        {
+            if (cachedShopManager == null)
+                cachedShopManager = FindAnyObjectByType<ShopManager>();
+            return cachedShopManager != null && cachedShopManager.IsShopLockedAfterBattle;
+        }
+    }
+
+    private bool IsBoardMovementBlocked()
+    {
+        if (!IsBattleInProgress)
+            return false;
+
+        Debug.Log("戦闘中は盤面のキャラクターを移動できません。");
+        return true;
+    }
+
+    private bool IsShopPurchaseBlocked()
+    {
+        if (!IsShopLocked)
+            return false;
+
+        Debug.Log("ゴールド獲得後、次のキャラクターがショップに並ぶまでは購入できません。");
+        return true;
+    }
+
     public void NotifyCharacterDragStarted()
     {
         IsSellButtonSuppressedAfterDrag = false;
@@ -226,6 +270,9 @@ public class BoardManager : MonoBehaviour
         if (!slot.acceptsPlayerCharacters)
             return;
 
+        if (IsBoardMovementBlocked())
+            return;
+
         if (selectedHandSlot.IsEmpty() || selectedHandSlot.itemData != null)
         {
             return;
@@ -400,6 +447,9 @@ public class BoardManager : MonoBehaviour
             fromSlot == toSlot || fromSlot.IsEmpty())
             return;
 
+        if (IsBoardMovementBlocked())
+            return;
+
         if (toSlot.IsEmpty())
         {
             OwnedCharacter character = fromSlot.placedCharacter;
@@ -493,6 +543,9 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
+        if (IsBoardMovementBlocked())
+            return;
+
         OwnedCharacter characterA =
             slotA.placedCharacter;
 
@@ -538,6 +591,9 @@ public class BoardManager : MonoBehaviour
         {
             return;
         }
+
+        if (IsBoardMovementBlocked())
+            return;
 
         // 盤面のキャラクター
         OwnedCharacter boardCharacter =
@@ -651,6 +707,9 @@ public class BoardManager : MonoBehaviour
     {
         if (selectedShopItem == null || selectedShopItemSlot == null ||
             handSlot == null || !handSlot.IsEmpty())
+            return;
+
+        if (IsShopPurchaseBlocked())
             return;
 
         PlayerData player = FindAnyObjectByType<PlayerData>();
@@ -879,6 +938,9 @@ public class BoardManager : MonoBehaviour
             return;
         }
 
+        if (IsShopPurchaseBlocked())
+            return;
+
         PlayerData player =
             FindAnyObjectByType<PlayerData>();
 
@@ -1007,6 +1069,9 @@ public class BoardManager : MonoBehaviour
         }
 
         if (!slot.acceptsPlayerCharacters)
+            return;
+
+        if (IsBoardMovementBlocked() || IsShopPurchaseBlocked())
             return;
 
         PlayerData player =

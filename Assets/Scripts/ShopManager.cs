@@ -322,6 +322,11 @@ public class ShopManager : MonoBehaviour
             xpBuyButtonObject.SetActive(false);
     }
 
+    // After a battle, true from the moment the gold reward is confirmed until the
+    // next characters are lined up in the shop. Purchases, character sales and
+    // Reroll are not allowed while it is true.
+    public bool IsShopLockedAfterBattle { get; private set; }
+
     private void CompleteStageSelection(StageManager.StageSelectionButton selectedButton)
     {
         // Enemies appear (EnemyManager) and the shop cards refresh on this same event.
@@ -350,6 +355,7 @@ public class ShopManager : MonoBehaviour
         }
 
         GenerateShop();
+        IsShopLockedAfterBattle = false;
     }
 
     private void ClearShopOffers()
@@ -369,6 +375,7 @@ public class ShopManager : MonoBehaviour
         if (currentStageIndex >= TotalStages - 1)
             return 0;
 
+        IsShopLockedAfterBattle = true;
         bool completedBossRound = currentStageIndex % 5 == 3;
         currentStageIndex++;
         // The stage label is updated later, when the next enemies appear and the
@@ -559,6 +566,9 @@ public class ShopManager : MonoBehaviour
 
     private void PurchaseExperience(int cost, int experience)
     {
+        if (IsShopLockedAfterBattle)
+            return;
+
         int purchaseCost = Mathf.Max(0, cost);
         int experienceAmount = Mathf.Max(0, experience);
         if (currentLevel >= MaxLevel || player == null ||
@@ -1262,6 +1272,9 @@ public class ShopManager : MonoBehaviour
 
     public void RerollShop()
     {
+        if (IsShopLockedAfterBattle)
+            return;
+
         if (stageManager != null && stageManager.IsAwaitingStageSelection)
             return;
 

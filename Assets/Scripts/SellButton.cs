@@ -57,11 +57,34 @@ public class SellButton :
                            boardManager.selectedHandSlot.itemData != null;
         bool canSell = canSellItem || (character != null &&
             (boardManager.selectionType == BoardManager.SelectionType.Hand ||
-             boardManager.selectionType == BoardManager.SelectionType.Board));
+             boardManager.selectionType == BoardManager.SelectionType.Board) &&
+            CanSellSelectedCharacter(boardManager, false));
 
         SetInteractable(canSell);
         SetVisible(!boardManager.IsShowingCharacterDetailOnly &&
                    !boardManager.IsSellButtonSuppressedAfterDrag);
+    }
+
+    // Character sales are locked between the confirmed gold reward and the next
+    // shop lineup. Board characters cannot be sold during a battle.
+    private bool CanSellSelectedCharacter(BoardManager boardManager, bool logReason)
+    {
+        if (boardManager.IsShopLocked)
+        {
+            if (logReason)
+                Debug.Log("ゴールド獲得後、次のキャラクターがショップに並ぶまでは売却できません。");
+            return false;
+        }
+
+        if (boardManager.selectionType == BoardManager.SelectionType.Board &&
+            boardManager.IsBattleInProgress)
+        {
+            if (logReason)
+                Debug.Log("戦闘中は盤面のキャラクターを売却できません。");
+            return false;
+        }
+
+        return true;
     }
 
     void SetInteractable(bool interactable)
@@ -113,6 +136,8 @@ public class SellButton :
 
         OwnedCharacter character = boardManager.GetSelectedCharacter();
         if (character == null) return;
+        if (!CanSellSelectedCharacter(boardManager, true))
+            return;
 
         PlayerData player =
             FindAnyObjectByType<PlayerData>();
@@ -269,6 +294,8 @@ public class SellButton :
 
         OwnedCharacter character = boardManager.GetSelectedCharacter();
         if (character == null) return;
+        if (!CanSellSelectedCharacter(boardManager, true))
+            return;
 
         PlayerData player =
             FindAnyObjectByType<PlayerData>();

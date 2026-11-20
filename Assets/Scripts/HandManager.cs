@@ -147,6 +147,10 @@ public class HandManager : MonoBehaviour
         CharacterData character,
         ShopCard shopCard)
     {
+        ShopManager shopManager = FindAnyObjectByType<ShopManager>();
+        if (shopManager != null && shopManager.IsShopLockedAfterBattle)
+            return false;
+
         if (character == null)
         {
             return false;
