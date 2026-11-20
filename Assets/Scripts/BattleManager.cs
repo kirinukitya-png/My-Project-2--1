@@ -278,6 +278,11 @@ public class BattleManager : MonoBehaviour
     {
         if (battleCoroutine != null)
             return;
+        if (shopManager != null && shopManager.IsEventStage)
+            return;
+        if (shopManager != null && shopManager.stageManager != null &&
+            shopManager.stageManager.IsAwaitingStageSelection)
+            return;
         if (battleStepButton == null && playbackMode == BattlePlaybackMode.Manual)
         {
             Debug.LogError("Assign the Battle Step Button in the BattleManager Inspector.", this);
@@ -301,6 +306,17 @@ public class BattleManager : MonoBehaviour
 
     private void StartAutomaticBattle(BattlePlaybackMode mode)
     {
+        if (shopManager == null)
+            shopManager = FindAnyObjectByType<ShopManager>();
+        if (shopManager != null && shopManager.IsEventStage)
+        {
+            shopManager.ContinuePastEvent();
+            return;
+        }
+        if (shopManager != null && shopManager.stageManager != null &&
+            shopManager.stageManager.IsAwaitingStageSelection)
+            return;
+
         playbackMode = mode;
         battleStepRequested = true;
         if (autoBattleButton != null)
@@ -405,6 +421,11 @@ public class BattleManager : MonoBehaviour
 
         if (logText != null)
             logText.text = string.Empty;
+    }
+
+    public void ShowEventLog(string message)
+    {
+        SetBattleLog(message);
     }
 
     private void SetBattleLog(string message)
@@ -1982,6 +2003,12 @@ public class BattleManager : MonoBehaviour
             }
 
             int goldReward = shopManager.AdvanceStageAfterBattle(false);
+            if (shopManager.IsEventStage)
+            {
+                shopManager.BeginNextStageSelectionAfterBattle();
+                yield break;
+            }
+
             SetBattleLog(goldReward + "ゴールドを手に入れた！");
             yield return new WaitForSecondsRealtime(3f);
             shopManager.BeginNextStageSelectionAfterBattle();

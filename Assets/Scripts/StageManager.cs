@@ -87,6 +87,18 @@ public class StageManager : MonoBehaviour
             popoutSelectStagePanel.SetActive(true);
     }
 
+    public void BeginEventStage(int stageIndex)
+    {
+        currentStageIndex = Mathf.Clamp(stageIndex, 0, TotalStages - 1);
+        awaitingStageSelection = false;
+        SetSelectionButtonsVisible(false);
+        if (popoutSelectStagePanel != null)
+            popoutSelectStagePanel.SetActive(false);
+
+        // Clear the previous encounter without selecting enemies for this event.
+        StageStarting?.Invoke();
+    }
+
     private Button GetButton(StageSelectionButton button)
     {
         switch (button)

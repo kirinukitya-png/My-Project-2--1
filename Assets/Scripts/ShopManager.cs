@@ -135,6 +135,9 @@ public class ShopManager : MonoBehaviour
     private float scoreRefreshTimer;
     private const int TotalStages = 25;
     private const float ScoreRefreshInterval = 0.2f;
+    private int eventChancePercent = 10;
+    public bool IsEventStage { get; private set; }
+    private bool allStagesCompleted;
     private int currentLevel = 1;
     private int currentLevelExperience;
     public int CurrentLevel => currentLevel;
@@ -302,6 +305,7 @@ public class ShopManager : MonoBehaviour
 
     private void BeginStageSelection()
     {
+        IsEventStage = false;
         ResetStageSelectionButtons();
         ClearShopOffers();
 
@@ -372,14 +376,22 @@ public class ShopManager : MonoBehaviour
 
     public int AdvanceStageAfterBattle(bool beginStageSelection = true)
     {
-        if (currentStageIndex >= TotalStages - 1)
+        if (allStagesCompleted)
             return 0;
 
+        if (currentStageIndex >= TotalStages - 1)
+        {
+            allStagesCompleted = true;
+            IsEventStage = false;
+            return 0;
+        }
+
         IsShopLockedAfterBattle = true;
+        IsEventStage = false;
         bool completedBossRound = currentStageIndex % 5 == 3;
         currentStageIndex++;
-        // The stage label is updated later, when the next enemies appear and the
-        // shop cards refresh (see CompleteStageSelection).
+        RollForEventStage();
+        // The stage label is updated when the next stage or event is displayed.
         UpdateCostProbabilityWidths();
         int experienceReward = GetExperienceReward(completedBossRound);
         GainExperience(experienceReward);
@@ -402,15 +414,68 @@ public class ShopManager : MonoBehaviour
         }
 
         if (beginStageSelection)
-            BeginStageSelection();
+            BeginNextStageSelectionAfterBattle();
 
         return goldReward;
     }
 
+    private void RollForEventStage()
+    {
+        int chance = Mathf.Clamp(eventChancePercent, 0, 100);
+        if (Random.Range(0, 100) < chance)
+        {
+            IsEventStage = true;
+            eventChancePercent = 0;
+            return;
+        }
+
+        eventChancePercent = Mathf.Min(100, chance + 10);
+    }
+
+    private void BeginEventStage()
+    {
+        if (stageManager == null)
+        {
+            Debug.LogError("StageManagerが設定されていないため、イベントを開始できません。", this);
+            return;
+        }
+
+        ResetStageSelectionButtons();
+        if (rerollButtonObject != null)
+            rerollButtonObject.SetActive(false);
+        if (xpBuyButtonObject != null)
+            xpBuyButtonObject.SetActive(false);
+
+        ClearShopOffers();
+        stageManager.BeginEventStage(currentStageIndex);
+        UpdateStageCountLabel();
+
+        BattleManager battleManager = FindAnyObjectByType<BattleManager>();
+        if (battleManager != null)
+            battleManager.ShowEventLog("イベントが発生しました");
+        else
+            Debug.LogWarning("BattleManagerが見つからないためイベントログを表示できません。", this);
+    }
+
+    public void ContinuePastEvent()
+    {
+        if (!IsEventStage)
+            return;
+
+        IsEventStage = false;
+        BeginStageSelection();
+    }
+
     public void BeginNextStageSelectionAfterBattle()
     {
-        if (currentStageIndex >= TotalStages - 1)
+        if (allStagesCompleted || currentStageIndex >= TotalStages)
             return;
+
+        if (IsEventStage)
+        {
+            BeginEventStage();
+            return;
+        }
 
         BeginStageSelection();
     }
@@ -467,6 +532,15 @@ public class ShopManager : MonoBehaviour
     {
         if (stageCountText == null)
             return;
+
+        if (IsEventStage)
+        {
+            int previousStageIndex = Mathf.Max(0, currentStageIndex - 1);
+            int eventStage = previousStageIndex / 5 + 1;
+            int eventRound = previousStageIndex % 5 + 1;
+            stageCountText.text = eventStage + "-" + eventRound + ".5";
+            return;
+        }
 
         int stage = currentStageIndex / 5 + 1;
         int round = currentStageIndex % 5 + 1;
