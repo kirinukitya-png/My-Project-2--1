@@ -3906,6 +3906,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 296215634}
   m_CullTransparentMesh: 1
+--- !u!1 &299451579
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 299451581}
+  - component: {fileID: 299451580}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &299451580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 299451579}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce65b6919d7e83e4baa64431961454f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OllamaClient
+  endpoint: http://localhost:11434/api/chat
+  model: qwen3:4b
+  timeoutSeconds: 120
+--- !u!4 &299451581
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 299451579}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 965.4265, y: 587.0582, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &309459018
 GameObject:
   m_ObjectHideFlags: 0
@@ -8371,6 +8418,7 @@ MonoBehaviour:
   specialEnemyFrameSprite: {fileID: 3160593228195567019, guid: 37adb0772d7d1fb49a92ae1852e22b3e, type: 3}
   enemyDetailPanel: {fileID: 456695661}
   stageManager: {fileID: 234162096}
+  eventItemSlotIndex: 2
 --- !u!4 &659053041
 Transform:
   m_ObjectHideFlags: 0
@@ -21098,6 +21146,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: acb97ae7e5bb0734cab5714f46ff5138, type: 2}
   - {fileID: 11400000, guid: 74f76de94424d5b43a1a64a3ef450dba, type: 2}
   - {fileID: 11400000, guid: fdfa8814be1fcc646a4713968474e162, type: 2}
+  eventItemData: {fileID: 0}
+  eventItemId: Item006
   player: {fileID: 1185068150}
   shopSlotsByStage: 0300000003000000030000000300000003000000i
   rerollCost: 1
@@ -22265,3 +22315,4 @@ SceneRoots:
   - {fileID: 952001488}
   - {fileID: 421580115}
   - {fileID: 373988108}
+  - {fileID: 299451581}
