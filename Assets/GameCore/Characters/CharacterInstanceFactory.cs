@@ -27,5 +27,11 @@ namespace ProjectNST.GameCore.Characters
         }
 
         public long LastIssuedNumber => _nextId;
+
+        /// <summary>Creates a transaction-local allocator copy. Commit the returned fork only on success.</summary>
+        public CharacterInstanceFactory CreateFork()
+        {
+            return new CharacterInstanceFactory(_prefix, _nextId);
+        }
     }
 }

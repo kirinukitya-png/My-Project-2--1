@@ -12,6 +12,7 @@ namespace ProjectNST.GameCore.Randomness
         Battle = 0x04UL,
         Event = 0x05UL,
         Roster = 0x06UL,
-        Economy = 0x07UL
+        Economy = 0x07UL,
+        Strategy = 0x08UL
     }
 }

@@ -10,20 +10,23 @@ namespace ProjectNST.GameCore.Shop
         public int RemainingCopies { get; }
         public int InitialStockLimit { get; }
         public int ReservedCopies { get; }
+        public int OwnedCopies { get; }
 
-        public CharacterPoolEntry(string definitionId, int remainingCopies, int initialStockLimit, int reservedCopies = 0)
+        public CharacterPoolEntry(string definitionId, int remainingCopies, int initialStockLimit, int reservedCopies = 0, int ownedCopies = 0)
         {
             if (string.IsNullOrWhiteSpace(definitionId)) throw new ArgumentException("A non-empty DefinitionId is required.", nameof(definitionId));
             if (remainingCopies < 0) throw new ArgumentOutOfRangeException(nameof(remainingCopies));
             if (initialStockLimit < 0) throw new ArgumentOutOfRangeException(nameof(initialStockLimit));
             if (reservedCopies < 0) throw new ArgumentOutOfRangeException(nameof(reservedCopies));
-            if ((long)remainingCopies + reservedCopies > initialStockLimit)
-                throw new ArgumentException("Remaining and reserved copies cannot exceed the initial stock limit.");
+            if (ownedCopies < 0) throw new ArgumentOutOfRangeException(nameof(ownedCopies));
+            if ((long)remainingCopies + reservedCopies + ownedCopies != initialStockLimit)
+                throw new ArgumentException("Available, reserved, and owned copies must equal the initial stock limit.");
 
             DefinitionId = definitionId;
             RemainingCopies = remainingCopies;
             InitialStockLimit = initialStockLimit;
             ReservedCopies = reservedCopies;
+            OwnedCopies = ownedCopies;
         }
     }
 

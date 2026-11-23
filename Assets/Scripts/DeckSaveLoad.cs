@@ -382,8 +382,7 @@ public class DeckSaveLoad : MonoBehaviour
     {
         if (buildPanel == null)
         {
-            foreach (Transform candidate in FindObjectsByType<Transform>(
-                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (Transform candidate in FindObjectsByType<Transform>(FindObjectsInactive.Include))
             {
                 if (candidate.name == "Build")
                 {
@@ -415,8 +414,7 @@ public class DeckSaveLoad : MonoBehaviour
         }
 
         contentPanels.Clear();
-        foreach (Transform candidate in FindObjectsByType<Transform>(
-                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+        foreach (Transform candidate in FindObjectsByType<Transform>(FindObjectsInactive.Include))
         {
             if (candidate.name == "Content" && !candidate.IsChildOf(buildPanel.transform))
                 contentPanels.Add(candidate.gameObject);
@@ -623,8 +621,7 @@ public class DeckSaveLoad : MonoBehaviour
 
     private static Button FindButtonByName(string objectName)
     {
-        foreach (Button button in FindObjectsByType<Button>(
-                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+        foreach (Button button in FindObjectsByType<Button>(FindObjectsInactive.Include))
         {
             if (button.gameObject.name == objectName)
                 return button;

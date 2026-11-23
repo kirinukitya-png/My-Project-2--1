@@ -83,6 +83,25 @@ namespace ProjectNST.GameCore.Randomness
             return new Pcg32RandomSource(seed, sequence);
         }
 
+        /// <summary>
+        /// Creates a deterministic substream within a registered stream domain. Existing
+        /// two-argument stream creation remains byte-for-byte unchanged; Strategy uses this
+        /// overload to separate each stable Strategy ID/version under stream ID 8.
+        /// </summary>
+        public static Pcg32RandomSource CreateStream(ulong trialSeed, RandomStreamId streamId,
+            ulong discriminator)
+        {
+            if (!Enum.IsDefined(typeof(RandomStreamId), streamId))
+                throw new ArgumentOutOfRangeException(nameof(streamId), "Register a stable RandomStreamId before creating this stream.");
+
+            ulong baseDomain = unchecked((ulong)streamId * StreamMultiplier);
+            ulong discriminatorDomain = TrialSeedGenerator.Mix64(discriminator ^ 0x8EBC6AF09C88C6E3UL);
+            ulong domain = baseDomain ^ RotateLeft(discriminatorDomain, 17);
+            ulong seed = TrialSeedGenerator.Mix64(trialSeed ^ domain ^ SeedDomain);
+            ulong sequence = TrialSeedGenerator.Mix64(trialSeed ^ RotateLeft(domain, 23) ^ SequenceDomain);
+            return new Pcg32RandomSource(seed, sequence);
+        }
+
         public SimulationRandomStreamsState CaptureState()
         {
             return new SimulationRandomStreamsState(TrialSeed, SimulationRandomStreamsState.CurrentVersion,

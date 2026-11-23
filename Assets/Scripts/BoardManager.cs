@@ -889,7 +889,7 @@ public class BoardManager : MonoBehaviour
                 if (slot != null && !slot.IsEmpty()) return true;
         }
 
-        foreach (HandSlot hand in FindObjectsByType<HandSlot>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        foreach (HandSlot hand in FindObjectsByType<HandSlot>(FindObjectsInactive.Exclude))
             if (hand != null && hand.ownedCharacter != null && hand.ownedCharacter.data != null) return true;
 
         return false;

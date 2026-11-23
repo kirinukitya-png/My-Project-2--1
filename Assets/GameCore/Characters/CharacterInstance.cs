@@ -37,6 +37,31 @@ namespace ProjectNST.GameCore.Characters
             Star = star;
         }
 
+        /// <summary>Creates a detached copy of this instance without consuming randomness.</summary>
+        internal CharacterInstance CreateCopy()
+        {
+            return new CharacterInstance(this);
+        }
+
+        private CharacterInstance(CharacterInstance source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            InstanceId = source.InstanceId;
+            DefinitionId = source.DefinitionId;
+            RunCost = source.RunCost;
+            Star = source.Star;
+            Attack = source.Attack;
+            Defense = source.Defense;
+            TemporaryAttackBonus = source.TemporaryAttackBonus;
+            TemporaryDefenseBonus = source.TemporaryDefenseBonus;
+            HasRolledStats = source.HasRolledStats;
+            _hasTemporaryStar = source._hasTemporaryStar;
+            _starBeforeTemporaryEffect = source._starBeforeTemporaryEffect;
+            _attackBeforeTemporaryEffect = source._attackBeforeTemporaryEffect;
+            _defenseBeforeTemporaryEffect = source._defenseBeforeTemporaryEffect;
+            _hadRolledStatsBeforeTemporaryEffect = source._hadRolledStatsBeforeTemporaryEffect;
+        }
+
         /// <summary>Explicit equivalent of legacy lazy initialization; value getters stay side-effect free.</summary>
         public bool EnsureStats(CharacterDefinition definition, CharacterStatDefinition settings, IRandomSource random)
         {
@@ -85,6 +110,39 @@ namespace ProjectNST.GameCore.Characters
             _hasTemporaryStar = false;
         }
 
+        /// <summary>Applies an item stat delta to this detached working copy.</summary>
+        internal bool TryApplyItemStatDelta(int attackDelta, int defenseDelta, bool temporary)
+        {
+            long nextAttack = temporary
+                ? (long)TemporaryAttackBonus + attackDelta
+                : (long)Attack + attackDelta;
+            long nextDefense = temporary
+                ? (long)TemporaryDefenseBonus + defenseDelta
+                : (long)Defense + defenseDelta;
+            if (nextAttack < int.MinValue || nextAttack > int.MaxValue ||
+                nextDefense < int.MinValue || nextDefense > int.MaxValue)
+                return false;
+
+            if (temporary)
+            {
+                TemporaryAttackBonus = (int)nextAttack;
+                TemporaryDefenseBonus = (int)nextDefense;
+            }
+            else
+            {
+                Attack = (int)nextAttack;
+                Defense = (int)nextDefense;
+            }
+            return true;
+        }
+
+        /// <summary>Restores all battle-only item changes on this detached working copy.</summary>
+        internal void ClearBattleOnlyItemEffects()
+        {
+            RevertTemporaryStar();
+            TemporaryAttackBonus = 0;
+            TemporaryDefenseBonus = 0;
+        }
         private bool TryRollStats(CharacterDefinition definition, CharacterStatDefinition settings,
             IRandomSource random, int statStar)
         {

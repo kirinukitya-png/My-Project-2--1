@@ -122,8 +122,7 @@ public class PlayerData : MonoBehaviour
         if (hpBar != null)
             return;
 
-        foreach (Slider candidate in FindObjectsByType<Slider>(
-                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+        foreach (Slider candidate in FindObjectsByType<Slider>(FindObjectsInactive.Include))
         {
             if (candidate.gameObject.name == "HPBar")
             {

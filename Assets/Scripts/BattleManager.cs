@@ -203,8 +203,7 @@ public class BattleManager : MonoBehaviour
     {
         if (blockCountText == null)
         {
-            foreach (TMP_Text candidate in FindObjectsByType<TMP_Text>(
-                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (TMP_Text candidate in FindObjectsByType<TMP_Text>(FindObjectsInactive.Include))
             {
                 if (candidate.gameObject.name == "BlockCount")
                 {
@@ -216,8 +215,7 @@ public class BattleManager : MonoBehaviour
 
         if (blockCountPanel == null)
         {
-            foreach (Transform candidate in FindObjectsByType<Transform>(
-                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (Transform candidate in FindObjectsByType<Transform>(FindObjectsInactive.Include))
             {
                 if (candidate.name == "BlockCountPanel")
                 {
@@ -705,12 +703,10 @@ public class BattleManager : MonoBehaviour
 
             Debug.Log("Battle round " + round + " - Enemy turn.", this);
             RestoreTemporaryEnemyDefenseReductions(enemies, enemyManager);
-            bool enemyWaitingForFutureAction = false;
             foreach (BattleUnit enemy in enemies)
             {
                 if (round < enemy.nextActionRound)
                 {
-                    enemyWaitingForFutureAction = true;
                     yield return WaitForBattleStep();
                     enemy.gap = Mathf.Max(0, enemy.gap - 1);
                     enemyManager.RefreshEnemyBattleState(
