@@ -44,15 +44,11 @@ namespace ProjectNST.GameCore.Observation
             Attack = instance.Attack; Defense = instance.Defense;
             TemporaryAttackBonus = instance.TemporaryAttackBonus;
             TemporaryDefenseBonus = instance.TemporaryDefenseBonus;
-            Units = Copy(definition.Units); Attributes = Copy(definition.Attributes);
+            // CharacterDefinition owns defensive copies wrapped as read-only collections.
+            // Sharing those immutable definition values avoids two arrays and two wrappers
+            // per observed character without sharing mutable instance state.
+            Units = definition.Units; Attributes = definition.Attributes;
             LocationKind = locationKind; SlotIndex = slotIndex;
-        }
-
-        private static IReadOnlyList<string> Copy(IReadOnlyList<string> values)
-        {
-            var copy = new string[values == null ? 0 : values.Count];
-            if (values != null) for (int i = 0; i < copy.Length; i++) copy[i] = values[i];
-            return Array.AsReadOnly(copy);
         }
     }
 
@@ -70,10 +66,8 @@ namespace ProjectNST.GameCore.Observation
         public int Columns { get; }
         public int Rows { get; }
         public IReadOnlyList<BoardSlotObservation> Slots { get; }
-        internal BoardObservation(int columns, int rows, IList<BoardSlotObservation> slots)
-        { Columns = columns; Rows = rows; Slots = Freeze(slots); }
-        private static IReadOnlyList<BoardSlotObservation> Freeze(IList<BoardSlotObservation> src)
-        { var a = new BoardSlotObservation[src.Count]; src.CopyTo(a, 0); return Array.AsReadOnly(a); }
+        internal BoardObservation(int columns, int rows, BoardSlotObservation[] slots)
+        { Columns = columns; Rows = rows; Slots = Array.AsReadOnly(slots); }
     }
 
     public sealed class ItemEffectObservation
@@ -123,8 +117,8 @@ namespace ProjectNST.GameCore.Observation
         public int SlotCount { get; }
         public int EmptySlotCount { get; }
         public IReadOnlyList<HandSlotObservation> Slots { get; }
-        internal HandObservation(int slotCount, int emptySlotCount, IList<HandSlotObservation> slots)
-        { SlotCount = slotCount; EmptySlotCount = emptySlotCount; var a = new HandSlotObservation[slots.Count]; slots.CopyTo(a, 0); Slots = Array.AsReadOnly(a); }
+        internal HandObservation(int slotCount, int emptySlotCount, HandSlotObservation[] slots)
+        { SlotCount = slotCount; EmptySlotCount = emptySlotCount; Slots = Array.AsReadOnly(slots); }
     }
 
     public sealed class PlayerObservation
@@ -151,6 +145,128 @@ namespace ProjectNST.GameCore.Observation
         }
     }
 
+    /// <summary>Public, rule-derived Economy choices; contains no random checkpoint.</summary>
+    public sealed class EconomyRulesObservation
+    {
+        public int ExperiencePurchaseGoldCost { get; }
+        public int ExperiencePerPurchase { get; }
+        public int MaximumLevel { get; }
+        public bool CanPurchaseExperience { get; }
+        public int? ShopRerollGoldCost { get; }
+        public bool CanRerollShop { get; }
+        public int GoldPerInterestThreshold { get; }
+        public int InterestGoldPerThreshold { get; }
+        public int MaximumInterestGold { get; }
+        public decimal ExpectedInterestAtCurrentGold { get; }
+        public int BaseStageGoldReward { get; }
+        public int EmptyHandSlotsPerBonusGold { get; }
+        public int BonusGoldPerEmptyHandSlots { get; }
+
+        internal EconomyRulesObservation(EconomyState state, EconomyRulesConfiguration config,
+            bool selectB, int? rerollCost, bool canReroll)
+        {
+            ExperiencePurchaseGoldCost = EconomyRules.GetExperiencePurchaseGoldCost(config, selectB);
+            ExperiencePerPurchase = config.ExperiencePerPurchase;
+            MaximumLevel = state.MaximumLevel;
+            CanPurchaseExperience = EconomyRules.CanPurchaseExperience(state, config, selectB);
+            ShopRerollGoldCost = rerollCost;
+            CanRerollShop = canReroll && rerollCost.HasValue && state.Gold >= rerollCost.Value;
+            GoldPerInterestThreshold = config.GoldPerInterestThreshold;
+            InterestGoldPerThreshold = config.InterestGoldPerThreshold;
+            MaximumInterestGold = config.MaximumInterestGold;
+            ExpectedInterestAtCurrentGold = EconomyRules.CalculateExpectedInterestGold(state.Gold, config);
+            BaseStageGoldReward = config.BaseStageGoldReward;
+            EmptyHandSlotsPerBonusGold = config.EmptyHandSlotsPerBonusGold;
+            BonusGoldPerEmptyHandSlots = config.BonusGoldPerEmptyHandSlots;
+        }
+    }
+
+    public sealed class CharacterStatRangeObservation
+    {
+        public bool IsAvailable { get; }
+        public int MinimumAttack { get; }
+        public int MaximumAttack { get; }
+        public int MinimumDefense { get; }
+        public int MaximumDefense { get; }
+        internal CharacterStatRangeObservation(bool available, int minAttack, int maxAttack,
+            int minDefense, int maxDefense)
+        { IsAvailable = available; MinimumAttack = minAttack; MaximumAttack = maxAttack;
+          MinimumDefense = minDefense; MaximumDefense = maxDefense; }
+    }
+
+    /// <summary>Stable per-cost weights shown by the shop UI, not pool-conditioned odds.</summary>
+    public sealed class ShopCostWeightObservation
+    {
+        public int StageNumber { get; }
+        public int Cost1Weight { get; }
+        public int Cost2Weight { get; }
+        public int Cost3Weight { get; }
+        public int Cost4Weight { get; }
+        public int Cost5Weight { get; }
+        public int TotalConfiguredWeight { get; }
+        internal ShopCostWeightObservation(int stage, CharacterShopConfiguration config)
+        {
+            StageNumber = stage; Cost1Weight = config.GetCostWeight(stage, 1);
+            Cost2Weight = config.GetCostWeight(stage, 2); Cost3Weight = config.GetCostWeight(stage, 3);
+            Cost4Weight = config.GetCostWeight(stage, 4); Cost5Weight = config.GetCostWeight(stage, 5);
+            TotalConfiguredWeight = checked(Cost1Weight + Cost2Weight + Cost3Weight + Cost4Weight + Cost5Weight);
+        }
+    }
+
+    public sealed class RosterDefinitionObservation
+    {
+        public string DefinitionId { get; }
+        public string DisplayName { get; }
+        public IReadOnlyList<string> Units { get; }
+        public IReadOnlyList<string> Attributes { get; }
+        internal RosterDefinitionObservation(CharacterDefinition definition)
+        { DefinitionId = definition.DefinitionId; DisplayName = definition.CharacterName;
+          Units = definition.Units; Attributes = definition.Attributes; }
+    }
+
+    public sealed class StageChoiceObservation
+    {
+        public StageChoice Choice { get; }
+        public bool IsAvailable { get; }
+        public StageEnemyCategory EnemyCategory { get; }
+        public StageShopMode ShopMode { get; }
+        public int ChoiceGoldReward { get; }
+        public int ChoiceXPReward { get; }
+        public StageSelectionEffectKind SelectionEffect { get; }
+        public StageSelectionEffectTiming SelectionEffectTiming { get; }
+        public int SelectionEffectAmount { get; }
+        public bool SelectionEffectCapsAtMaximum { get; }
+        public int ExperiencePurchaseGoldCost { get; }
+        public bool CanReroll { get; }
+        public int? PostBattleGold { get; }
+        public int? PostBattleXP { get; }
+        public bool BossRewardOverridesChoice { get; }
+        public int? BossGoldReward { get; }
+        public int? BossXPReward { get; }
+
+        internal StageChoiceObservation(StageChoice choice, StageSelectionOutcome outcome,
+            bool available, bool bossRewardOverrides, EconomyRulesConfiguration economy,
+            StageRewardConfiguration rewards)
+        {
+            Choice = choice; IsAvailable = available; EnemyCategory = outcome.EnemyCategory;
+            ShopMode = outcome.ShopMode; ChoiceGoldReward = outcome.GoldReward;
+            ChoiceXPReward = outcome.ExperienceReward;
+            SelectionEffect = outcome.SelectionEffect == null ? StageSelectionEffectKind.None : outcome.SelectionEffect.Kind;
+            SelectionEffectTiming = outcome.SelectionEffect == null ? StageSelectionEffectTiming.None : outcome.SelectionEffect.Timing;
+            SelectionEffectAmount = outcome.SelectionEffect == null ? 0 : outcome.SelectionEffect.Amount;
+            SelectionEffectCapsAtMaximum = outcome.SelectionEffect != null && outcome.SelectionEffect.CapAtInitialMaximum;
+            ExperiencePurchaseGoldCost = EconomyRules.GetExperiencePurchaseGoldCost(economy,
+                choice == StageChoice.SelectB);
+            CanReroll = outcome.CanReroll;
+            BossRewardOverridesChoice = bossRewardOverrides;
+            BossGoldReward = rewards == null ? (int?)null : rewards.BossGoldReward;
+            BossXPReward = rewards == null ? (int?)null : rewards.BossExperienceReward;
+            PostBattleGold = bossRewardOverrides ? (rewards == null ? (int?)null : rewards.BossGoldReward) :
+                (choice == StageChoice.SelectA ? economy.BaseStageGoldReward : outcome.GoldReward);
+            PostBattleXP = bossRewardOverrides ? (rewards == null ? (int?)null : rewards.BossExperienceReward) : outcome.ExperienceReward;
+        }
+    }
+
     public sealed class StageObservation
     {
         public int EncounterIndex { get; }
@@ -167,7 +283,10 @@ namespace ProjectNST.GameCore.Observation
         public bool IsBossReward { get; }
         public bool IsFinalVictory { get; }
         public IReadOnlyList<StageChoice> AvailableChoices { get; }
-        internal StageObservation(StageProgressState state, StageProgressConfig config)
+        public IReadOnlyList<StageChoiceObservation> ChoiceDetails { get; }
+        public StageChoiceObservation SelectedChoiceDetails { get; }
+        internal StageObservation(StageProgressState state, StageProgressConfig config,
+            EconomyRulesConfiguration economy, StageRewardConfiguration rewards)
         {
             EncounterIndex = state.EncounterIndex;
             StageNumber = config.GetStageNumber(state.EncounterIndex);
@@ -185,6 +304,23 @@ namespace ProjectNST.GameCore.Observation
             AvailableChoices = state.Phase == StageProgressPhase.AwaitingStageChoice
                 ? Array.AsReadOnly(new[] { StageChoice.SelectA, StageChoice.SelectB, StageChoice.SelectC, StageChoice.SelectD })
                 : Array.AsReadOnly(Array.Empty<StageChoice>());
+            bool isChoicePhase = state.Phase == StageProgressPhase.AwaitingStageChoice;
+            bool boss = RoundNumber == config.BossRoundNumber;
+            if (isChoicePhase)
+            {
+                var choices = new StageChoiceObservation[4];
+                for (int i = 0; i < choices.Length; i++)
+                {
+                    StageChoice choice = (StageChoice)i;
+                    choices[i] = new StageChoiceObservation(choice,
+                        StageSelectionRules.CreateOutcome(config, state.EncounterIndex, choice), true, boss, economy, rewards);
+                }
+                ChoiceDetails = Array.AsReadOnly(choices);
+            }
+            else ChoiceDetails = Array.AsReadOnly(Array.Empty<StageChoiceObservation>());
+            if (state.CurrentSelection != null)
+                SelectedChoiceDetails = new StageChoiceObservation(state.CurrentSelection.Choice,
+                    state.CurrentSelection, false, boss, economy, rewards);
         }
     }
 
@@ -199,9 +335,41 @@ namespace ProjectNST.GameCore.Observation
         public ShopOfferStatus Status { get; }
         public int OfferIndex { get; }
         public int OfferSlotIndex => OfferIndex;
-        internal ShopOfferObservation(ShopOffer offer, string displayName, int offerIndex)
-        { OfferId = offer.OfferId; Kind = offer.Kind; DefinitionId = offer.DefinitionId; DisplayName = displayName;
-          DisplayPrice = offer.DisplayPrice; CharacterCost = offer.CharacterCost; Status = offer.Status; OfferIndex = offerIndex; }
+        public int? RunCost => Kind == ShopOfferKind.Character ? CharacterCost : null;
+        public IReadOnlyList<string> Units { get; }
+        public IReadOnlyList<string> Attributes { get; }
+        public CharacterStatRangeObservation CharacterStats { get; }
+        public ItemObservation Item { get; }
+        internal ShopOfferObservation(ShopOffer offer, CharacterDefinition character,
+            ItemObservation item, CharacterStatDefinition stats, int offerIndex)
+        {
+            OfferId = offer.OfferId; Kind = offer.Kind; DefinitionId = offer.DefinitionId;
+            DisplayName = character != null ? character.CharacterName : item != null ? item.DisplayName : string.Empty;
+            DisplayPrice = offer.DisplayPrice; CharacterCost = offer.CharacterCost; Status = offer.Status; OfferIndex = offerIndex;
+            if (character != null)
+            {
+                Units = character.Units; Attributes = character.Attributes;
+                CharacterStats = BuildStatRange(stats, offer.CharacterCost ?? 0);
+            }
+            Item = item;
+        }
+
+        private static CharacterStatRangeObservation BuildStatRange(CharacterStatDefinition stats, int cost)
+        {
+            if (stats == null || !stats.TryGetOptions(cost, 1, out IReadOnlyList<CharacterStatOption> options))
+                return new CharacterStatRangeObservation(false, 0, 0, 0, 0);
+            int minA = int.MaxValue, maxA = int.MinValue, minD = int.MaxValue, maxD = int.MinValue;
+            for (int i = 0; i < options.Count; i++)
+            {
+                CharacterStatOption option = options[i];
+                if (option.Weight <= 0) continue;
+                minA = Math.Min(minA, option.Attack); maxA = Math.Max(maxA, option.Attack);
+                minD = Math.Min(minD, option.Defense); maxD = Math.Max(maxD, option.Defense);
+            }
+            return minA == int.MaxValue
+                ? new CharacterStatRangeObservation(false, 0, 0, 0, 0)
+                : new CharacterStatRangeObservation(true, minA, maxA, minD, maxD);
+        }
     }
 
     public sealed class ShopObservation
@@ -212,9 +380,11 @@ namespace ProjectNST.GameCore.Observation
         public int RoundNumber { get; }
         public bool IsEventStage { get; }
                 public IReadOnlyList<ShopOfferObservation> Offers { get; }
-        internal ShopObservation(ShopKind kind, int slotCount, int stage, int round, bool isEventStage, IList<ShopOfferObservation> offers)
+        public ShopCostWeightObservation CostWeights { get; }
+        internal ShopObservation(ShopKind kind, int slotCount, int stage, int round, bool isEventStage,
+            ShopOfferObservation[] offers, ShopCostWeightObservation costWeights)
         { Kind = (ObservationShopKind)kind; SlotCount = slotCount; StageNumber = stage; RoundNumber = round; IsEventStage = isEventStage;
-          var a = new ShopOfferObservation[offers.Count]; offers.CopyTo(a, 0); Offers = Array.AsReadOnly(a); }
+          Offers = Array.AsReadOnly(offers); CostWeights = costWeights; }
     }
 
     public sealed class EventItemObservation
@@ -222,8 +392,8 @@ namespace ProjectNST.GameCore.Observation
         public ItemObservation Item { get; }
         public EventItemStatus Status { get; }
         public bool IsAvailable { get; }
-        internal EventItemObservation(ItemDefinition item, EventItemState state)
-        { Item = new ItemObservation(item); Status = state.Status; IsAvailable = state.IsAvailable; }
+        internal EventItemObservation(ItemObservation item, EventItemState state)
+        { Item = item; Status = state.Status; IsAvailable = state.IsAvailable; }
     }
 
     public sealed class SynergyUnitObservation
@@ -296,7 +466,8 @@ namespace ProjectNST.GameCore.Observation
             Gap = unit.Gap; Cooldown = unit.Cooldown;
             SlotBonusAttack = unit.TemporaryAttackBonus; SlotBonusDefense = unit.TemporaryDefenseBonus;
             SlotBonusHP = 0; SlotBonusGap = 0;
-            CipEffects = Copy(unit.CipEffectIds); AeEffects = Copy(unit.AeEffectIds); PigEffects = Copy(unit.PigEffectIds);
+            // BattleUnitState exposes immutable read-only collections backed by private copies.
+            CipEffects = unit.CipEffectIds; AeEffects = unit.AeEffectIds; PigEffects = unit.PigEffectIds;
         }
 
         internal EnemyObservation(EnemyInstance instance, EnemyDefinition definition, EnemyPreparationState prep)
@@ -310,10 +481,8 @@ namespace ProjectNST.GameCore.Observation
             Attack = checked(instance.Attack + SlotBonusAttack); Defense = checked(instance.Defense + SlotBonusDefense);
             MaximumHP = Math.Max(0, checked(instance.MaxHealth + SlotBonusHP)); HP = MaximumHP;
             Gap = Math.Max(0, checked(instance.Gap + SlotBonusGap)); Cooldown = instance.Cooldown;
-            CipEffects = Copy(definition.CipEffectIds); AeEffects = Copy(definition.AeEffectIds); PigEffects = Copy(definition.PigEffectIds);
+            CipEffects = definition.CipEffectIds; AeEffects = definition.AeEffectIds; PigEffects = definition.PigEffectIds;
         }
-        private static IReadOnlyList<string> Copy(IReadOnlyList<string> src)
-        { var a = new string[src.Count]; for (int i=0;i<a.Length;i++) a[i]=src[i]; return Array.AsReadOnly(a); }
     }
 
     public sealed class BattleUnitObservation
@@ -337,7 +506,8 @@ namespace ProjectNST.GameCore.Observation
             InstanceId=unit.InstanceId; DefinitionId=unit.DefinitionId; SlotIndex=unit.SlotIndex;
             Attack=unit.Attack; Defense=unit.Defense; HasHealth=unit.HasHealth;
             HP=unit.CurrentHP; MaximumHP=unit.MaxHP; Gap=unit.Gap; Cooldown=unit.Cooldown; Star=unit.Star;
-            UnitTags=Copy(unit.UnitTags); AttributeTags=Copy(unit.AttributeTags);
+            // BattleUnitState is immutable and defensively owns these read-only lists.
+            UnitTags=unit.UnitTags; AttributeTags=unit.AttributeTags;
             var e=new List<string>(); e.AddRange(unit.CipEffectIds); e.AddRange(unit.AeEffectIds); e.AddRange(unit.PigEffectIds);
             PublicEffectIds=Array.AsReadOnly(e.ToArray());
         }
@@ -387,18 +557,20 @@ namespace ProjectNST.GameCore.Observation
         public IReadOnlyList<EnemyObservation> Enemies { get; }
         public BattleObservation Battle { get; }
         public bool IsStrategyActionAllowed { get; }
+        public EconomyRulesObservation EconomyRules { get; }
+        public IReadOnlyList<RosterDefinitionObservation> SelectedRoster { get; }
 
         internal GameObservation(PlayerObservation player, StageObservation stage, ShopObservation shop,
-            BoardObservation board, HandObservation hand, IList<CharacterObservation> characters,
-            EventItemObservation eventItem, SynergyObservation synergy, IList<EnemyObservation> enemies,
-            BattleObservation battle, bool actionAllowed)
+            BoardObservation board, HandObservation hand, CharacterObservation[] characters,
+            EventItemObservation eventItem, SynergyObservation synergy, EnemyObservation[] enemies,
+            BattleObservation battle, bool actionAllowed, EconomyRulesObservation economyRules,
+            IReadOnlyList<RosterDefinitionObservation> selectedRoster)
         {
             Player=player; Stage=stage; Shop=shop; Board=board; Hand=hand;
-            Characters=Freeze(characters); EventItem=eventItem; Synergy=synergy;
-            Enemies=Freeze(enemies); Battle=battle; IsStrategyActionAllowed=actionAllowed;
+            Characters=Array.AsReadOnly(characters); EventItem=eventItem; Synergy=synergy;
+            Enemies=Array.AsReadOnly(enemies); Battle=battle; IsStrategyActionAllowed=actionAllowed;
+            EconomyRules=economyRules; SelectedRoster=selectedRoster;
         }
-        private static IReadOnlyList<T> Freeze<T>(IList<T> src)
-        { var a=new T[src.Count]; src.CopyTo(a,0); return Array.AsReadOnly(a); }
     }
 }
 

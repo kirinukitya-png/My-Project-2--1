@@ -34,6 +34,11 @@ namespace ProjectNST.GameCore.Observation
         public EnemyPreparationState EnemyPreparation { get; }
         public BattleState Battle { get; }
         public BattleResult BattleResult { get; }
+        public CharacterStatDefinition CharacterStatSettings { get; }
+        public CharacterShopConfiguration CharacterShopConfig { get; }
+        public StageRewardConfiguration StageRewardConfig { get; }
+        public int? ShopRerollGoldCost { get; }
+        public IReadOnlyList<RosterDefinitionObservation> SelectedRosterObservation { get; }
 
         public ObservationSource(StageProgressState stage, StageProgressConfig stageConfig,
             EconomyState economy, EconomyRulesConfiguration economyConfig, BoardState board,
@@ -45,7 +50,12 @@ namespace ProjectNST.GameCore.Observation
             ShopState shop = null, ItemEffectState itemEffects = null,
             EventItemState eventItem = null, IReadOnlyList<EnemyDefinition> enemyDefinitions = null,
             EnemyBoardState enemyBoard = null, EnemyPreparationState enemyPreparation = null,
-            BattleState battle = null, BattleResult battleResult = null)
+            BattleState battle = null, BattleResult battleResult = null,
+            CharacterStatDefinition characterStatSettings = null,
+            CharacterShopConfiguration characterShopConfig = null,
+            StageRewardConfiguration stageRewardConfig = null,
+            int? shopRerollGoldCost = null,
+            IReadOnlyList<RosterDefinitionObservation> selectedRosterObservation = null)
         {
             Stage=stage; StageConfig=stageConfig; Economy=economy; EconomyConfig=economyConfig;
             Board=board; Hand=hand; Ownership=ownership; CharacterDefinitions=characterDefinitions;
@@ -53,6 +63,9 @@ namespace ProjectNST.GameCore.Observation
             ItemDefinitions=itemDefinitions; Shop=shop; ItemEffects=itemEffects;
             EventItem=eventItem; EnemyDefinitions=enemyDefinitions; EnemyBoard=enemyBoard;
             EnemyPreparation=enemyPreparation; Battle=battle; BattleResult=battleResult;
+            CharacterStatSettings=characterStatSettings; CharacterShopConfig=characterShopConfig;
+            StageRewardConfig=stageRewardConfig; ShopRerollGoldCost=shopRerollGoldCost;
+            SelectedRosterObservation=selectedRosterObservation;
         }
     }
 
@@ -75,6 +88,8 @@ namespace ProjectNST.GameCore.Observation
     /// </summary>
     public static class ObservationBuilder
     {
+        private static readonly Comparison<CharacterObservation> CharacterOrder = CompareCharacters;
+
         public static ObservationBuildResult Build(ObservationSource source)
         {
             var errors = new List<string>();
@@ -171,16 +186,17 @@ namespace ProjectNST.GameCore.Observation
                 if (errors.Count != 0) return Failure(errors);
 
                 var characterDtos = new Dictionary<string, CharacterObservation>(StringComparer.Ordinal);
-                var boardSlots = new List<BoardSlotObservation>(source.Board.SlotCount);
+                var boardSlots = new BoardSlotObservation[source.Board.SlotCount];
                 for (int i = 0; i < source.Board.SlotCount; i++)
                 {
                     source.Board.TryGetCharacterIdAt(i, out string id);
                     CharacterObservation dto = id == null ? null :
                         BuildCharacter(id, ObservationLocationKind.Board, i, owned, characters, characterDtos, errors);
-                    boardSlots.Add(new BoardSlotObservation(i, dto));
+                    boardSlots[i] = new BoardSlotObservation(i, dto);
                 }
 
-                var handSlots = new List<HandSlotObservation>(source.Hand.SlotCount);
+                var itemDtos = new Dictionary<string, ItemObservation>(StringComparer.Ordinal);
+                var handSlots = new HandSlotObservation[source.Hand.SlotCount];
                 EventItemObservation eventItemDto = null;
                 for (int i = 0; i < source.Hand.SlotCount; i++)
                 {
@@ -194,18 +210,29 @@ namespace ProjectNST.GameCore.Observation
                     {
                         if (!items.TryGetValue(content.ItemDefinitionId, out ItemDefinition itemDefinition))
                             errors.Add("Hand references unknown Item DefinitionId '" + content.ItemDefinitionId + "'.");
-                        else item = new ItemObservation(itemDefinition);
+                        else item = GetItemObservation(itemDefinition, itemDtos);
                     }
-                    handSlots.Add(new HandSlotObservation(i, content.Kind, character, item));
+                    handSlots[i] = new HandSlotObservation(i, content.Kind, character, item);
                 }
 
-                var allCharacters = new List<CharacterObservation>(characterDtos.Values);
-                allCharacters.Sort((left, right) => string.CompareOrdinal(left.InstanceId, right.InstanceId));
+                var allCharacters = new CharacterObservation[characterDtos.Count];
+                int characterIndex = 0;
+                foreach (CharacterObservation character in characterDtos.Values)
+                    allCharacters[characterIndex++] = character;
+                Array.Sort(allCharacters, CharacterOrder);
 
                 PlayerObservation player = new PlayerObservation(source.Economy,
                     GetRequiredXP(source.Economy, source.EconomyConfig), source.ItemEffects);
-                StageObservation stage = new StageObservation(source.Stage, source.StageConfig);
-                ShopObservation shop = BuildShop(source.Stage, source.Shop, characters, items, errors);
+                StageObservation stage = new StageObservation(source.Stage, source.StageConfig,
+                    source.EconomyConfig, source.StageRewardConfig);
+                ShopObservation shop = BuildShop(source.Stage, source.Shop, characters, items,
+                    source.CharacterStatSettings, source.CharacterShopConfig, itemDtos, errors);
+                StageSelectionOutcome selection = source.Stage.CurrentSelection;
+                EconomyRulesObservation economyRules = new EconomyRulesObservation(source.Economy,
+                    source.EconomyConfig, selection != null && selection.Choice == StageChoice.SelectB,
+                    source.ShopRerollGoldCost, selection != null && selection.CanReroll && source.Shop != null);
+                IReadOnlyList<RosterDefinitionObservation> roster = source.SelectedRosterObservation ??
+                    BuildRosterSnapshot(source.SelectedRoster);
 
                 SynergyObservation synergy = null;
                 if (source.Stage.Phase == StageProgressPhase.Preparation)
@@ -217,7 +244,7 @@ namespace ProjectNST.GameCore.Observation
                     else synergy = new SynergyObservation(detected);
                 }
 
-                List<EnemyObservation> enemyDtos = BuildEnemies(source, enemies, errors);
+                EnemyObservation[] enemyDtos = BuildEnemies(source, enemies, errors);
                 BattleObservation battle = source.Battle == null ? null :
                     new BattleObservation(source.Battle, source.BattleResult);
 
@@ -225,7 +252,7 @@ namespace ProjectNST.GameCore.Observation
                 {
                     if (!items.TryGetValue(source.EventItem.DefinitionId, out ItemDefinition eventDefinition))
                         errors.Add("Event references unknown Item DefinitionId '" + source.EventItem.DefinitionId + "'.");
-                    else eventItemDto = new EventItemObservation(eventDefinition, source.EventItem);
+                    else eventItemDto = new EventItemObservation(GetItemObservation(eventDefinition, itemDtos), source.EventItem);
                 }
 
                 if (errors.Count != 0) return Failure(errors);
@@ -237,7 +264,8 @@ namespace ProjectNST.GameCore.Observation
                     new GameObservation(player, stage, shop,
                         new BoardObservation(source.Board.Columns, source.Board.Rows, boardSlots),
                         new HandObservation(source.Hand.SlotCount, source.Hand.EmptySlotCount, handSlots),
-                        allCharacters, eventItemDto, synergy, enemyDtos, battle, actionAllowed),
+                        allCharacters, eventItemDto, synergy, enemyDtos, battle, actionAllowed,
+                        economyRules, roster),
                     Array.Empty<string>());
             }
             catch (ArgumentException exception)
@@ -284,37 +312,57 @@ namespace ProjectNST.GameCore.Observation
             return result;
         }
 
+        private static ItemObservation GetItemObservation(ItemDefinition item,
+            Dictionary<string, ItemObservation> itemDtos)
+        {
+            if (!itemDtos.TryGetValue(item.DefinitionId, out ItemObservation observation))
+            { observation = new ItemObservation(item); itemDtos.Add(item.DefinitionId, observation); }
+            return observation;
+        }
+
+        private static IReadOnlyList<RosterDefinitionObservation> BuildRosterSnapshot(
+            IReadOnlyList<CharacterDefinition> selectedRoster)
+        {
+            var snapshot = new RosterDefinitionObservation[selectedRoster.Count];
+            for (int i = 0; i < snapshot.Length; i++) snapshot[i] = new RosterDefinitionObservation(selectedRoster[i]);
+            return Array.AsReadOnly(snapshot);
+        }
+
         private static ShopObservation BuildShop(StageProgressState stage, ShopState shop,
             Dictionary<string, CharacterDefinition> characters, Dictionary<string, ItemDefinition> items,
-            List<string> errors)
+            CharacterStatDefinition stats, CharacterShopConfiguration shopConfig,
+            Dictionary<string, ItemObservation> itemDtos, List<string> errors)
         {
             if (stage.Phase != StageProgressPhase.Preparation || shop == null) return null;
-            var offers = new List<ShopOfferObservation>(shop.Offers.Count);
+            var offers = new ShopOfferObservation[shop.Offers.Count];
             for (int i = 0; i < shop.Offers.Count; i++)
             {
                 ShopOffer offer = shop.Offers[i];
-                string name = string.Empty;
+                CharacterDefinition character = null;
+                ItemDefinition item = null;
                 if (!offer.IsEmpty)
                 {
                     if (offer.Kind == ShopOfferKind.Character)
                     {
-                        if (!characters.TryGetValue(offer.DefinitionId, out CharacterDefinition definition))
+                        if (!characters.TryGetValue(offer.DefinitionId, out character))
                             errors.Add("Shop references unknown Character DefinitionId '" + offer.DefinitionId + "'.");
-                        else name = definition.CharacterName;
                     }
                     else if (offer.Kind == ShopOfferKind.Item)
                     {
-                        if (!items.TryGetValue(offer.DefinitionId, out ItemDefinition definition))
+                        if (!items.TryGetValue(offer.DefinitionId, out item))
                             errors.Add("Shop references unknown Item DefinitionId '" + offer.DefinitionId + "'.");
-                        else name = definition.DisplayName;
                     }
                 }
-                offers.Add(new ShopOfferObservation(offer, name, i));
+                offers[i] = new ShopOfferObservation(offer, character,
+                    item == null ? null : GetItemObservation(item, itemDtos), stats, i);
             }
-            return new ShopObservation(shop.Kind, shop.SlotCount, shop.StageNumber, shop.RoundNumber, shop.IsEventStage, offers);
+            ShopCostWeightObservation weights = shop.Kind == ShopKind.Character && shopConfig != null
+                ? new ShopCostWeightObservation(shop.StageNumber, shopConfig) : null;
+            return new ShopObservation(shop.Kind, shop.SlotCount, shop.StageNumber, shop.RoundNumber,
+                shop.IsEventStage, offers, weights);
         }
 
-        private static List<EnemyObservation> BuildEnemies(ObservationSource source,
+        private static EnemyObservation[] BuildEnemies(ObservationSource source,
             Dictionary<string, EnemyDefinition> definitions, List<string> errors)
         {
             var result = new List<EnemyObservation>();
@@ -323,7 +371,7 @@ namespace ProjectNST.GameCore.Observation
                 source.Stage.Phase == StageProgressPhase.Completed ||
                 source.Stage.Phase == StageProgressPhase.GameOver)
             {
-                if (source.Battle == null) return result;
+                if (source.Battle == null) return result.ToArray();
                 foreach (BattleUnitState unit in source.Battle.Enemies)
                 {
                     if (!definitions.TryGetValue(unit.DefinitionId, out EnemyDefinition definition))
@@ -333,12 +381,12 @@ namespace ProjectNST.GameCore.Observation
                     }
                     result.Add(new EnemyObservation(unit, definition));
                 }
-                return result;
+                return result.ToArray();
             }
             if (source.Stage.Phase != StageProgressPhase.Preparation ||
                 source.Stage.CurrentSelection == null ||
                 source.Stage.CurrentSelection.EnemyCategory == StageEnemyCategory.None ||
-                source.EnemyBoard == null) return result;
+                source.EnemyBoard == null) return result.ToArray();
 
             for (int i = 0; i < source.EnemyBoard.SlotCount; i++)
             {
@@ -351,8 +399,11 @@ namespace ProjectNST.GameCore.Observation
                 }
                 result.Add(new EnemyObservation(instance, definition, source.EnemyPreparation));
             }
-            return result;
+            return result.ToArray();
         }
+
+        private static int CompareCharacters(CharacterObservation left, CharacterObservation right) =>
+            string.CompareOrdinal(left.InstanceId, right.InstanceId);
 
         private static Dictionary<string, T> BuildUniqueMap<T>(IReadOnlyList<T> values,
             Func<T, string> getId, string kind, List<string> errors) where T : class

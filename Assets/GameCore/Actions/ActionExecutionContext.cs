@@ -26,6 +26,7 @@ namespace ProjectNST.GameCore.Actions
         public IReadOnlyList<CharacterDefinition> SelectedRoster { get; }
         public IReadOnlyList<CharacterDefinition> FullCharacterRoster { get; }
         public IReadOnlyList<ItemDefinition> ItemDefinitions { get; }
+        public ItemDefinition EventItemDefinition { get; }
         public IReadOnlyList<EnemyDefinition> EnemyDefinitions { get; }
         public IReadOnlyList<EncounterPoolDefinition> EncounterPools { get; }
         public IReadOnlyList<EnemyFormationDefinition> EnemyFormations { get; }
@@ -48,7 +49,8 @@ namespace ProjectNST.GameCore.Actions
             IEnumerable<EnemyFormationDefinition> enemyFormations = null,
             IEnumerable<BattleTargetDefinition> battleTargetDefinitions = null,
             IEnumerable<BattleEffectDefinition> battleEffectDefinitions = null,
-            int? shopRerollGoldCost = null)
+            int? shopRerollGoldCost = null,
+            ItemDefinition eventItemDefinition = null)
         {
             if (shopRerollGoldCost < 0) throw new ArgumentOutOfRangeException(nameof(shopRerollGoldCost));
             StageConfig = stageConfig; EconomyConfig = economyConfig;
@@ -60,6 +62,7 @@ namespace ProjectNST.GameCore.Actions
             SelectedRoster = Copy(selectedRoster, nameof(selectedRoster));
             FullCharacterRoster = Copy(fullCharacterRoster, nameof(fullCharacterRoster));
             ItemDefinitions = Copy(itemDefinitions, nameof(itemDefinitions));
+            EventItemDefinition = eventItemDefinition;
             EnemyDefinitions = Copy(enemyDefinitions, nameof(enemyDefinitions));
             EncounterPools = Copy(encounterPools, nameof(encounterPools));
             EnemyFormations = Copy(enemyFormations, nameof(enemyFormations));

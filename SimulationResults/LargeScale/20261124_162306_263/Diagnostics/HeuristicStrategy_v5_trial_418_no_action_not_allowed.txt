@@ -1,0 +1,397 @@
+NST stopped Trial diagnostic (deterministic replay)
+TrialIndex=418
+TrialSeed=9191212219947575095
+Strategy=HeuristicStrategy v5
+SelectedRosterFingerprint=composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383
+BatchConfigurationId=unity-shop-100-v1|roster:composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383|event-item:Item006|pool-accounting:v2
+DeterministicCostAssignment (recomputed from same TrialSeed + Roster RNG):
+  character-data:710dfde0ec1d4b44b44f568086831312 cost=1
+  character-data:3510c2096e94459e9fae034465364186 cost=1
+  character-data:31e185eec748485cbbd272dad17b1f6e cost=4
+  character-data:ecc8561063394e6a8c0e9a26adcd0ce5 cost=2
+  character-data:da882de76e1f4d76946951e167465f05 cost=1
+  character-data:f4a589af297f457d90fdda08ac4d97d9 cost=4
+  character-data:ba20fc7fb2d7466ca0d8e23577496060 cost=1
+  character-data:f0cdbe7ff7764dd8a3cafe0b576b0f85 cost=2
+  character-data:7e290880568f41b682511e38318ed09a cost=4
+  character-data:34d50c59b20a42ecb051ee734bfed03f cost=3
+  character-data:2ace6fbc1bee498083d3080c5754c401 cost=4
+  character-data:507d64629f4543029f37d9ff6c730257 cost=5
+  character-data:14b7487ab20249c1a6223cac4d1652a2 cost=5
+  character-data:932fa32419264532aaf154bd873fa997 cost=4
+  character-data:4bc149c8bce845b3b25a32a28dbf71e8 cost=1
+  character-data:0e5714b0606b4fc09e126f75acfd6ffd cost=3
+  character-data:63e470f8515641dd84fbcbe91c94a29b cost=2
+  character-data:203bd50997254704b70090e6a87c07da cost=3
+  character-data:283c9b5a31744c5eb05127e91e94684b cost=2
+  character-data:567a39521b87465ea9ef6ab99d9bcb6d cost=5
+  character-data:80b87e0bdd4b4d10ac3ec46082bd44be cost=5
+  character-data:7da124c2904a443b8918f5bceb71e69f cost=2
+  character-data:21889b7d18fb4e6e9fe9bc58d1439ca1 cost=2
+  character-data:cd5d320fb3c84a57a928f0b6f0533c6e cost=3
+  character-data:25ed6f872e764400b1bfd57b5f98a9e3 cost=1
+  character-data:91c7d01bdcc04eddbfddc1acd83599f3 cost=3
+  character-data:0612954dc45544bebd147b91259ad495 cost=5
+  character-data:9c9aba4550c54ebd90baa5b20cbb8eb1 cost=5
+  character-data:eb03bff3735f456a9d4fc657480514ce cost=4
+  character-data:52d661a10b364454a500085b06c21866 cost=3
+StopReason=no_action_not_allowed / NoActionNotAllowed
+Stage=5 Round=4 Phase=Preparation Decisions=161 PhaseDecisions=2
+Detail=NoAction is not an end-of-turn signal in this phase.
+Field-by-field replay comparison (Unavailable is never counted as a match):
+TrialIndex: MATCH expected=418 actual=418
+TrialSeed: MATCH expected=9191212219947575095 actual=9191212219947575095
+StrategyId: MATCH expected=HeuristicStrategy actual=HeuristicStrategy
+StrategyVersion: MATCH expected=5 actual=5
+BatchConfigurationId (retained batch vs replay configuration): MATCH expected=unity-shop-100-v1|roster:composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383|event-item:Item006|pool-accounting:v2 actual=unity-shop-100-v1|roster:composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383|event-item:Item006|pool-accounting:v2
+RosterFingerprint (batch input vs replay input): MATCH expected=composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383 actual=composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383
+StopReason: MATCH expected=no_action_not_allowed actual=no_action_not_allowed
+FinalPhase: MATCH expected=Preparation actual=Preparation
+FinalStage: MATCH expected=5 actual=5
+FinalRound: MATCH expected=4 actual=4
+FinalStateFingerprint: MATCH expected=0abedc22fcd0328a9d75e38060ff757b2892f295be9a8d0728c05a14cf5b9fba actual=0abedc22fcd0328a9d75e38060ff757b2892f295be9a8d0728c05a14cf5b9fba
+DecisionCount: MATCH expected=161 actual=161
+PhaseDecisionCount: MATCH expected=2 actual=2
+SuccessfulActionCount: MATCH expected=158 actual=158
+RejectedActionCount: MATCH expected=0 actual=0
+ActionSequence: MATCH expected=158 actual=158
+ActionSequenceDetails: UNAVAILABLE retained Trial history was not recorded; the diagnostic rerun has a separate history and cannot be compared action-by-action.
+GameCore checkpoint fields:
+GameCoreCheckpoint.Version: MATCH expected=2 actual=2
+GameCoreCheckpoint.TrialSeed: MATCH expected=9191212219947575095 actual=9191212219947575095
+GameRng.Shop.AlgorithmVersion: MATCH expected=1 actual=1
+GameRng.Shop.State: MATCH expected=3445137246720074596 actual=3445137246720074596
+GameRng.Shop.Increment: MATCH expected=8737304267760875925 actual=8737304267760875925
+GameRng.Stats.AlgorithmVersion: MATCH expected=1 actual=1
+GameRng.Stats.State: MATCH expected=16187848814704392041 actual=16187848814704392041
+GameRng.Stats.Increment: MATCH expected=6186121313764182369 actual=6186121313764182369
+GameRng.Encounter.AlgorithmVersion: MATCH expected=1 actual=1
+GameRng.Encounter.State: MATCH expected=4126038192442854215 actual=4126038192442854215
+GameRng.Encounter.Increment: MATCH expected=15312057305893026327 actual=15312057305893026327
+GameRng.Battle.AlgorithmVersion: MATCH expected=1 actual=1
+GameRng.Battle.State: MATCH expected=17273765125460407614 actual=17273765125460407614
+GameRng.Battle.Increment: MATCH expected=9407961827428503431 actual=9407961827428503431
+GameRng.Event.AlgorithmVersion: MATCH expected=1 actual=1
+GameRng.Event.State: MATCH expected=17991380131548984062 actual=17991380131548984062
+GameRng.Event.Increment: MATCH expected=10410181341394164421 actual=10410181341394164421
+GameRng.Roster.AlgorithmVersion: MATCH expected=1 actual=1
+GameRng.Roster.State: MATCH expected=13721162291868822275 actual=13721162291868822275
+GameRng.Roster.Increment: MATCH expected=5661054081727930941 actual=5661054081727930941
+GameRng.Economy.AlgorithmVersion: MATCH expected=1 actual=1
+GameRng.Economy.State: MATCH expected=10292114990145865945 actual=10292114990145865945
+GameRng.Economy.Increment: MATCH expected=12987474640018444051 actual=12987474640018444051
+GameSession checkpoint component fingerprints:
+Checkpoint.Stage: MATCH expected=dc0bf8ab680aff3e30b28a215278d26e3d18829b7248acd95230289ad151aa9e actual=dc0bf8ab680aff3e30b28a215278d26e3d18829b7248acd95230289ad151aa9e
+Checkpoint.Economy: MATCH expected=a3e3ad60a0c9b5e66f91e8a87a0a81085f767a34e9bc14acb44c1cae43637423 actual=a3e3ad60a0c9b5e66f91e8a87a0a81085f767a34e9bc14acb44c1cae43637423
+Checkpoint.Shop: MATCH expected=c92d28915f9b64fba629177125d8c92ecdf172a17e32a3038449ddc4d92dcb43 actual=c92d28915f9b64fba629177125d8c92ecdf172a17e32a3038449ddc4d92dcb43
+Checkpoint.CharacterPool: MATCH expected=b7a2b0aae8a2723cc8bb0129b34a09683117cbf4ace864a7460bf385d1a40edd actual=b7a2b0aae8a2723cc8bb0129b34a09683117cbf4ace864a7460bf385d1a40edd
+Checkpoint.InstanceFactory.LastIssuedNumber: MATCH expected=35 actual=35
+Checkpoint.Board: MATCH expected=08fde31b92f3061daee7617f3320da3545c0026359152f20cb3e49dac6314780 actual=08fde31b92f3061daee7617f3320da3545c0026359152f20cb3e49dac6314780
+Checkpoint.Hand: MATCH expected=c484bc5c5e4305267b18b94a5239e9a16b98d9b220638a8ee906e15e7733de09 actual=c484bc5c5e4305267b18b94a5239e9a16b98d9b220638a8ee906e15e7733de09
+Checkpoint.Ownership: MATCH expected=9335cc32aa520c17be78cf3f592d90391c6d4918dd73e6cb554faa7f3edaf78f actual=9335cc32aa520c17be78cf3f592d90391c6d4918dd73e6cb554faa7f3edaf78f
+Checkpoint.ItemEffects: MATCH expected=ca23bb6346aade379ef493c43e1824197b814c60f96ed430ecd059082ad043fc actual=ca23bb6346aade379ef493c43e1824197b814c60f96ed430ecd059082ad043fc
+Checkpoint.EventItem: MATCH expected=<null> actual=<null>
+Checkpoint.EnemyBoard: MATCH expected=9ea75262d2abe3ecff29df87f1734feb56c64a309c7e48197fc7898ddbcfb875 actual=9ea75262d2abe3ecff29df87f1734feb56c64a309c7e48197fc7898ddbcfb875
+Checkpoint.EnemyPreparation: MATCH expected=71a2440ac60cbd2741e92de7d39b8ae7f1a7bb6670871c25cfc4fc7f0af7021d actual=71a2440ac60cbd2741e92de7d39b8ae7f1a7bb6670871c25cfc4fc7f0af7021d
+Checkpoint.Battle: MATCH expected=<null> actual=<null>
+Checkpoint.BattleResult: MATCH expected=<null> actual=<null>
+Checkpoint.ExecutedActionIds: MATCH expected=trial:418:action:0|trial:418:action:1|trial:418:action:2|trial:418:action:3|trial:418:action:4|trial:418:action:5|trial:418:action:6|trial:418:action:7|trial:418:action:8|trial:418:action:9|trial:418:action:10|trial:418:action:11|trial:418:action:12|trial:418:action:13|trial:418:action:14|trial:418:action:15|trial:418:action:16|trial:418:action:17|trial:418:action:18|trial:418:action:19|trial:418:action:20|trial:418:action:21|trial:418:action:22|trial:418:action:23|trial:418:action:24|trial:418:action:25|trial:418:action:26|trial:418:action:27|trial:418:action:28|trial:418:action:29|trial:418:action:30|trial:418:action:31|trial:418:action:32|trial:418:action:33|trial:418:action:34|trial:418:action:35|trial:418:action:36|trial:418:action:37|trial:418:action:38|trial:418:action:39|trial:418:action:40|trial:418:action:41|trial:418:action:42|trial:418:action:43|trial:418:action:44|trial:418:action:45|trial:418:action:46|trial:418:action:47|trial:418:action:48|trial:418:action:49|trial:418:action:50|trial:418:action:51|trial:418:action:52|trial:418:action:53|trial:418:action:54|trial:418:action:55|trial:418:action:56|trial:418:action:57|trial:418:action:58|trial:418:action:59|trial:418:action:60|trial:418:action:61|trial:418:action:62|trial:418:action:63|trial:418:action:64|trial:418:action:65|trial:418:action:66|trial:418:action:67|trial:418:action:68|trial:418:action:69|trial:418:action:70|trial:418:action:71|trial:418:action:72|trial:418:action:73|trial:418:action:74|trial:418:action:75|trial:418:action:76|trial:418:action:77|trial:418:action:78|trial:418:action:79|trial:418:action:80|trial:418:action:81|trial:418:action:82|trial:418:action:83|trial:418:action:84|trial:418:action:85|trial:418:action:86|trial:418:action:87|trial:418:action:88|trial:418:action:89|trial:418:action:90|trial:418:action:91|trial:418:action:92|trial:418:action:93|trial:418:action:94|trial:418:action:95|trial:418:action:96|trial:418:action:97|trial:418:action:98|trial:418:action:99|trial:418:action:100|trial:418:action:101|trial:418:action:102|trial:418:action:103|trial:418:action:104|trial:418:action:105|trial:418:action:106|trial:418:action:107|trial:418:action:108|trial:418:action:109|trial:418:action:110|trial:418:action:111|trial:418:action:112|trial:418:action:113|trial:418:action:114|trial:418:action:115|trial:418:action:116|trial:418:action:117|trial:418:action:118|trial:418:action:119|trial:418:action:120|trial:418:action:121|trial:418:action:122|trial:418:action:123|trial:418:action:124|trial:418:action:125|trial:418:action:126|trial:418:action:127|trial:418:action:128|trial:418:action:129|trial:418:action:130|trial:418:action:131|trial:418:action:132|trial:418:action:133|trial:418:action:134|trial:418:action:135|trial:418:action:136|trial:418:action:137|trial:418:action:138|trial:418:action:139|trial:418:action:140|trial:418:action:141|trial:418:action:142|trial:418:action:143|trial:418:action:144|trial:418:action:145|trial:418:action:146|trial:418:action:147|trial:418:action:148|trial:418:action:149|trial:418:action:150|trial:418:action:151|trial:418:action:152|trial:418:action:153|trial:418:action:154|trial:418:action:155|trial:418:action:156|trial:418:action:157 actual=trial:418:action:0|trial:418:action:1|trial:418:action:2|trial:418:action:3|trial:418:action:4|trial:418:action:5|trial:418:action:6|trial:418:action:7|trial:418:action:8|trial:418:action:9|trial:418:action:10|trial:418:action:11|trial:418:action:12|trial:418:action:13|trial:418:action:14|trial:418:action:15|trial:418:action:16|trial:418:action:17|trial:418:action:18|trial:418:action:19|trial:418:action:20|trial:418:action:21|trial:418:action:22|trial:418:action:23|trial:418:action:24|trial:418:action:25|trial:418:action:26|trial:418:action:27|trial:418:action:28|trial:418:action:29|trial:418:action:30|trial:418:action:31|trial:418:action:32|trial:418:action:33|trial:418:action:34|trial:418:action:35|trial:418:action:36|trial:418:action:37|trial:418:action:38|trial:418:action:39|trial:418:action:40|trial:418:action:41|trial:418:action:42|trial:418:action:43|trial:418:action:44|trial:418:action:45|trial:418:action:46|trial:418:action:47|trial:418:action:48|trial:418:action:49|trial:418:action:50|trial:418:action:51|trial:418:action:52|trial:418:action:53|trial:418:action:54|trial:418:action:55|trial:418:action:56|trial:418:action:57|trial:418:action:58|trial:418:action:59|trial:418:action:60|trial:418:action:61|trial:418:action:62|trial:418:action:63|trial:418:action:64|trial:418:action:65|trial:418:action:66|trial:418:action:67|trial:418:action:68|trial:418:action:69|trial:418:action:70|trial:418:action:71|trial:418:action:72|trial:418:action:73|trial:418:action:74|trial:418:action:75|trial:418:action:76|trial:418:action:77|trial:418:action:78|trial:418:action:79|trial:418:action:80|trial:418:action:81|trial:418:action:82|trial:418:action:83|trial:418:action:84|trial:418:action:85|trial:418:action:86|trial:418:action:87|trial:418:action:88|trial:418:action:89|trial:418:action:90|trial:418:action:91|trial:418:action:92|trial:418:action:93|trial:418:action:94|trial:418:action:95|trial:418:action:96|trial:418:action:97|trial:418:action:98|trial:418:action:99|trial:418:action:100|trial:418:action:101|trial:418:action:102|trial:418:action:103|trial:418:action:104|trial:418:action:105|trial:418:action:106|trial:418:action:107|trial:418:action:108|trial:418:action:109|trial:418:action:110|trial:418:action:111|trial:418:action:112|trial:418:action:113|trial:418:action:114|trial:418:action:115|trial:418:action:116|trial:418:action:117|trial:418:action:118|trial:418:action:119|trial:418:action:120|trial:418:action:121|trial:418:action:122|trial:418:action:123|trial:418:action:124|trial:418:action:125|trial:418:action:126|trial:418:action:127|trial:418:action:128|trial:418:action:129|trial:418:action:130|trial:418:action:131|trial:418:action:132|trial:418:action:133|trial:418:action:134|trial:418:action:135|trial:418:action:136|trial:418:action:137|trial:418:action:138|trial:418:action:139|trial:418:action:140|trial:418:action:141|trial:418:action:142|trial:418:action:143|trial:418:action:144|trial:418:action:145|trial:418:action:146|trial:418:action:147|trial:418:action:148|trial:418:action:149|trial:418:action:150|trial:418:action:151|trial:418:action:152|trial:418:action:153|trial:418:action:154|trial:418:action:155|trial:418:action:156|trial:418:action:157
+StrategyRng.AlgorithmId: MATCH expected=PCG-XSH-RR-32-v1 actual=PCG-XSH-RR-32-v1
+StrategyRng.AlgorithmVersion: MATCH expected=1 actual=1
+StrategyRng.CheckpointVersion: MATCH expected=1 actual=1
+StrategyRng.TrialSeed: MATCH expected=9191212219947575095 actual=9191212219947575095
+StrategyRng.State: MATCH expected=17225302205603807956 actual=17225302205603807956
+StrategyRng.Increment: MATCH expected=17810697130527051681 actual=17810697130527051681
+StrategyState.StrategyId: MATCH expected=HeuristicStrategy actual=HeuristicStrategy
+StrategyState.Version: MATCH expected=5 actual=5
+StrategyState.SchemaVersion: MATCH expected=1 actual=1
+StrategyState.Payload: MATCH expected=hs1|5| actual=hs1|5|
+ReplayComparison=UNAVAILABLE
+Replay identical=Unavailable
+Action totals: successful=158 rejected=0 actionSequence=158
+PreparationDecisionCount=2 ConsecutiveRejectionCount=0
+Roster fingerprint matches batch input=True
+Stage=5 Round=4 Phase=Preparation EncounterIndex=23 Choice=SelectA EnemyCategory=Boss ShopMode=Character
+Gold=11 Level=10 XP=0 HP=18/30
+Board=0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33
+Hand=0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35
+Shop=Character Stage=5 Round=4
+  OfferId=character-s5-r4-g0-slot0 Kind=Character DefinitionId=character-data:80b87e0bdd4b4d10ac3ec46082bd44be Cost=5 Price=5 Status=Available
+  OfferId=character-s5-r4-g0-slot1 Kind=Character DefinitionId=character-data:2ace6fbc1bee498083d3080c5754c401 Cost=4 Price=4 Status=Available
+  OfferId=character-s5-r4-g0-slot2 Kind=Character DefinitionId=character-data:14b7487ab20249c1a6223cac4d1652a2 Cost=5 Price=5 Status=Available
+Last 20 Action records (consecutive rejection stop includes its full final rejection streak):
+#195 step=139 phase=Preparation->Preparation location=Stage=4 Round=5 ActionKind=MoveOrSwapBoard ActionId=trial:418:action:138 parameters=MoveOrSwapBoard(8->6) stageRound=Stage=4 Round=5 status=Succeeded beforeFingerprint=364a7c993f26ce99b1f0ae4caac4b03893cd2418b9a716782ff3820c297b8c05 afterFingerprint=d6b46f30e6868a800453362f13a215ff836d07afaa13b5534215ea25d9abec44 strategyState=HeuristicStrategy/v5/schema1/payload=hs1|60|Njo4OjY= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Relocation improves visible power or synergy placement. Score=64.
+  before: 
+phase=Preparation encounter=19 gold=39 level=8 xp=6 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:empty,7:C8,8:C34] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C33]
+  after: 
+phase=Preparation encounter=19 gold=39 level=8 xp=6 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:empty] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C33]
+#196 step=140 phase=Preparation->Preparation location=Stage=4 Round=5 ActionKind=BuyExperience ActionId=trial:418:action:139 parameters=BuyExperience stageRound=Stage=4 Round=5 status=Succeeded beforeFingerprint=d6b46f30e6868a800453362f13a215ff836d07afaa13b5534215ea25d9abec44 afterFingerprint=2b455e5f639b3fd19432f1e975208b4997af2cbe47f7e5abbeb5f262971a3c2c strategyState=HeuristicStrategy/v5/schema1/payload=hs1|61|NQ== strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Values public XP progress against its configured cost. Score=10.6.
+  before: 
+phase=Preparation encounter=19 gold=39 level=8 xp=6 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:empty] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C33]
+  after: 
+phase=Preparation encounter=19 gold=35 level=8 xp=7 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:empty] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C33]
+#197 step=141 phase=Preparation->Preparation location=Stage=4 Round=5 ActionKind=RerollShop ActionId=trial:418:action:140 parameters=RerollShop(Character) stageRound=Stage=4 Round=5 status=Succeeded beforeFingerprint=2b455e5f639b3fd19432f1e975208b4997af2cbe47f7e5abbeb5f262971a3c2c afterFingerprint=f301432e601b41567b63211d8b844ced33ea33db221076e5eb934519aaa4ca96 strategyState=HeuristicStrategy/v5/schema1/payload=hs1|62|NDox strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Reroll is affordable; future offers are not predicted. Score=9.73.
+  before: 
+phase=Preparation encounter=19 gold=35 level=8 xp=7 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:empty] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C33]
+  after: 
+phase=Preparation encounter=19 gold=34 level=8 xp=7 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:empty] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C33]
+#198 step=142 phase=Preparation->Preparation location=Stage=4 Round=5 ActionKind=BuyExperience ActionId=trial:418:action:141 parameters=BuyExperience stageRound=Stage=4 Round=5 status=Succeeded beforeFingerprint=f301432e601b41567b63211d8b844ced33ea33db221076e5eb934519aaa4ca96 afterFingerprint=ceba2b42005c0981b118a78f90a5b5143fbf220731e32fb4791e585a031b8288 strategyState=HeuristicStrategy/v5/schema1/payload=hs1|63|NQ== strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Public XP is near a level-up threshold. Score=26.6.
+  before: 
+phase=Preparation encounter=19 gold=34 level=8 xp=7 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:empty] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C33]
+  after: 
+phase=Preparation encounter=19 gold=30 level=9 xp=0 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:empty] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C33]
+#199 step=143 phase=Preparation->Preparation location=Stage=4 Round=5 ActionKind=MoveHandToBoard ActionId=trial:418:action:142 parameters=MoveHandToBoard(4->8) stageRound=Stage=4 Round=5 status=Succeeded beforeFingerprint=ceba2b42005c0981b118a78f90a5b5143fbf220731e32fb4791e585a031b8288 afterFingerprint=d3fcfb6eac01b2a16b3417fe00ab5f3f411775196764fef3916658f29fc0fe5a strategyState=HeuristicStrategy/v5/schema1/payload=hs1|64|OTo0Ojg= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Transfer improves visible formation or reduces Board population above Level. Deploys an available Hand character into unused Level capacity. Score=346.
+  before: 
+phase=Preparation encounter=19 gold=30 level=9 xp=0 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:empty] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C33]
+  after: 
+phase=Preparation encounter=19 gold=30 level=9 xp=0 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:empty]
+#200 step=144 phase=Preparation->Preparation location=Stage=4 Round=5 ActionKind=BuyCharacter ActionId=trial:418:action:143 parameters=BuyCharacter(character-s4-r5-g10-slot0,Hand:4) stageRound=Stage=4 Round=5 status=Succeeded beforeFingerprint=d3fcfb6eac01b2a16b3417fe00ab5f3f411775196764fef3916658f29fc0fe5a afterFingerprint=74c756cbb2108487d55568e323020b6a1c4419743c9d1abf39791db956a2c321 strategyState=HeuristicStrategy/v5/schema1/payload=hs1|65|MjpjaGFyYWN0ZXItczQtcjUtZzEwLXNsb3QwOjE6NA== strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=24.040000000000003.
+  before: 
+phase=Preparation encounter=19 gold=30 level=9 xp=0 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:empty]
+  after: 
+phase=Preparation encounter=19 gold=26 level=9 xp=0 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#201 step=145 phase=Preparation->Preparation location=Stage=4 Round=5 ActionKind=BuyExperience ActionId=trial:418:action:144 parameters=BuyExperience stageRound=Stage=4 Round=5 status=Succeeded beforeFingerprint=74c756cbb2108487d55568e323020b6a1c4419743c9d1abf39791db956a2c321 afterFingerprint=717c81603331609c9654050d67fa0f150636b698af7b5daddc63352bd7b713be strategyState=HeuristicStrategy/v5/schema1/payload=hs1|66|NQ== strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Values public XP progress against its configured cost. Score=10.6.
+  before: 
+phase=Preparation encounter=19 gold=26 level=9 xp=0 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=Preparation encounter=19 gold=22 level=9 xp=1 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#202 step=146 phase=Preparation->Preparation location=Stage=4 Round=5 ActionKind=RerollShop ActionId=trial:418:action:145 parameters=RerollShop(Character) stageRound=Stage=4 Round=5 status=Succeeded beforeFingerprint=717c81603331609c9654050d67fa0f150636b698af7b5daddc63352bd7b713be afterFingerprint=dbf7ec60c6cf8fda3507eeac7b6eb599fb14becef10fbdbe33727b3b3d5e8a2d strategyState=HeuristicStrategy/v5/schema1/payload=hs1|67|NDox strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Reroll is affordable; future offers are not predicted. Score=8.6900000000000013.
+  before: 
+phase=Preparation encounter=19 gold=22 level=9 xp=1 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=Preparation encounter=19 gold=21 level=9 xp=1 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#203 step=147 phase=Preparation->Preparation location=Stage=4 Round=5 ActionKind=BuyExperience ActionId=trial:418:action:146 parameters=BuyExperience stageRound=Stage=4 Round=5 status=Succeeded beforeFingerprint=dbf7ec60c6cf8fda3507eeac7b6eb599fb14becef10fbdbe33727b3b3d5e8a2d afterFingerprint=f5ce3a25a1030009178cef034cda482c1849fd59fb4ba8d7f0e57785ffa06e91 strategyState=HeuristicStrategy/v5/schema1/payload=hs1|68|NQ== strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Values public XP progress against its configured cost. Score=10.6.
+  before: 
+phase=Preparation encounter=19 gold=21 level=9 xp=1 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=Preparation encounter=19 gold=17 level=9 xp=2 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#204 step=148 phase=Preparation->Preparation location=Stage=4 Round=5 ActionKind=RerollShop ActionId=trial:418:action:147 parameters=RerollShop(Character) stageRound=Stage=4 Round=5 status=Succeeded beforeFingerprint=f5ce3a25a1030009178cef034cda482c1849fd59fb4ba8d7f0e57785ffa06e91 afterFingerprint=901f5e522b136e17e59ac16a897a52aa6b401e24c0ca184d42f847239b3338c5 strategyState=HeuristicStrategy/v5/schema1/payload=hs1|69|NDox strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Reroll is affordable; future offers are not predicted. Score=8.2900000000000009.
+  before: 
+phase=Preparation encounter=19 gold=17 level=9 xp=2 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=Preparation encounter=19 gold=16 level=9 xp=2 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#205 step=149 phase=Preparation->Preparation location=Stage=4 Round=5 ActionKind=BuyExperience ActionId=trial:418:action:148 parameters=BuyExperience stageRound=Stage=4 Round=5 status=Succeeded beforeFingerprint=901f5e522b136e17e59ac16a897a52aa6b401e24c0ca184d42f847239b3338c5 afterFingerprint=9bc3f16ed237d5d3e1f94f6e782252b4cf65159f3859ecadb2cc765884e0917c strategyState=HeuristicStrategy/v5/schema1/payload=hs1|70|NQ== strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Values public XP progress against its configured cost. Score=10.6.
+  before: 
+phase=Preparation encounter=19 gold=16 level=9 xp=2 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=Preparation encounter=19 gold=12 level=9 xp=3 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#206 step=150 phase=Preparation->Preparation location=Stage=4 Round=5 ActionKind=RerollShop ActionId=trial:418:action:149 parameters=RerollShop(Character) stageRound=Stage=4 Round=5 status=Succeeded beforeFingerprint=9bc3f16ed237d5d3e1f94f6e782252b4cf65159f3859ecadb2cc765884e0917c afterFingerprint=75011bd55482711fdb97ccde29c6e8c34eeed2246a18b498f85561dd49ea1b30 strategyState=HeuristicStrategy/v5/schema1/payload=hs1|71|NDox strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Reroll is affordable; future offers are not predicted. Score=7.8900000000000006.
+  before: 
+phase=Preparation encounter=19 gold=12 level=9 xp=3 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=Preparation encounter=19 gold=11 level=9 xp=3 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#207 step=151 phase=Preparation->Preparation location=Stage=4 Round=5 ActionKind=BuyExperience ActionId=trial:418:action:150 parameters=BuyExperience stageRound=Stage=4 Round=5 status=Succeeded beforeFingerprint=75011bd55482711fdb97ccde29c6e8c34eeed2246a18b498f85561dd49ea1b30 afterFingerprint=3cfae02e8aad4d71736a18a2085e4bd54dfcddf338fd283a867212e0288e0918 strategyState=HeuristicStrategy/v5/schema1/payload=hs1|72|NQ== strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Values public XP progress against its configured cost. Score=10.6.
+  before: 
+phase=Preparation encounter=19 gold=11 level=9 xp=3 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=Preparation encounter=19 gold=7 level=9 xp=4 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#211 step=153 phase=Preparation->Battle location=Stage=5 Round=1 ActionKind=StartBattle ActionId=trial:418:action:151 parameters=StartBattle stageRound=Stage=5 Round=1 status=Succeeded beforeFingerprint=5235a039cbd2595c7db705be8552ad8f1e8b33c3729ccbb1c92907b3309a5a15 afterFingerprint=f8364e601aeb80de5ef747e2a2eeb2dfa16666b5be72e63d0889aab55833d7e5 strategyState=HeuristicStrategy/v5/schema1/payload=hs1|74|MTU= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Preparation decision limit reached; prioritize legal StartBattle. Score=1000000.
+  before: 
+phase=Preparation encounter=20 gold=7 level=9 xp=4 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=Battle encounter=20 gold=7 level=9 xp=4 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#214 step=154 phase=EventPending->EventPending location=Stage=5 Round=2 ActionKind=UseEventItem ActionId=trial:418:action:152 parameters=UseEventItem(BoardCharacter:2) stageRound=Stage=5 Round=2 status=Succeeded beforeFingerprint=f8430577308b94fa700ce39c8d794c9d016018d3397c1462ecdc066b669c0403 afterFingerprint=b20bbc70188a3f5614726a5c755f9c401d285ae8186ea6d51bdcfa8dfa603d35 strategyState=HeuristicStrategy/v5/schema1/payload=hs1|0|MTM6MToyOjA6MQ== strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Uses the Event Item on a public eligible target. Score=30.
+  before: 
+phase=EventPending encounter=21 gold=11 level=9 xp=5 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=EventPending encounter=21 gold=11 level=9 xp=5 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#215 step=155 phase=EventPending->AwaitingEncounterStart location=Stage=5 Round=2 ActionKind=EndEvent ActionId=trial:418:action:153 parameters=EndEvent stageRound=Stage=5 Round=2 status=Succeeded beforeFingerprint=b20bbc70188a3f5614726a5c755f9c401d285ae8186ea6d51bdcfa8dfa603d35 afterFingerprint=47a82874b4df1e8fc709279ccb49613daf3c54b6e67600e38b4ed18ca9602c40 strategyState=HeuristicStrategy/v5/schema1/payload=hs1|0|MTQ= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=No eligible Event Item target; end the event. Score=30.
+  before: 
+phase=EventPending encounter=21 gold=11 level=9 xp=5 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=AwaitingEncounterStart encounter=21 gold=11 level=9 xp=5 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#217 step=156 phase=Preparation->Battle location=Stage=5 Round=2 ActionKind=StartBattle ActionId=trial:418:action:154 parameters=StartBattle stageRound=Stage=5 Round=2 status=Succeeded beforeFingerprint=8b80d2f5b99611a687b8da3c06688f0b87803105353f82a8957548caac47f147 afterFingerprint=8a90c2b762fe6fc2a15b6ad5d633bbd255a208f0d4e30ec8b0bc5240a71653de strategyState=HeuristicStrategy/v5/schema1/payload=hs1|1|MTU= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=76.55.
+  before: 
+phase=Preparation encounter=21 gold=11 level=9 xp=5 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=Battle encounter=21 gold=11 level=9 xp=5 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#221 step=157 phase=Preparation->Preparation location=Stage=5 Round=3 ActionKind=BuyExperience ActionId=trial:418:action:155 parameters=BuyExperience stageRound=Stage=5 Round=3 status=Succeeded beforeFingerprint=2aa5a71febe75fe71e5101b0dfe99b0ff2e23bd19c0fdd307957c2d9366639b9 afterFingerprint=fd9c9a5849c65f53e7ab2124849af0a8ef9f474fe3539b1bb79e034661bedac7 strategyState=HeuristicStrategy/v5/schema1/payload=hs1|2|NQ== strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Values public XP progress against its configured cost. Score=10.6.
+  before: 
+phase=Preparation encounter=22 gold=15 level=9 xp=6 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=Preparation encounter=22 gold=11 level=9 xp=7 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#222 step=158 phase=Preparation->Battle location=Stage=5 Round=3 ActionKind=StartBattle ActionId=trial:418:action:156 parameters=StartBattle stageRound=Stage=5 Round=3 status=Succeeded beforeFingerprint=fd9c9a5849c65f53e7ab2124849af0a8ef9f474fe3539b1bb79e034661bedac7 afterFingerprint=6ef03acf44b3aa6676ac4ce02cb1b5e502d81c923795b8dd1cb2465db199882b strategyState=HeuristicStrategy/v5/schema1/payload=hs1|3|MTU= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=78.05.
+  before: 
+phase=Preparation encounter=22 gold=11 level=9 xp=7 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=Battle encounter=22 gold=11 level=9 xp=7 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+#226 step=159 phase=Preparation->Preparation location=Stage=5 Round=4 ActionKind=BuyExperience ActionId=trial:418:action:157 parameters=BuyExperience stageRound=Stage=5 Round=4 status=Succeeded beforeFingerprint=e3d0a7713092cf4f25361e561f7439fe7019fe4f829e48492488dc0af5db82c7 afterFingerprint=0abedc22fcd0328a9d75e38060ff757b2892f295be9a8d0728c05a14cf5b9fba strategyState=HeuristicStrategy/v5/schema1/payload=hs1|4|NQ== strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=9191212219947575095/state=17225302205603807956/increment=17810697130527051681 strategy=Public XP is near a level-up threshold. Score=26.6.
+  before: 
+phase=Preparation encounter=23 gold=15 level=9 xp=8 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+  after: 
+phase=Preparation encounter=23 gold=11 level=10 xp=0 hp=18/30 board=[0:C2,1:C1,2:C32,3:C13,4:C3,5:C12,6:C34,7:C8,8:C33] hand=[0:C:C5,1:C:C18,2:C:C9,3:C:C23,4:C:C35]
+StrategyNoAction step=53 phase=Preparation reason=No positive-value preparation action is visible; Runner may detect the stall.
+StrategyNoAction step=152 phase=Preparation reason=No positive-value preparation action is visible; Runner may detect the stall.
+StrategyNoAction step=160 phase=Preparation reason=No positive-value preparation action is visible; Runner may detect the stall.
+Per-decision candidate count/rank: unavailable; ExecutionHistory stores selected Action and StrategyDiagnostic, not the full candidate list. Final-state candidate inspection below is read-only and uses no Strategy RNG.
+Character Pool consistency (diagnostic only):
+  character-data:0612954dc45544bebd147b91259ad495 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:0e5714b0606b4fc09e126f75acfd6ffd owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:14b7487ab20249c1a6223cac4d1652a2 owned=0 expected=0 reserved=1 expected=1 remaining=14 initial=15 consistent=True
+  character-data:203bd50997254704b70090e6a87c07da owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:21889b7d18fb4e6e9fe9bc58d1439ca1 owned=2 expected=2 reserved=0 expected=0 remaining=13 initial=15 consistent=True
+  character-data:25ed6f872e764400b1bfd57b5f98a9e3 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:283c9b5a31744c5eb05127e91e94684b owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:2ace6fbc1bee498083d3080c5754c401 owned=1 expected=1 reserved=1 expected=1 remaining=13 initial=15 consistent=True
+  character-data:31e185eec748485cbbd272dad17b1f6e owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:34d50c59b20a42ecb051ee734bfed03f owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:3510c2096e94459e9fae034465364186 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:4bc149c8bce845b3b25a32a28dbf71e8 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:507d64629f4543029f37d9ff6c730257 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:52d661a10b364454a500085b06c21866 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:567a39521b87465ea9ef6ab99d9bcb6d owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:63e470f8515641dd84fbcbe91c94a29b owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:710dfde0ec1d4b44b44f568086831312 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:7da124c2904a443b8918f5bceb71e69f owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:7e290880568f41b682511e38318ed09a owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:80b87e0bdd4b4d10ac3ec46082bd44be owned=0 expected=0 reserved=1 expected=1 remaining=14 initial=15 consistent=True
+  character-data:91c7d01bdcc04eddbfddc1acd83599f3 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:932fa32419264532aaf154bd873fa997 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:9c9aba4550c54ebd90baa5b20cbb8eb1 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:ba20fc7fb2d7466ca0d8e23577496060 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:cd5d320fb3c84a57a928f0b6f0533c6e owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:da882de76e1f4d76946951e167465f05 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:eb03bff3735f456a9d4fc657480514ce owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:ecc8561063394e6a8c0e9a26adcd0ce5 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:f0cdbe7ff7764dd8a3cafe0b576b0f85 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:f4a589af297f457d90fdda08ac4d97d9 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+StartBattle legal in current public candidates: True
+Current final-state Heuristic candidate count=137 (not per-decision rank).
+Current Heuristic public candidate evaluations (fresh final-state diagnostic enumeration):
+  BuyExperience score=10.6 reason=Values public XP progress against its configured cost.
+  StartBattle score=-14.200000000000003 reason=Delay battle to deploy a visible Hand character while below Level capacity.
+  SellCharacter(C5) score=-18.91 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C9) score=-19.05 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C18) score=-19.26 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C23) score=-19.26 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C35) score=-19.61 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C33) score=-33 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C34) score=-51.600000000000009 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C8) score=-55.200000000000024 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C13) score=-89.600000000000009 reason=Weighs visible sale Gold against the character and synergy value lost.
+  RerollShop(Character) score=-100 reason=Below configured reroll Gold threshold.
+  MoveOrSwapBoard(0->1) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->2) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->3) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->4) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->5) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->6) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->2) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->3) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->4) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->5) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->6) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(2->3) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(2->4) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(2->5) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(2->6) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(2->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(2->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(3->4) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(3->5) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(3->6) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(3->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(3->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(4->5) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(4->6) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(4->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(4->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(5->6) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(5->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(5->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(6->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(6->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(7->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapHand(0->1) score=-100 reason=Hand slots have no public strategic ordering; avoid an unproductive rearrangement.
+  MoveOrSwapHand(0->2) score=-100 reason=Hand slots have no public strategic ordering; avoid an unproductive rearrangement.
+  MoveOrSwapHand(0->3) score=-100 reason=Hand slots have no public strategic ordering; avoid an unproductive rearrangement.
+  MoveOrSwapHand(0->4) score=-100 reason=Hand slots have no public strategic ordering; avoid an unproductive rearrangement.
+  MoveOrSwapHand(1->2) score=-100 reason=Hand slots have no public strategic ordering; avoid an unproductive rearrangement.
+  MoveOrSwapHand(1->3) score=-100 reason=Hand slots have no public strategic ordering; avoid an unproductive rearrangement.
+  MoveOrSwapHand(1->4) score=-100 reason=Hand slots have no public strategic ordering; avoid an unproductive rearrangement.
+  MoveOrSwapHand(2->3) score=-100 reason=Hand slots have no public strategic ordering; avoid an unproductive rearrangement.
+  MoveOrSwapHand(2->4) score=-100 reason=Hand slots have no public strategic ordering; avoid an unproductive rearrangement.
+  MoveOrSwapHand(3->4) score=-100 reason=Hand slots have no public strategic ordering; avoid an unproductive rearrangement.
+  MoveBoardToHand(0->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(0->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(0->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(0->4) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(1->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(1->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(1->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(1->4) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(2->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(2->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(2->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(2->4) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(3->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(3->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(3->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(3->4) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(4->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(4->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(4->2) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(4->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(4->4) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(5->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(5->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(5->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(5->4) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(6->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(6->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(6->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(6->4) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(7->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(7->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(7->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(7->4) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(8->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(8->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(8->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(8->4) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(0->0) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(0->1) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(0->2) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(0->3) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(0->4) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(0->5) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(0->6) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(0->7) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(0->8) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(1->0) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(1->1) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(1->2) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(1->3) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(1->4) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(1->5) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(1->6) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(1->7) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(1->8) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(2->4) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(3->0) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(3->1) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(3->2) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(3->3) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(3->4) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(3->5) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(3->6) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(3->7) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(3->8) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(4->0) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(4->1) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(4->2) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(4->3) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(4->4) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(4->5) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(4->6) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(4->7) score=-100 reason=No positive public placement value.
+  MoveHandToBoard(4->8) score=-100 reason=No positive public placement value.
+  SellCharacter(C2) score=-108.60000000000001 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C32) score=-110.79999999999998 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C1) score=-123.19999999999999 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C12) score=-133.60000000000002 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C3) score=-144.39999999999998 reason=Weighs visible sale Gold against the character and synergy value lost.

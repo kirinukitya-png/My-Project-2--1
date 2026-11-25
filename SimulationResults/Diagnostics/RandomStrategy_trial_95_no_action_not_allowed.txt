@@ -1,0 +1,146 @@
+NST stopped Trial diagnostic (deterministic replay)
+TrialIndex=95
+TrialSeed=3048770777844474188
+Strategy=RandomStrategy v1
+StopReason=no_action_not_allowed / NoActionNotAllowed
+Stage=2 Round=3 Phase=EventPending Decisions=81 PhaseDecisions=2
+Detail=NoAction is not an end-of-turn signal in this phase.
+Replay identical=True
+Game RNG checkpoint identical=True
+Gold=19 Level=4 XP=3 HP=3/30
+Board=0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6
+Hand=0:empty,1:empty,2:empty,3:C:C4,4:C:C10
+Last actions / operations (up to 20):
+#81 step=69 Action Preparation->Preparation action=MoveHandToBoard(1->3) status=Succeeded strategy=Selected uniformly from 79 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=9 level=4 xp=0 hp=18/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C6,6:C3,7:empty,8:empty] hand=[0:C:C9,1:C:C4,2:C:C2,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=9 level=4 xp=0 hp=18/30 board=[0:empty,1:empty,2:empty,3:C4,4:empty,5:C6,6:C3,7:empty,8:empty] hand=[0:C:C9,1:empty,2:C:C2,3:empty,4:empty]
+#82 step=70 Action Preparation->Preparation action=MoveBoardToHand(5->3) status=Succeeded strategy=Selected uniformly from 79 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=9 level=4 xp=0 hp=18/30 board=[0:empty,1:empty,2:empty,3:C4,4:empty,5:C6,6:C3,7:empty,8:empty] hand=[0:C:C9,1:empty,2:C:C2,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=9 level=4 xp=0 hp=18/30 board=[0:empty,1:empty,2:empty,3:C4,4:empty,5:empty,6:C3,7:empty,8:empty] hand=[0:C:C9,1:empty,2:C:C2,3:C:C6,4:empty]
+#83 step=71 Action Preparation->Preparation action=MoveBoardToHand(3->3) status=Succeeded strategy=Selected uniformly from 95 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=9 level=4 xp=0 hp=18/30 board=[0:empty,1:empty,2:empty,3:C4,4:empty,5:empty,6:C3,7:empty,8:empty] hand=[0:C:C9,1:empty,2:C:C2,3:C:C6,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=9 level=4 xp=0 hp=18/30 board=[0:empty,1:empty,2:empty,3:C6,4:empty,5:empty,6:C3,7:empty,8:empty] hand=[0:C:C9,1:empty,2:C:C2,3:C:C4,4:empty]
+#84 step=72 Action Preparation->Preparation action=MoveOrSwapBoard(3->8) status=Succeeded strategy=Selected uniformly from 78 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=9 level=4 xp=0 hp=18/30 board=[0:empty,1:empty,2:empty,3:C6,4:empty,5:empty,6:C3,7:empty,8:empty] hand=[0:C:C9,1:empty,2:C:C2,3:C:C4,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=9 level=4 xp=0 hp=18/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C3,7:empty,8:C6] hand=[0:C:C9,1:empty,2:C:C2,3:C:C4,4:empty]
+#85 step=73 Action Preparation->Preparation action=BuyCharacter(character-s1-r5-g1-slot0,Hand:1) status=Succeeded strategy=Selected uniformly from 79 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=9 level=4 xp=0 hp=18/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C3,7:empty,8:C6] hand=[0:C:C9,1:empty,2:C:C2,3:C:C4,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=8 level=4 xp=0 hp=18/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C3,7:empty,8:C6] hand=[0:C:C9,1:empty,2:empty,3:C:C4,4:empty]
+#86 step=74 Action Preparation->Battle action=StartBattle status=Succeeded strategy=Preparation decision limit reached; prioritizing StartBattle.
+  before: 
+phase=Preparation encounter=4 gold=8 level=4 xp=0 hp=18/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C3,7:empty,8:C6] hand=[0:C:C9,1:empty,2:empty,3:C:C4,4:empty]
+  after: 
+phase=Battle encounter=4 gold=8 level=4 xp=0 hp=18/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C3,7:empty,8:C6] hand=[0:C:C9,1:empty,2:empty,3:C:C4,4:empty]
+#87 step=75 BattleAdvance Battle->RewardPending action=none status=battle:Victory
+  before: 
+phase=Battle encounter=4 gold=8 level=4 xp=0 hp=18/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C3,7:empty,8:C6] hand=[0:C:C9,1:empty,2:empty,3:C:C4,4:empty]
+  after: 
+phase=RewardPending encounter=4 gold=8 level=4 xp=0 hp=16/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C3,7:empty,8:C6] hand=[0:C:C9,1:empty,2:empty,3:C:C4,4:empty]
+#88 step=75 ResolveVictoryReward RewardPending->AwaitingEncounterStart action=none status=stage:Progressed:None
+  before: 
+phase=RewardPending encounter=4 gold=8 level=4 xp=0 hp=16/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C3,7:empty,8:C6] hand=[0:C:C9,1:empty,2:empty,3:C:C4,4:empty]
+  after: 
+phase=AwaitingEncounterStart encounter=5 gold=12 level=4 xp=1 hp=16/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C3,7:empty,8:C6] hand=[0:C:C9,1:empty,2:empty,3:C:C4,4:empty]
+#89 step=75 AdvanceToNextStage AwaitingEncounterStart->Preparation action=none status=stage:Progressed:None
+  before: 
+phase=AwaitingEncounterStart encounter=5 gold=12 level=4 xp=1 hp=16/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C3,7:empty,8:C6] hand=[0:C:C9,1:empty,2:empty,3:C:C4,4:empty]
+  after: 
+phase=Preparation encounter=5 gold=12 level=4 xp=1 hp=16/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C3,7:empty,8:C6] hand=[0:C:C9,1:empty,2:empty,3:C:C4,4:empty]
+#90 step=75 Action Preparation->Preparation action=MoveHandToBoard(0->5) status=Succeeded strategy=Selected uniformly from 86 observable candidates.
+  before: 
+phase=Preparation encounter=5 gold=12 level=4 xp=1 hp=16/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C3,7:empty,8:C6] hand=[0:C:C9,1:empty,2:empty,3:C:C4,4:empty]
+  after: 
+phase=Preparation encounter=5 gold=12 level=4 xp=1 hp=16/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:empty]
+#91 step=76 Action Preparation->Battle action=StartBattle status=Succeeded strategy=Preparation decision limit reached; prioritizing StartBattle.
+  before: 
+phase=Preparation encounter=5 gold=12 level=4 xp=1 hp=16/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:empty]
+  after: 
+phase=Battle encounter=5 gold=12 level=4 xp=1 hp=16/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:empty]
+#92 step=77 BattleAdvance Battle->RewardPending action=none status=battle:Victory
+  before: 
+phase=Battle encounter=5 gold=12 level=4 xp=1 hp=16/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:empty]
+  after: 
+phase=RewardPending encounter=5 gold=12 level=4 xp=1 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:empty]
+#93 step=77 ResolveVictoryReward RewardPending->AwaitingEncounterStart action=none status=stage:Progressed:None
+  before: 
+phase=RewardPending encounter=5 gold=12 level=4 xp=1 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:empty]
+  after: 
+phase=AwaitingEncounterStart encounter=6 gold=16 level=4 xp=2 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:empty]
+#94 step=77 AdvanceToNextStage AwaitingEncounterStart->Preparation action=none status=stage:Progressed:None
+  before: 
+phase=AwaitingEncounterStart encounter=6 gold=16 level=4 xp=2 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:empty]
+  after: 
+phase=Preparation encounter=6 gold=16 level=4 xp=2 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:empty]
+#95 step=77 Action Preparation->Preparation action=BuyCharacter(character-s2-r2-g0-slot0,Hand:4) status=Succeeded strategy=Selected uniformly from 85 observable candidates.
+  before: 
+phase=Preparation encounter=6 gold=16 level=4 xp=2 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:empty]
+  after: 
+phase=Preparation encounter=6 gold=14 level=4 xp=2 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:C:C10]
+#96 step=78 Action Preparation->Battle action=StartBattle status=Succeeded strategy=Preparation decision limit reached; prioritizing StartBattle.
+  before: 
+phase=Preparation encounter=6 gold=14 level=4 xp=2 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:C:C10]
+  after: 
+phase=Battle encounter=6 gold=14 level=4 xp=2 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:C:C10]
+#97 step=79 BattleAdvance Battle->RewardPending action=none status=battle:Victory
+  before: 
+phase=Battle encounter=6 gold=14 level=4 xp=2 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:C:C10]
+  after: 
+phase=RewardPending encounter=6 gold=14 level=4 xp=2 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:C:C10]
+#98 step=79 ResolveVictoryReward RewardPending->EventPending action=none status=stage:Progressed:None eventItem=Item006
+  before: 
+phase=RewardPending encounter=6 gold=14 level=4 xp=2 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:C:C10]
+  after: 
+phase=EventPending encounter=7 gold=19 level=4 xp=3 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:C:C10]
+#99 step=79 Action EventPending->EventPending action=UseEventItem(BoardCharacter:6) status=Succeeded strategy=Selected uniformly from 4 observable candidates.
+  before: 
+phase=EventPending encounter=7 gold=19 level=4 xp=3 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:C:C10]
+  after: 
+phase=EventPending encounter=7 gold=19 level=4 xp=3 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:C:C10]
+#100 step=80 StrategyNoAction EventPending->EventPending action=none status=no-action strategy=No observable legal candidates are available.
+  before: 
+phase=EventPending encounter=7 gold=19 level=4 xp=3 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:C:C10]
+  after: 
+phase=EventPending encounter=7 gold=19 level=4 xp=3 hp=3/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:C9,6:C3,7:empty,8:C6] hand=[0:empty,1:empty,2:empty,3:C:C4,4:C:C10]
+Character Pool consistency (diagnostic only):
+  character-data:0612954dc45544bebd147b91259ad495 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:0e5714b0606b4fc09e126f75acfd6ffd owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:14b7487ab20249c1a6223cac4d1652a2 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:203bd50997254704b70090e6a87c07da owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:21889b7d18fb4e6e9fe9bc58d1439ca1 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:25ed6f872e764400b1bfd57b5f98a9e3 owned=1 expected=3 reserved=0 expected=0 remaining=14 initial=15 consistent=False
+  character-data:283c9b5a31744c5eb05127e91e94684b owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:2ace6fbc1bee498083d3080c5754c401 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:31e185eec748485cbbd272dad17b1f6e owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:34d50c59b20a42ecb051ee734bfed03f owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:3510c2096e94459e9fae034465364186 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:4bc149c8bce845b3b25a32a28dbf71e8 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:507d64629f4543029f37d9ff6c730257 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:52d661a10b364454a500085b06c21866 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:567a39521b87465ea9ef6ab99d9bcb6d owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:63e470f8515641dd84fbcbe91c94a29b owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:710dfde0ec1d4b44b44f568086831312 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:7da124c2904a443b8918f5bceb71e69f owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:7e290880568f41b682511e38318ed09a owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:80b87e0bdd4b4d10ac3ec46082bd44be owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:91c7d01bdcc04eddbfddc1acd83599f3 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:932fa32419264532aaf154bd873fa997 owned=3 expected=3 reserved=0 expected=0 remaining=12 initial=15 consistent=True
+  character-data:9c9aba4550c54ebd90baa5b20cbb8eb1 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:ba20fc7fb2d7466ca0d8e23577496060 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:cd5d320fb3c84a57a928f0b6f0533c6e owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:da882de76e1f4d76946951e167465f05 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:eb03bff3735f456a9d4fc657480514ce owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:ecc8561063394e6a8c0e9a26adcd0ce5 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:f0cdbe7ff7764dd8a3cafe0b576b0f85 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:f4a589af297f457d90fdda08ac4d97d9 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+StartBattle legal in current public candidates: False
+Current RandomStrategy public candidate set:

@@ -1,0 +1,222 @@
+NST stopped Trial diagnostic (deterministic replay)
+TrialIndex=6
+TrialSeed=4636112666557124712
+Strategy=HeuristicStrategy v3
+SelectedRosterFingerprint=composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383
+BatchConfigurationId=unity-shop-100-v1|roster:composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383|event-item:Item006
+DeterministicCostAssignment (recomputed from same TrialSeed + Roster RNG):
+  character-data:710dfde0ec1d4b44b44f568086831312 cost=1
+  character-data:3510c2096e94459e9fae034465364186 cost=3
+  character-data:31e185eec748485cbbd272dad17b1f6e cost=2
+  character-data:ecc8561063394e6a8c0e9a26adcd0ce5 cost=5
+  character-data:da882de76e1f4d76946951e167465f05 cost=5
+  character-data:f4a589af297f457d90fdda08ac4d97d9 cost=2
+  character-data:ba20fc7fb2d7466ca0d8e23577496060 cost=3
+  character-data:f0cdbe7ff7764dd8a3cafe0b576b0f85 cost=2
+  character-data:7e290880568f41b682511e38318ed09a cost=1
+  character-data:34d50c59b20a42ecb051ee734bfed03f cost=4
+  character-data:2ace6fbc1bee498083d3080c5754c401 cost=3
+  character-data:507d64629f4543029f37d9ff6c730257 cost=2
+  character-data:14b7487ab20249c1a6223cac4d1652a2 cost=3
+  character-data:932fa32419264532aaf154bd873fa997 cost=2
+  character-data:4bc149c8bce845b3b25a32a28dbf71e8 cost=4
+  character-data:0e5714b0606b4fc09e126f75acfd6ffd cost=4
+  character-data:63e470f8515641dd84fbcbe91c94a29b cost=5
+  character-data:203bd50997254704b70090e6a87c07da cost=4
+  character-data:283c9b5a31744c5eb05127e91e94684b cost=1
+  character-data:567a39521b87465ea9ef6ab99d9bcb6d cost=4
+  character-data:80b87e0bdd4b4d10ac3ec46082bd44be cost=1
+  character-data:7da124c2904a443b8918f5bceb71e69f cost=5
+  character-data:21889b7d18fb4e6e9fe9bc58d1439ca1 cost=1
+  character-data:cd5d320fb3c84a57a928f0b6f0533c6e cost=1
+  character-data:25ed6f872e764400b1bfd57b5f98a9e3 cost=5
+  character-data:91c7d01bdcc04eddbfddc1acd83599f3 cost=3
+  character-data:0612954dc45544bebd147b91259ad495 cost=5
+  character-data:9c9aba4550c54ebd90baa5b20cbb8eb1 cost=4
+  character-data:eb03bff3735f456a9d4fc657480514ce cost=2
+  character-data:52d661a10b364454a500085b06c21866 cost=3
+StopReason=consecutive_rejection_limit_exceeded / ConsecutiveRejectionLimitExceeded
+Stage=1 Round=2 Phase=Preparation Decisions=14 PhaseDecisions=10
+Detail=Consecutive Action rejection limit reached. Last rejection: InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch.
+Replay identical=True
+Identity/stop/final-state/action-count/checkpoint comparison=True
+Game RNG checkpoint identical=True
+Strategy RNG checkpoint identical=True
+Strategy state identical=True
+Action totals: successful=4 rejected=10 actionSequence=14
+PreparationDecisionCount=10 ConsecutiveRejectionCount=10
+Roster fingerprint matches batch input=True
+Stage=1 Round=2 Phase=Preparation EncounterIndex=1 Choice=SelectA EnemyCategory=Normal ShopMode=Character
+Gold=10 Level=2 XP=0 HP=28/30
+Board=0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty
+Hand=0:empty,1:empty,2:empty,3:empty,4:empty
+Shop=Character Stage=1 Round=2
+  OfferId=character-s1-r2-g0-slot0 Kind=Character DefinitionId=character-data:80b87e0bdd4b4d10ac3ec46082bd44be Cost=1 Price=1 Status=Available
+  OfferId=character-s1-r2-g0-slot1 Kind=Character DefinitionId=character-data:21889b7d18fb4e6e9fe9bc58d1439ca1 Cost=1 Price=1 Status=Available
+  OfferId=character-s1-r2-g0-slot2 Kind=Character DefinitionId=character-data:80b87e0bdd4b4d10ac3ec46082bd44be Cost=1 Price=1 Status=Available
+Last 20 Action records (consecutive rejection stop includes its full final rejection streak):
+#0 step=0 phase=Preparation->Preparation location=Stage=1 Round=1 ActionKind=BuyCharacter ActionId=trial:6:action:0 parameters=BuyCharacter(character-s1-r1-g0-slot0,Board:0) stageRound=Stage=1 Round=1 status=Succeeded beforeFingerprint=bf4fe12cef4795e750aa1de4d4fac17558af8b00a5bb80fcfbcbe50e1e8fec7f afterFingerprint=e826bd57bc0e620d7c5a262e546a75801387c73a8ef075cb39ee80ff7ee49112 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|1|MjpjaGFyYWN0ZXItczEtcjEtZzAtc2xvdDA6MDow strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=123.3.
+  before: 
+phase=Preparation encounter=0 gold=7 level=1 xp=0 hp=30/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=0 gold=6 level=1 xp=0 hp=30/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#1 step=1 phase=Preparation->Battle location=Stage=1 Round=1 ActionKind=StartBattle ActionId=trial:6:action:1 parameters=StartBattle stageRound=Stage=1 Round=1 status=Succeeded beforeFingerprint=e826bd57bc0e620d7c5a262e546a75801387c73a8ef075cb39ee80ff7ee49112 afterFingerprint=bf7a4974521f4f5688576f8acc1208b0eb55ab649381707d71ec04a10a10becd strategyState=HeuristicStrategy/v3/schema1/payload=hs1|2|MTU= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=40.1.
+  before: 
+phase=Preparation encounter=0 gold=6 level=1 xp=0 hp=30/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Battle encounter=0 gold=6 level=1 xp=0 hp=30/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#4 step=2 phase=EventPending->EventPending location=Stage=1 Round=2 ActionKind=UseEventItem ActionId=trial:6:action:2 parameters=UseEventItem(BoardCharacter:0) stageRound=Stage=1 Round=2 status=Succeeded beforeFingerprint=13e5405b45cdfcc0311f69d6f45e7bc7e32c7d31b1f73467f967bf47497d8550 afterFingerprint=564011409ca23707ac5c2564c04d265126e9818cc07f3fb5994017b6e4d69724 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|0|MTM6MTowOjA6MQ== strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=Uses the Event Item on a public eligible target. Score=30.
+  before: 
+phase=EventPending encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=EventPending encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#5 step=3 phase=EventPending->AwaitingEncounterStart location=Stage=1 Round=2 ActionKind=EndEvent ActionId=trial:6:action:3 parameters=EndEvent stageRound=Stage=1 Round=2 status=Succeeded beforeFingerprint=564011409ca23707ac5c2564c04d265126e9818cc07f3fb5994017b6e4d69724 afterFingerprint=927c8d37a4f1f345ba9db5769dac19df62ffa6d7f427a8f67c4d0b0964a6f323 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|0|MTQ= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=No eligible Event Item target; end the event. Score=30.
+  before: 
+phase=EventPending encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=AwaitingEncounterStart encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#7 step=4 phase=Preparation->Preparation location=Stage=1 Round=2 ActionKind=BuyCharacter ActionId=trial:6:action:4 parameters=BuyCharacter(character-s1-r2-g0-slot0,Board:1) stageRound=Stage=1 Round=2 status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. beforeFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 afterFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|1|MjpjaGFyYWN0ZXItczEtcjItZzAtc2xvdDA6MDox strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=65.72999999999999.
+  before: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#8 step=5 phase=Preparation->Preparation location=Stage=1 Round=2 ActionKind=BuyCharacter ActionId=trial:6:action:5 parameters=BuyCharacter(character-s1-r2-g0-slot0,Board:2) stageRound=Stage=1 Round=2 status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. beforeFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 afterFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|2|MjpjaGFyYWN0ZXItczEtcjItZzAtc2xvdDA6MDoy strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=65.72999999999999.
+  before: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#9 step=6 phase=Preparation->Preparation location=Stage=1 Round=2 ActionKind=BuyCharacter ActionId=trial:6:action:6 parameters=BuyCharacter(character-s1-r2-g0-slot0,Board:1) stageRound=Stage=1 Round=2 status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. beforeFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 afterFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|3|MjpjaGFyYWN0ZXItczEtcjItZzAtc2xvdDA6MDox strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=65.72999999999999.
+  before: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#10 step=7 phase=Preparation->Preparation location=Stage=1 Round=2 ActionKind=BuyCharacter ActionId=trial:6:action:7 parameters=BuyCharacter(character-s1-r2-g0-slot0,Board:2) stageRound=Stage=1 Round=2 status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. beforeFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 afterFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|4|MjpjaGFyYWN0ZXItczEtcjItZzAtc2xvdDA6MDoy strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=65.72999999999999.
+  before: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#11 step=8 phase=Preparation->Preparation location=Stage=1 Round=2 ActionKind=BuyCharacter ActionId=trial:6:action:8 parameters=BuyCharacter(character-s1-r2-g0-slot0,Board:1) stageRound=Stage=1 Round=2 status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. beforeFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 afterFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|5|MjpjaGFyYWN0ZXItczEtcjItZzAtc2xvdDA6MDox strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=65.72999999999999.
+  before: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#12 step=9 phase=Preparation->Preparation location=Stage=1 Round=2 ActionKind=BuyCharacter ActionId=trial:6:action:9 parameters=BuyCharacter(character-s1-r2-g0-slot0,Board:2) stageRound=Stage=1 Round=2 status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. beforeFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 afterFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|6|MjpjaGFyYWN0ZXItczEtcjItZzAtc2xvdDA6MDoy strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=65.72999999999999.
+  before: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#13 step=10 phase=Preparation->Preparation location=Stage=1 Round=2 ActionKind=BuyCharacter ActionId=trial:6:action:10 parameters=BuyCharacter(character-s1-r2-g0-slot0,Board:1) stageRound=Stage=1 Round=2 status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. beforeFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 afterFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|7|MjpjaGFyYWN0ZXItczEtcjItZzAtc2xvdDA6MDox strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=65.72999999999999.
+  before: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#14 step=11 phase=Preparation->Preparation location=Stage=1 Round=2 ActionKind=BuyCharacter ActionId=trial:6:action:11 parameters=BuyCharacter(character-s1-r2-g0-slot0,Board:2) stageRound=Stage=1 Round=2 status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. beforeFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 afterFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|8|MjpjaGFyYWN0ZXItczEtcjItZzAtc2xvdDA6MDoy strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=65.72999999999999.
+  before: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#15 step=12 phase=Preparation->Preparation location=Stage=1 Round=2 ActionKind=BuyCharacter ActionId=trial:6:action:12 parameters=BuyCharacter(character-s1-r2-g0-slot0,Board:1) stageRound=Stage=1 Round=2 status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. beforeFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 afterFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|9|MjpjaGFyYWN0ZXItczEtcjItZzAtc2xvdDA6MDox strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=65.72999999999999.
+  before: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#16 step=13 phase=Preparation->Preparation location=Stage=1 Round=2 ActionKind=BuyCharacter ActionId=trial:6:action:13 parameters=BuyCharacter(character-s1-r2-g0-slot0,Board:2) stageRound=Stage=1 Round=2 status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. beforeFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 afterFingerprint=3de2b88eeb65049bbcaf25103c0b7488181ce076b45cd137de71cf353c2b8d13 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|10|MjpjaGFyYWN0ZXItczEtcjItZzAtc2xvdDA6MDoy strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=4636112666557124712/state=9095707336105699210/increment=16640100320709813117 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=65.72999999999999.
+  before: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+Last 10 rejected Actions (or all available in the trailing rejection streak):
+#7 step=4 BuyCharacter BuyCharacter(character-s1-r2-g0-slot0,Board:1) InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch.
+#8 step=5 BuyCharacter BuyCharacter(character-s1-r2-g0-slot0,Board:2) InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch.
+#9 step=6 BuyCharacter BuyCharacter(character-s1-r2-g0-slot0,Board:1) InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch.
+#10 step=7 BuyCharacter BuyCharacter(character-s1-r2-g0-slot0,Board:2) InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch.
+#11 step=8 BuyCharacter BuyCharacter(character-s1-r2-g0-slot0,Board:1) InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch.
+#12 step=9 BuyCharacter BuyCharacter(character-s1-r2-g0-slot0,Board:2) InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch.
+#13 step=10 BuyCharacter BuyCharacter(character-s1-r2-g0-slot0,Board:1) InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch.
+#14 step=11 BuyCharacter BuyCharacter(character-s1-r2-g0-slot0,Board:2) InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch.
+#15 step=12 BuyCharacter BuyCharacter(character-s1-r2-g0-slot0,Board:1) InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch.
+#16 step=13 BuyCharacter BuyCharacter(character-s1-r2-g0-slot0,Board:2) InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch.
+Trailing rejected Action records captured=10
+Per-decision candidate count/rank: unavailable; ExecutionHistory stores selected Action and StrategyDiagnostic, not the full candidate list. Final-state candidate inspection below is read-only and uses no Strategy RNG.
+Character Pool consistency (diagnostic only):
+  character-data:0612954dc45544bebd147b91259ad495 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:0e5714b0606b4fc09e126f75acfd6ffd owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:14b7487ab20249c1a6223cac4d1652a2 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:203bd50997254704b70090e6a87c07da owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:21889b7d18fb4e6e9fe9bc58d1439ca1 owned=1 expected=3 reserved=1 expected=1 remaining=13 initial=15 consistent=False
+  character-data:25ed6f872e764400b1bfd57b5f98a9e3 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:283c9b5a31744c5eb05127e91e94684b owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:2ace6fbc1bee498083d3080c5754c401 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:31e185eec748485cbbd272dad17b1f6e owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:34d50c59b20a42ecb051ee734bfed03f owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:3510c2096e94459e9fae034465364186 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:4bc149c8bce845b3b25a32a28dbf71e8 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:507d64629f4543029f37d9ff6c730257 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:52d661a10b364454a500085b06c21866 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:567a39521b87465ea9ef6ab99d9bcb6d owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:63e470f8515641dd84fbcbe91c94a29b owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:710dfde0ec1d4b44b44f568086831312 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:7da124c2904a443b8918f5bceb71e69f owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:7e290880568f41b682511e38318ed09a owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:80b87e0bdd4b4d10ac3ec46082bd44be owned=0 expected=0 reserved=2 expected=2 remaining=13 initial=15 consistent=True
+  character-data:91c7d01bdcc04eddbfddc1acd83599f3 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:932fa32419264532aaf154bd873fa997 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:9c9aba4550c54ebd90baa5b20cbb8eb1 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:ba20fc7fb2d7466ca0d8e23577496060 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:cd5d320fb3c84a57a928f0b6f0533c6e owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:da882de76e1f4d76946951e167465f05 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:eb03bff3735f456a9d4fc657480514ce owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:ecc8561063394e6a8c0e9a26adcd0ce5 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:f0cdbe7ff7764dd8a3cafe0b576b0f85 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:f4a589af297f457d90fdda08ac4d97d9 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+StartBattle legal in current public candidates: True
+Current final-state Heuristic candidate count=48 (not per-decision rank).
+Current Heuristic public candidate evaluations (fresh final-state diagnostic enumeration):
+  BuyCharacter(character-s1-r2-g0-slot0,Board:1) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot0,Board:2) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot0,Board:3) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot0,Board:4) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot0,Board:5) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot0,Board:6) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot0,Board:7) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot0,Board:8) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot2,Board:1) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot2,Board:2) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot2,Board:3) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot2,Board:4) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot2,Board:5) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot2,Board:6) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot2,Board:7) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot2,Board:8) score=65.72999999999999 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot0,Hand:0) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot0,Hand:1) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot0,Hand:2) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot0,Hand:3) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot0,Hand:4) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot1,Hand:0) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot1,Hand:1) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot1,Hand:2) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot1,Hand:3) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot1,Hand:4) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot2,Hand:0) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot2,Hand:1) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot2,Hand:2) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot2,Hand:3) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyCharacter(character-s1-r2-g0-slot2,Hand:4) score=23.729999999999997 reason=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.
+  BuyExperience score=10.6 reason=Values public XP progress against its configured cost.
+  SellCharacter(C1) score=-31.2 reason=Weighs visible sale Gold against the character and synergy value lost.
+  StartBattle score=-46.2 reason=Delay battle to fill unused Board capacity with an affordable visible character.
+  RerollShop(Character) score=-100 reason=Below configured reroll Gold threshold.
+  MoveOrSwapBoard(0->1) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->2) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->3) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->4) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->5) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->6) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveBoardToHand(0->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(0->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(0->2) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(0->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(0->4) score=-100 reason=No positive public placement value.

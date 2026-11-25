@@ -11,7 +11,9 @@ namespace ProjectNST.GameCore.Characters
     public sealed class CharacterOwnershipState
     {
         private readonly Dictionary<string, CharacterInstance> _instances;
-        public IReadOnlyDictionary<string, CharacterInstanceView> Instances => CreateReadOnlyViews();
+        private readonly Dictionary<string, CharacterInstanceView> _views;
+        private readonly IReadOnlyDictionary<string, CharacterInstanceView> _readOnlyViews;
+        public IReadOnlyDictionary<string, CharacterInstanceView> Instances => _readOnlyViews;
         public int OwnedCount => _instances.Count;
 
         public CharacterOwnershipState(IEnumerable<CharacterInstance> instances)
@@ -25,6 +27,14 @@ namespace ProjectNST.GameCore.Characters
                     throw new ArgumentException("InstanceId values must be unique in ownership state.", nameof(instances));
                 _instances.Add(instance.InstanceId, instance.CreateCopy());
             }
+
+            // Owned CharacterInstances are never exposed and all rule updates create a new
+            // CharacterOwnershipState. Their public value views are therefore stable for this
+            // state's lifetime and can be reused across observations and validators.
+            _views = new Dictionary<string, CharacterInstanceView>(_instances.Count, StringComparer.Ordinal);
+            foreach (KeyValuePair<string, CharacterInstance> pair in _instances)
+                _views.Add(pair.Key, new CharacterInstanceView(pair.Value));
+            _readOnlyViews = new ReadOnlyDictionary<string, CharacterInstanceView>(_views);
         }
 
         public bool Contains(string instanceId) =>
@@ -32,9 +42,8 @@ namespace ProjectNST.GameCore.Characters
 
         public bool TryGet(string instanceId, out CharacterInstanceView instance)
         {
-            if (_instances.TryGetValue(instanceId ?? string.Empty, out CharacterInstance owned))
+            if (_views.TryGetValue(instanceId ?? string.Empty, out instance))
             {
-                instance = new CharacterInstanceView(owned);
                 return true;
             }
             instance = null;
@@ -55,9 +64,9 @@ namespace ProjectNST.GameCore.Characters
 
         public IReadOnlyList<CharacterInstanceView> GetOwnedInstances()
         {
-            var copy = new CharacterInstanceView[_instances.Count];
+            var copy = new CharacterInstanceView[_views.Count];
             int index = 0;
-            foreach (CharacterInstance instance in _instances.Values) copy[index++] = new CharacterInstanceView(instance);
+            foreach (CharacterInstanceView instance in _views.Values) copy[index++] = instance;
             return Array.AsReadOnly(copy);
         }
 
@@ -97,12 +106,5 @@ namespace ProjectNST.GameCore.Characters
             return true;
         }
 
-        private IReadOnlyDictionary<string, CharacterInstanceView> CreateReadOnlyViews()
-        {
-            var copy = new Dictionary<string, CharacterInstanceView>(StringComparer.Ordinal);
-            foreach (KeyValuePair<string, CharacterInstance> pair in _instances)
-                copy.Add(pair.Key, new CharacterInstanceView(pair.Value));
-            return new ReadOnlyDictionary<string, CharacterInstanceView>(copy);
-        }
     }
 }

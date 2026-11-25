@@ -241,6 +241,17 @@ namespace ProjectNST.GameCore.Actions
             return item != null;
         }
 
+        internal static ItemDefinition FindEventDefinition(ActionExecutionContext context, string id, out string error)
+        {
+            error = null;
+            if (context.ItemDefinitions != null && TryFindItem(
+                context.ItemDefinitions, id, out ItemDefinition pooled, out error)) return pooled;
+            if (context.EventItemDefinition != null && context.EventItemDefinition.DefinitionId == id)
+            { error = null; return context.EventItemDefinition; }
+            if (string.IsNullOrEmpty(error)) error = "Event Item Definition '" + id + "' is unavailable.";
+            return null;
+        }
+
         private static bool TryCreateFormation(EnemyBoardState board, int encounterIndex,
             out EnemyFormationDefinition formation, out int count)
         {
@@ -281,11 +292,10 @@ namespace ProjectNST.GameCore.Actions
                 return ActionHandlerResult.Reject(ActionErrorCode.InvalidAction, "Expected UseEventItemAction.");
             if (state.EventItem == null)
                 return ActionHandlerResult.Reject(ActionErrorCode.InvalidState, "No Event Item is active.");
-            if (context.ItemDefinitions == null)
+            if (context.ItemDefinitions == null && context.EventItemDefinition == null)
                 return ActionHandlerResult.ConfigurationError("ItemDefinitions are unavailable.");
-            if (!UseHandItemActionHandler.TryFindItem(context.ItemDefinitions, state.EventItem.DefinitionId,
-                out ItemDefinition item, out string error))
-                return ActionHandlerResult.ConfigurationError(error);
+            ItemDefinition item = UseHandItemActionHandler.FindEventDefinition(context, state.EventItem.DefinitionId, out string error);
+            if (item == null) return ActionHandlerResult.ConfigurationError(error);
             if (item.Target != ItemEffectTarget.OneAlly)
                 return ActionHandlerResult.Reject(ActionErrorCode.ItemTargetInvalid, "Event Item rules support a single ally target only.");
 
@@ -326,11 +336,10 @@ namespace ProjectNST.GameCore.Actions
                     state.BattleResult, state.ExecutedActionIds));
             }
 
-            if (context.ItemDefinitions == null)
+            if (context.ItemDefinitions == null && context.EventItemDefinition == null)
                 return ActionHandlerResult.ConfigurationError("ItemDefinitions are unavailable.");
-            if (!UseHandItemActionHandler.TryFindItem(context.ItemDefinitions, state.EventItem.DefinitionId,
-                out ItemDefinition item, out string error))
-                return ActionHandlerResult.ConfigurationError(error);
+            ItemDefinition item = UseHandItemActionHandler.FindEventDefinition(context, state.EventItem.DefinitionId, out string error);
+            if (item == null) return ActionHandlerResult.ConfigurationError(error);
             ItemEffectResult result = ItemEffectRules.EndEventWithoutEligibleTarget(item,
                 state.EventItem, state.Board, state.Hand, state.Ownership, state.Economy,
                 state.Stage, state.ItemEffects, state.RandomState.Stats);
@@ -340,5 +349,6 @@ namespace ProjectNST.GameCore.Actions
             return ActionHandlerResult.Success(state.With(stage: result.NextStage,
                 eventItem: result.NextEventItem));
         }
+
     }
 }

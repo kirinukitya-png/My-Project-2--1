@@ -49,16 +49,17 @@ namespace ProjectNST.GameCore.Strategy
     public sealed class RandomStrategy : IPlayerStrategy
     {
         public const string StableId = "RandomStrategy";
-        public const string StableVersion = "1";
+        public const string StableVersion = "4";
         public const int StateSchemaVersion = 1;
         private const string PayloadPrefix = "rg1|";
         private readonly RandomStrategySettings _settings;
+        private readonly ProjectNST.GameCore.Sessions.SimulationProfileCollector _profiler;
 
         public string StrategyId => StableId;
         public string Version => StableVersion;
 
-        public RandomStrategy(RandomStrategySettings settings = null)
-        { _settings = settings ?? new RandomStrategySettings(); }
+        public RandomStrategy(RandomStrategySettings settings = null, ProjectNST.GameCore.Sessions.SimulationProfileCollector profiler = null)
+        { _settings = settings ?? new RandomStrategySettings(); _profiler = profiler; }
 
         public StrategyDecision ChooseAction(GameObservation observation, StrategyContext context)
         {
@@ -67,34 +68,55 @@ namespace ProjectNST.GameCore.Strategy
             if (!context.IsFor(this)) throw new ArgumentException("Context belongs to another Strategy.", nameof(context));
             if (context.StrategyRandomState == null)
                 throw new ArgumentException("RandomStrategy requires a Strategy RNG checkpoint.", nameof(context));
+            _profiler?.Add("Strategy.ChooseActionCalls");
 
             StrategyPayload previous = ReadPayload(context.State);
             if (!observation.IsStrategyActionAllowed)
                 return context.NoAction(NewState(0, string.Empty), "No player decision is required in this phase.");
 
-            List<GameAction> candidates = BuildCandidates(observation, context.NextActionId);
+            List<GameAction> candidates;
+            using (_profiler == null ? default(ProjectNST.GameCore.Sessions.SimulationProfileCollector.Scope) : _profiler.Measure("Strategy.CandidateGeneration"))
+                candidates = BuildCandidates(observation, context.NextActionId);
+            if (_profiler != null) { foreach (var group in candidates.GroupBy(x => x.Kind)) _profiler.Add("Candidate.Generated." + group.Key, group.LongCount()); _profiler.Add("Candidate.Generated.Total", candidates.Count); }
             int decisionCount = observation.Stage.Phase == ObservationPhase.Preparation
                 ? checked(previous.PreparationDecisionCount + 1) : 0;
 
-            if (observation.Stage.Phase == ObservationPhase.Preparation &&
-                decisionCount >= _settings.PreparationDecisionLimit)
-            {
-                GameAction start = candidates.FirstOrDefault(a => a.Kind == GameActionKind.StartBattle);
-                if (start != null && !string.Equals(Signature(start), previous.LastActionSignature, StringComparison.Ordinal))
-                    return context.DecideWithRng(start, NewState(decisionCount, Signature(start)),
-                        context.StrategyRandomState, "Preparation decision limit reached; prioritizing StartBattle.");
-            }
-
             if (!string.IsNullOrEmpty(previous.LastActionSignature))
             {
+                Dictionary<GameActionKind, int> beforeKinds = _profiler == null ? null : candidates.GroupBy(a => a.Kind).ToDictionary(g => g.Key, g => g.Count());
+                int beforeFilter = candidates.Count;
                 candidates.RemoveAll(a => string.Equals(Signature(a), previous.LastActionSignature, StringComparison.Ordinal));
                 candidates.RemoveAll(a => IsImmediateReverse(previous.LastActionSignature, a));
+                if (_profiler != null) { _profiler.Add("Candidate.Filtered.Total", beforeFilter - candidates.Count); foreach (var kv in beforeKinds) { int after = candidates.Count(a => a.Kind == kv.Key); _profiler.Add("Candidate.Filtered." + kv.Key, kv.Value - after); } }
             }
+
+            bool decisionLimitReached = observation.Stage.Phase == ObservationPhase.Preparation &&
+                decisionCount >= _settings.PreparationDecisionLimit;
+            if (decisionLimitReached && IsEnemylessPreparation(observation))
+            {
+                return context.NoActionWithRng(NewState(decisionCount, string.Empty),
+                    context.StrategyRandomState,
+                    "Preparation decision limit reached on an enemyless selection; Runner will resolve the enemyless stage.");
+            }
+
             if (candidates.Count == 0)
             {
                 StrategyState noActionState = NewState(decisionCount, string.Empty);
                 return context.NoActionWithRng(noActionState, context.StrategyRandomState,
                     "No observable legal candidates are available.");
+            }
+
+            if (decisionLimitReached)
+            {
+                GameAction start = candidates.FirstOrDefault(a => a.Kind == GameActionKind.StartBattle);
+                if (start != null)
+                    return context.DecideWithRng(start, NewState(decisionCount, Signature(start)),
+                        context.StrategyRandomState, "Preparation decision limit reached; prioritizing legal StartBattle.");
+
+                List<GameAction> resolution = GetBoardOverflowResolutionCandidates(observation, candidates);
+                if (resolution.Count > 0)
+                    return ChooseCandidate(resolution, decisionCount, context,
+                        "Preparation decision limit reached without legal StartBattle; randomly selected a legal action that reduces Board/Level excess.");
             }
 
             candidates.Sort(CompareActions);
@@ -110,6 +132,56 @@ namespace ProjectNST.GameCore.Strategy
             GameAction selected = candidates[selectedIndex];
             return context.DecideWithRng(selected, NewState(decisionCount, Signature(selected)),
                 random.CaptureState(), "Selected uniformly from " + candidates.Count.ToString(CultureInfo.InvariantCulture) + " observable candidates.");
+        }
+
+        private StrategyDecision ChooseCandidate(List<GameAction> candidates, int decisionCount,
+            StrategyContext context, string diagnostic)
+        {
+            candidates.Sort(CompareActions);
+            if (candidates.Count == 1)
+            {
+                GameAction only = candidates[0];
+                return context.DecideWithRng(only, NewState(decisionCount, Signature(only)),
+                    context.StrategyRandomState, diagnostic + " One resolution candidate; Strategy RNG was not consumed.");
+            }
+            StrategyRandomSource random = context.CreateStrategyRandomSource();
+            GameAction selected = candidates[random.NextInt(0, candidates.Count)];
+            return context.DecideWithRng(selected, NewState(decisionCount, Signature(selected)),
+                random.CaptureState(), diagnostic + " Selected uniformly from " + candidates.Count.ToString(CultureInfo.InvariantCulture) + " resolution candidates.");
+        }
+
+        private static bool IsEnemylessPreparation(GameObservation observation) =>
+            observation.Stage.HasSelection && observation.Stage.EnemyCategory.HasValue &&
+            observation.Stage.EnemyCategory.Value == StageEnemyCategory.None;
+
+        /// <summary>
+        /// At the policy limit, narrow random choice to actions that immediately reduce the
+        /// public Board/Level excess. Existing candidate generation remains the legality source.
+        /// </summary>
+        private static List<GameAction> GetBoardOverflowResolutionCandidates(GameObservation observation,
+            IReadOnlyList<GameAction> candidates)
+        {
+            int boardCount = observation.Board.Slots.Count(slot => slot.Character != null);
+            int excess = boardCount - observation.Player.Level;
+            if (excess <= 0) return new List<GameAction>();
+
+            List<GameAction> transfers = candidates.OfType<MoveBoardToHandAction>()
+                .Where(action => observation.Hand.Slots.Any(slot => slot.SlotIndex == action.HandSlot &&
+                    slot.Kind == HandSlotContentKind.Empty)).Cast<GameAction>().ToList();
+            if (transfers.Count > 0) return transfers;
+
+            bool oneXpRaisesLevel = observation.Player.Level < observation.Player.MaximumLevel &&
+                observation.Player.RequiredXP > 0 && observation.Player.XP + 1 >= observation.Player.RequiredXP;
+            if (oneXpRaisesLevel)
+            {
+                List<GameAction> experience = candidates.OfType<BuyExperienceAction>().Cast<GameAction>().ToList();
+                if (experience.Count > 0) return experience;
+            }
+
+            var boardInstances = new HashSet<string>(observation.Board.Slots
+                .Where(slot => slot.Character != null).Select(slot => slot.Character.InstanceId), StringComparer.Ordinal);
+            return candidates.OfType<SellCharacterAction>()
+                .Where(action => boardInstances.Contains(action.InstanceId)).Cast<GameAction>().ToList();
         }
 
         /// <summary>Exposed for deterministic inspection and tests; returned list is read-only.</summary>
@@ -254,8 +326,9 @@ namespace ProjectNST.GameCore.Strategy
             foreach (HandSlotObservation hand in o.Hand.Slots.Where(s => s.Kind == HandSlotContentKind.Character).OrderBy(s => s.SlotIndex))
             foreach (BoardSlotObservation board in o.Board.Slots.OrderBy(s => s.SlotIndex))
             {
-                if (board.Character != null && WouldBoardDuplicate(o.Board,
-                    board.SlotIndex, hand.Character.DefinitionId, -1, null)) continue;
+                // Evaluate the final Board for both empty-slot moves and occupied-slot swaps.
+                // The destination occupant leaves the Board before the Hand character enters.
+                if (WouldBoardDuplicate(o.Board, board.SlotIndex, hand.Character.DefinitionId, -1, null)) continue;
                 add(new MoveHandToBoardAction(id, hand.SlotIndex, board.SlotIndex));
             }
         }
@@ -302,7 +375,18 @@ namespace ProjectNST.GameCore.Strategy
         private static void AddEventCandidates(GameObservation o, ActionId id, Action<GameAction> add)
         {
             EventItemObservation eventItem = o.EventItem;
-            if (eventItem == null || !eventItem.IsAvailable || eventItem.Item == null || !IsSupportedEventItem(eventItem.Item)) return;
+            if (eventItem == null || eventItem.Item == null || !IsSupportedEventItem(eventItem.Item)) return;
+
+            // Event use leaves the session in EventPending with a Consumed item. The existing
+            // EndEvent handler accepts this state and completes the event without another effect.
+            if (eventItem.Status == EventItemStatus.Consumed)
+            {
+                add(new EndEventAction(id));
+                return;
+            }
+
+            // EndEvent is only offered for an Available item when no eligible target exists.
+            if (eventItem.Status != EventItemStatus.Available) return;
             bool found = false;
             foreach (BoardSlotObservation slot in o.Board.Slots.Where(s => s.Character != null).OrderBy(s => s.SlotIndex))
             {

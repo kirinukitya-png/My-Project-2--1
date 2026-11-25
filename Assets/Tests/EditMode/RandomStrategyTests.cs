@@ -70,7 +70,7 @@ namespace ProjectNST.GameCore.Tests
         public void RandomStrategy_HasStableMetadataAndOnlyAvailableStageChoices()
         {
             var strategy = new RandomStrategy(); var obs = Build(Choice());
-            Assert.That(strategy.StrategyId, Is.EqualTo("RandomStrategy")); Assert.That(strategy.Version, Is.EqualTo("1"));
+            Assert.That(strategy.StrategyId, Is.EqualTo("RandomStrategy")); Assert.That(strategy.Version, Is.EqualTo("4"));
             var candidates = strategy.GetCandidates(obs, new ActionId("choice"));
             Assert.That(candidates.Select(a => ((SelectStageChoiceAction)a).Choice), Is.EqualTo(new[] { StageChoice.SelectA, StageChoice.SelectB, StageChoice.SelectC, StageChoice.SelectD }));
             var context = Context(Rng(3), "choice"); var decision = strategy.ChooseAction(obs, context);
@@ -141,6 +141,60 @@ namespace ProjectNST.GameCore.Tests
         }
 
         [Test]
+        public void MoveHandToBoardCandidatesValidateFinalDefinitionSetForMovesAndSwaps()
+        {
+            CharacterDefinition a = Def("canonical-a"), b = Def("canonical-b");
+            CharacterInstance boardA = Inst("board-a", a), boardB = Inst("board-b", b);
+            CharacterInstance handAStar2 = new CharacterInstance("hand-a-star2", a, 1, 2);
+            BoardState board = BoardState.CreateStandard();
+            Assert.That(board.TryWithCharacterAt(0, boardA.InstanceId, out board), Is.True);
+            Assert.That(board.TryWithCharacterAt(1, boardB.InstanceId, out board), Is.True);
+            HandState hand = HandState.CreateStandard();
+            Assert.That(hand.TryWithSlot(0, HandSlotContent.Character(handAStar2.InstanceId), out hand), Is.True);
+            var ownership = new CharacterOwnershipState(new[] { boardA, boardB, handAStar2 });
+            GameObservation observation = Build(Prep(), board: board, hand: hand,
+                owned: new[] { boardA, boardB, handAStar2 }, definitions: new[] { a, b });
+            IReadOnlyList<GameAction> candidates = new RandomStrategy().GetCandidates(observation,
+                new ActionId("final-board-duplicates"));
+            MoveHandToBoardAction[] moves = candidates.OfType<MoveHandToBoardAction>().ToArray();
+
+            Assert.That(moves.Any(x => x.HandSlot == 0 && x.BoardSlot == 2), Is.False,
+                "An empty-slot move must not create a duplicate Definition ID, regardless of Star or Instance ID.");
+            Assert.That(moves.Any(x => x.HandSlot == 0 && x.BoardSlot == 1), Is.False,
+                "Swapping with a different Definition would leave two canonical-a characters on Board.");
+            Assert.That(moves.Any(x => x.HandSlot == 0 && x.BoardSlot == 0), Is.True,
+                "Swapping with the same Definition removes the Board copy before adding the Hand copy.");
+
+            BoardHandOperationResult legalSwap = BoardHandRules.MoveHandToBoard(board, hand, ownership,
+                0, 0, BoardHandOperationContext.Preparation);
+            Assert.That(legalSwap.Succeeded, Is.True, legalSwap.FailureReason.ToString());
+            Assert.That(BoardHandStateValidator.Validate(legalSwap.NextBoard, legalSwap.NextHand, ownership).IsValid, Is.True);
+        }
+
+        [Test]
+        public void MoveHandToBoardCandidateForUniqueDefinitionMatchesRules()
+        {
+            CharacterDefinition a = Def("unique-a"), b = Def("unique-b");
+            CharacterInstance boardA = Inst("unique-board", a), handB = Inst("unique-hand", b);
+            BoardState board = BoardState.CreateStandard();
+            Assert.That(board.TryWithCharacterAt(0, boardA.InstanceId, out board), Is.True);
+            HandState hand = HandState.CreateStandard();
+            Assert.That(hand.TryWithSlot(0, HandSlotContent.Character(handB.InstanceId), out hand), Is.True);
+            var ownership = new CharacterOwnershipState(new[] { boardA, handB });
+            GameObservation observation = Build(Prep(), board: board, hand: hand,
+                owned: new[] { boardA, handB }, definitions: new[] { a, b });
+
+            MoveHandToBoardAction candidate = new RandomStrategy().GetCandidates(observation,
+                new ActionId("unique-move")).OfType<MoveHandToBoardAction>()
+                .Single(x => x.HandSlot == 0 && x.BoardSlot == 2);
+            BoardHandOperationResult result = BoardHandRules.MoveHandToBoard(board, hand, ownership,
+                candidate.HandSlot, candidate.BoardSlot, BoardHandOperationContext.Preparation);
+            Assert.That(result.Succeeded, Is.True, result.FailureReason.ToString());
+            Assert.That(result.NextBoard.TryGetCharacterIdAt(2, out string moved), Is.True);
+            Assert.That(moved, Is.EqualTo(handB.InstanceId));
+        }
+
+        [Test]
         public void StartBattleCandidateRequiresEnemyChoiceLevelCapacityAndPositiveHP()
         {
             var strategy = new RandomStrategy();
@@ -174,10 +228,86 @@ namespace ProjectNST.GameCore.Tests
             var obs = Build(ev, board: board, owned: new[] {c}, definitions: new[] {d}, items: new[] {item}, eventItem: eventState);
             var strategy = new RandomStrategy(); var acts = strategy.GetCandidates(obs, new ActionId("evt"));
             Assert.That(acts.OfType<UseEventItemAction>().Count(), Is.EqualTo(1)); Assert.That(acts.OfType<EndEventAction>(), Is.Empty);
+            var availableDecision = strategy.ChooseAction(obs, Context(Rng(91), "event-use"));
+            Assert.That(availableDecision.Action, Is.TypeOf<UseEventItemAction>());
             var empty = Build(ev, items: new[] {item}, eventItem: eventState);
             Assert.That(strategy.GetCandidates(empty, new ActionId("end")).Single(), Is.TypeOf<EndEventAction>());
         }
 
+        [Test]
+        public void ConsumedEventGeneratesOnlyEndEventAndRandomStrategySelectsItWithoutRng()
+        {
+            var cfg = Config(eventChance: 100);
+            StageProgressState prep = Prep(cfg);
+            StageProgressState battle = StageProgressRules.BeginBattle(prep).NextState;
+            StageProgressState pending = StageProgressRules.ResolveBattle(battle, cfg, true).NextState;
+            StageProgressState ev = StageProgressRules.CompletePendingReward(pending, cfg,
+                new SimulationRandomStreams(91).Event.CaptureState()).NextState;
+            var item = Item("event", ItemEffectTarget.OneAlly, new ItemEffectDefinition(ItemEffectKind.Star, 2));
+            GameObservation observation = Build(ev, items: new[] { item },
+                eventItem: new EventItemState("event", EventItemStatus.Consumed));
+            var strategy = new RandomStrategy();
+            var candidates = strategy.GetCandidates(observation, new ActionId("end-consumed"));
+            Assert.That(candidates, Has.Count.EqualTo(1));
+            Assert.That(candidates[0], Is.TypeOf<EndEventAction>());
+
+            StrategyRngState before = Rng(8877);
+            StrategyContext context = Context(before, "end-consumed");
+            StrategyDecision decision = strategy.ChooseAction(observation, context);
+            Assert.That(decision.Action, Is.TypeOf<EndEventAction>());
+            Assert.That(decision.StrategyRngAdvanced, Is.False);
+            Assert.That(decision.NextStrategyRngState, Is.EqualTo(before));
+            StrategyDecision replay = strategy.ChooseAction(observation, Context(before, "end-consumed"));
+            Assert.That(replay.Action, Is.TypeOf<EndEventAction>());
+            Assert.That(replay.NextStrategyRngState, Is.EqualTo(decision.NextStrategyRngState));
+        }
+
+        [Test]
+        public void EndEventIsNotGeneratedOutsideEventPhaseOrForEndedWithoutUseState()
+        {
+            var item = Item("event", ItemEffectTarget.OneAlly, new ItemEffectDefinition(ItemEffectKind.Star, 2));
+            var strategy = new RandomStrategy();
+            GameObservation wrongPhase = Build(Prep(), items: new[] { item },
+                eventItem: new EventItemState("event", EventItemStatus.Consumed));
+            Assert.That(strategy.GetCandidates(wrongPhase, new ActionId("wrong-phase")).OfType<EndEventAction>(), Is.Empty);
+
+            var cfg = Config(eventChance: 100);
+            StageProgressState prep = Prep(cfg);
+            StageProgressState pending = StageProgressRules.ResolveBattle(
+                StageProgressRules.BeginBattle(prep).NextState, cfg, true).NextState;
+            StageProgressState ev = StageProgressRules.CompletePendingReward(pending, cfg,
+                new SimulationRandomStreams(91).Event.CaptureState()).NextState;
+            GameObservation invalidLifecycle = Build(ev, items: new[] { item },
+                eventItem: new EventItemState("event", EventItemStatus.EndedWithoutUse));
+            Assert.That(strategy.GetCandidates(invalidLifecycle, new ActionId("ended-state")), Is.Empty);
+        }
+        [Test]
+        public void EndingConsumedEventAdvancesToNextEncounterAndExposesStageChoices()
+        {
+            var cfg = new StageProgressConfig(2, 2, 2, 2, 100, 0, 100,
+                1, 0, 0, 3, 6, 0, 0, 10, 4, 2, true);
+            StageProgressState prep = StageProgressRules.BeginCurrentEncounter(
+                StageProgressRules.CreateInitialState(cfg), cfg).NextState;
+            StageProgressState battle = StageProgressRules.BeginBattle(prep).NextState;
+            StageProgressState reward = StageProgressRules.ResolveBattle(battle, cfg, true).NextState;
+            StageProgressState ev = StageProgressRules.CompletePendingReward(reward, cfg,
+                new SimulationRandomStreams(191).Event.CaptureState()).NextState;
+            var eventItem = new EventItemState("event", EventItemStatus.Consumed);
+            ItemDefinition item = Item("event", ItemEffectTarget.OneAlly,
+                new ItemEffectDefinition(ItemEffectKind.Star, 2));
+            GameObservation eventObservation = Build(ev, items: new[] { item }, eventItem: eventItem);
+            var eventDecision = new RandomStrategy().ChooseAction(eventObservation,
+                Context(Rng(191), "event-end", step: 0));
+            Assert.That(eventDecision.Action, Is.TypeOf<EndEventAction>());
+
+            StageProgressState completedEvent = StageProgressRules.CompleteEvent(ev, false).NextState;
+            StageProgressState nextEncounter = StageProgressRules.BeginCurrentEncounter(completedEvent, cfg).NextState;
+            Assert.That(nextEncounter.Phase, Is.EqualTo(StageProgressPhase.AwaitingStageChoice));
+            GameObservation choiceObservation = Build(nextEncounter);
+            var choices = new RandomStrategy().GetCandidates(choiceObservation, new ActionId("next-choice"));
+            Assert.That(choices.OfType<SelectStageChoiceAction>().Select(x => x.Choice),
+                Is.EqualTo(new[] { StageChoice.SelectA, StageChoice.SelectB, StageChoice.SelectC, StageChoice.SelectD }));
+        }
         [Test]
         public void UniformSelection_IsReproducibleAndCheckpointRestoresSameAction()
         {
@@ -262,6 +392,106 @@ namespace ProjectNST.GameCore.Tests
             var reverseContext = Context(Rng(5), "reverse", movementState);
             var reverseDecision = strategy.ChooseAction(sparse, reverseContext);
             Assert.That(reverseDecision.Action, Is.Not.TypeOf<MoveOrSwapBoardAction>());
+        }
+
+        [TestCase(StageChoice.SelectB)]
+        [TestCase(StageChoice.SelectD)]
+        public void EnemylessPreparationReturnsNoActionAtPolicyLimitWithoutConsumingRng(StageChoice choice)
+        {
+            StageProgressConfig config = Config(choiceRound: 1);
+            StageProgressState selected = StageSelectionRules.Select(Choice(config), config, choice).NextState;
+            ShopState shop;
+            ItemDefinition[] items;
+            CharacterDefinition[] definitions;
+            if (choice == StageChoice.SelectB)
+            {
+                var item = Item("limit-item", ItemEffectTarget.Player,
+                    new ItemEffectDefinition(ItemEffectKind.Block, 1));
+                shop = new ShopState(ShopKind.Item,
+                    new[] { new ShopOffer("limit-offer", ShopOfferKind.Item, item.DefinitionId, 1, null) },
+                    1, 1, 1);
+                items = new[] { item };
+                definitions = Array.Empty<CharacterDefinition>();
+            }
+            else
+            {
+                CharacterDefinition definition = Def("limit-character");
+                shop = new ShopState(ShopKind.Character,
+                    new[] { new ShopOffer("limit-offer", ShopOfferKind.Character, definition.DefinitionId, 1, 1) },
+                    1, 1, 1);
+                items = Array.Empty<ItemDefinition>();
+                definitions = new[] { definition };
+            }
+            GameObservation observation = Build(selected, Econ(10), definitions: definitions,
+                shop: shop, items: items);
+            var strategy = new RandomStrategy(new RandomStrategySettings(preparationDecisionLimit: 1));
+            Assert.That(strategy.GetCandidates(observation, new ActionId("enemyless-candidates")), Is.Not.Empty,
+                "The no-op must be caused by the policy limit, not by an empty candidate set.");
+
+            StrategyRngState checkpoint = Rng(13013);
+            var state = new StrategyState(Sid, Ver, 1, "rg1|0|" + Convert.ToBase64String(Array.Empty<byte>()));
+            StrategyDecision decision = strategy.ChooseAction(observation, Context(checkpoint,
+                "enemyless-limit", state));
+
+            Assert.That(decision.HasAction, Is.False);
+            Assert.That(decision.Diagnostic, Does.Contain("enemyless selection"));
+            Assert.That(decision.NextState.Payload, Does.StartWith("rg1|1|"));
+            Assert.That(decision.NextStrategyRngState, Is.EqualTo(checkpoint));
+            Assert.That(decision.StrategyRngAdvanced, Is.False);
+        }
+
+        [Test]
+        public void DecisionLimitRandomlySelectsOnlyBoardOverflowResolutionAndThenStartsBattle()
+        {
+            CharacterDefinition[] definitions = Enumerable.Range(0, 7).Select(i => Def("limit-overflow-" + i)).ToArray();
+            CharacterInstance[] owned = definitions.Select((definition, i) => Inst("limit-instance-" + i, definition)).ToArray();
+            BoardState board = BoardState.CreateStandard();
+            Assert.That(board.TryWithCharacterAt(0, owned[0].InstanceId, out board), Is.True);
+            Assert.That(board.TryWithCharacterAt(1, owned[1].InstanceId, out board), Is.True);
+            HandState hand = HandState.CreateStandard();
+            for (int i = 0; i < hand.SlotCount; i++)
+                Assert.That(hand.TryWithSlot(i, HandSlotContent.Character(owned[i + 2].InstanceId), out hand), Is.True);
+            var strategy = new RandomStrategy(new RandomStrategySettings(preparationDecisionLimit: 1));
+            GameObservation over = Build(Prep(), Econ(gold: 0, level: 1), board, hand, owned, definitions);
+            StrategyRngState checkpoint = Rng(13131);
+            var initialState = new StrategyState(Sid, Ver, 1, "rg1|0|" + Convert.ToBase64String(Array.Empty<byte>()));
+            var firstContext = Context(checkpoint, "overflow-1", initialState);
+            StrategyDecision first = strategy.ChooseAction(over, firstContext);
+            StrategyDecision replay = strategy.ChooseAction(over, Context(checkpoint, "overflow-1", initialState));
+            Assert.That(first.Action, Is.TypeOf<SellCharacterAction>());
+            string sold = ((SellCharacterAction)first.Action).InstanceId;
+            Assert.That(owned.Take(2).Any(instance => instance.InstanceId == sold), Is.True,
+                "Selling a Hand character would not reduce Board/Level excess.");
+            Assert.That(first.Action.Kind, Is.EqualTo(replay.Action.Kind));
+            Assert.That(((SellCharacterAction)replay.Action).InstanceId, Is.EqualTo(sold));
+            Assert.That(first.NextStrategyRngState, Is.EqualTo(replay.NextStrategyRngState));
+
+            Assert.That(board.TryFindInstance(sold, out int slot), Is.True);
+            Assert.That(board.TryWithCharacterAt(slot, null, out BoardState nextBoard), Is.True);
+            CharacterInstance[] nextOwned = owned.Where(instance => instance.InstanceId != sold).ToArray();
+            GameObservation ready = Build(Prep(), Econ(gold: 0, level: 1), nextBoard, hand, nextOwned, definitions);
+            StrategyDecision next = strategy.ChooseAction(ready, Context(first.NextStrategyRngState,
+                "overflow-ready", first.NextState, step: 1));
+            Assert.That(next.Action, Is.TypeOf<StartBattleAction>(),
+                "After one legal sale reduces Board to Level, the random policy must use legal StartBattle at its cap.");
+        }
+
+        [Test]
+        public void DecisionLimitPrefersAnEmptyHandTransferBeforeSaleAndDoesNotForceIllegalBattle()
+        {
+            CharacterDefinition a = Def("transfer-a"), b = Def("transfer-b");
+            CharacterInstance ia = Inst("transfer-ia", a), ib = Inst("transfer-ib", b);
+            BoardState board = BoardState.CreateStandard();
+            Assert.That(board.TryWithCharacterAt(0, ia.InstanceId, out board), Is.True);
+            Assert.That(board.TryWithCharacterAt(1, ib.InstanceId, out board), Is.True);
+            GameObservation observation = Build(Prep(), Econ(level: 1), board,
+                HandState.CreateStandard(), new[] { ia, ib }, new[] { a, b });
+            var strategy = new RandomStrategy(new RandomStrategySettings(preparationDecisionLimit: 1));
+            StrategyDecision decision = strategy.ChooseAction(observation,
+                Context(Rng(13132), "overflow-transfer",
+                    new StrategyState(Sid, Ver, 1, "rg1|0|" + Convert.ToBase64String(Array.Empty<byte>()))));
+            Assert.That(decision.Action, Is.TypeOf<MoveBoardToHandAction>());
+            Assert.That(decision.Action, Is.Not.TypeOf<StartBattleAction>());
         }
         [Test]
         public void InvalidPayloadResetsSafelyAndAutomaticPhasesReturnNoActionWithoutRandomness()

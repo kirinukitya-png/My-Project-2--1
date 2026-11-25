@@ -332,6 +332,82 @@ namespace ProjectNST.GameCore.Tests
         }
 
         [Test]
+        public void PermanentStarItemPreservesPoolCopiesAcrossPurchaseAndSale()
+        {
+            var starItem = Item("event-star-pool", ItemEffectTarget.OneAlly,
+                ItemEffectDuration.Immediate, new ItemEffectDefinition(ItemEffectKind.Star, 2));
+            CharacterInstance original = new CharacterInstance("pool-origin", Hero, 1);
+            Assert.That(original.TrySetStar(1, Hero, Stats, new Pcg32RandomSource(8, 3)), Is.True);
+            BoardState board = BoardState.CreateStandard();
+            Assert.That(board.TryWithCharacterAt(0, original.InstanceId, out board), Is.True);
+            var ownership = new CharacterOwnershipState(new[] { original });
+            Pcg32State beforeStats = new Pcg32RandomSource(91, 7).CaptureState();
+            ItemEffectResult itemResult = ItemEffectRules.TryUseEventItem(starItem,
+                new EventItemState(starItem.DefinitionId),
+                ItemUseTarget.BoardCharacter(0), board, HandState.CreateStandard(), ownership,
+                new EconomyState(10, 0, 1, 12, 10, 0, 1, 20, 30), EventPending(),
+                new ItemEffectState(), new[] { Hero }, Stats, beforeStats);
+
+            Assert.That(itemResult.Succeeded, Is.True, itemResult.Failure.ToString());
+            Assert.That(itemResult.NextOwnership.TryGet(original.InstanceId, out CharacterInstanceView upgraded), Is.True);
+            Assert.That(upgraded.Star, Is.EqualTo(2));
+            Assert.That(upgraded.PoolCopies, Is.EqualTo(1), "A free Star increase must not consume finite shop stock.");
+
+            CharacterPool pool = new CharacterPool(new[] { new CharacterPoolEntry("hero", 13, 15, 1, 1) });
+            ShopState shop = new ShopState(ShopKind.Character,
+                new[] { new ShopOffer("offer", ShopOfferKind.Character, "hero", 1, 1) }, 1, 1, 1);
+            EconomyState economy = new EconomyState(10, 0, 1, 12, 10, 0, 1, 20, 30);
+            CharacterInstanceFactory factory = new CharacterInstanceFactory("purchase", 0);
+            BoardShopTransactionResult purchase = BoardShopTransactionRules.TryPurchaseCharacter(shop, "offer",
+                new[] { Hero }, Costs, economy, pool, itemResult.NextBoard, itemResult.NextHand,
+                itemResult.NextOwnership, factory, Stats, beforeStats,
+                new CharacterLocation(CharacterLocationKind.Hand, 0), ownershipScopeMatchesPool: true);
+
+            Assert.That(purchase.Succeeded, Is.True, purchase.FailureReason.ToString());
+            Assert.That(purchase.NextPool.Entries["hero"].OwnedCopies, Is.EqualTo(2));
+            Assert.That(purchase.NextOwnership.TryGet(original.InstanceId, out CharacterInstanceView stillUpgraded), Is.True);
+            Assert.That(stillUpgraded.PoolCopies, Is.EqualTo(1));
+
+            BoardShopTransactionResult sale = BoardShopTransactionRules.TrySellCharacter(original.InstanceId,
+                purchase.NextEconomy, purchase.NextShop, purchase.NextPool, purchase.NextBoard,
+                purchase.NextHand, purchase.NextOwnership, purchase.NextInstanceFactory,
+                purchase.NextStatsRandomState, ownershipScopeMatchesPool: true);
+            Assert.That(sale.Succeeded, Is.True, sale.FailureReason.ToString());
+            Assert.That(sale.GoldDelta, Is.EqualTo(3), "Legacy sale Gold remains Star-based.");
+            Assert.That(sale.PoolCopiesDelta, Is.EqualTo(1), "Only the copy actually acquired from the pool is returned.");
+            Assert.That(sale.NextPool.Entries["hero"].OwnedCopies, Is.EqualTo(1));
+            Assert.That(sale.NextPool.Entries["hero"].RemainingCopies, Is.EqualTo(14));
+            Assert.That(sale.NextPool.Entries["hero"].RemainingCopies +
+                sale.NextPool.Entries["hero"].ReservedCopies + sale.NextPool.Entries["hero"].OwnedCopies,
+                Is.EqualTo(15));
+        }
+
+        [Test]
+        public void MergeAfterFreeStarIncreaseConservesOriginalPoolCopyContributions()
+        {
+            CharacterInstance itemUpgraded = new CharacterInstance("item-upgraded", Hero, 1, 2, poolCopies: 1);
+            CharacterInstance boughtA = new CharacterInstance("bought-a", Hero, 1, 2, poolCopies: 3);
+            CharacterInstance boughtB = new CharacterInstance("bought-b", Hero, 1, 2, poolCopies: 3);
+            var owned = new CharacterOwnershipState(new[] { itemUpgraded, boughtA, boughtB });
+            BoardState board = BoardState.CreateStandard();
+            HandState hand = HandState.CreateStandard();
+            Assert.That(hand.TryWithSlot(0, HandSlotContent.Character(itemUpgraded.InstanceId), out hand), Is.True);
+            Assert.That(hand.TryWithSlot(1, HandSlotContent.Character(boughtA.InstanceId), out hand), Is.True);
+            Assert.That(hand.TryWithSlot(2, HandSlotContent.Character(boughtB.InstanceId), out hand), Is.True);
+
+            CharacterMergeResult result = MergeRules.TryMerge(board, hand, owned,
+                Hero, 2, Stats, new Pcg32RandomSource(71, 9).CaptureState());
+
+            Assert.That(result.Succeeded, Is.True, result.FailureReason.ToString());
+            Assert.That(result.NextOwnership.TryGet(itemUpgraded.InstanceId, out CharacterInstanceView survivor), Is.True);
+            Assert.That(survivor.Star, Is.EqualTo(3));
+            Assert.That(survivor.PoolCopies, Is.EqualTo(7));
+            Assert.That(result.NextOwnership.OwnedCount, Is.EqualTo(1));
+            Assert.That(result.NextHand.TryGetSlot(0, out HandSlotContent survivingSlot), Is.True);
+            Assert.That(survivingSlot.CharacterInstanceId, Is.EqualTo(itemUpgraded.InstanceId));
+        }
+
+        [Test]
         public void AllFourteenHandlersRegisterAndStartBattleRemainsUnsupported()
         {
             var handlers = ShopEconomyActionHandlers.Create().Concat(BoardHandActionHandlers.Create())

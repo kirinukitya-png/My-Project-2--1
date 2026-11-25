@@ -32,16 +32,46 @@ namespace ProjectNST.GameCore.Tests
             IReadOnlyList<CharacterDefinition> full = null,
             IReadOnlyList<ItemDefinition> items = null,
             ShopState shop = null, EventItemState eventItem = null, IReadOnlyList<EnemyDefinition> enemies = null,
-            EnemyBoardState enemyBoard = null, BattleState battle = null, BattleResult result = null)
+            EnemyBoardState enemyBoard = null, BattleState battle = null, BattleResult result = null,
+            CharacterStatDefinition stats = null, CharacterShopConfiguration characterShop = null,
+            StageRewardConfiguration rewards = null, int? rerollCost = null,
+            StageProgressConfig stageConfig = null)
         {
-            return new ObservationSource(stage ?? StageProgressRules.CreateInitialState(StageConfig()),
-                StageConfig(), economy ?? new EconomyState(12, 0, 1, 12, 12, 0, 1, 25, 30),
+            StageProgressConfig effectiveStageConfig = stageConfig ?? StageConfig();
+            return new ObservationSource(stage ?? StageProgressRules.CreateInitialState(effectiveStageConfig),
+                effectiveStageConfig, economy ?? new EconomyState(12, 0, 1, 12, 12, 0, 1, 25, 30),
                 EconomyConfig(), board ?? BoardState.CreateStandard(),
                 hand ?? HandState.CreateStandard(), ownership ?? new CharacterOwnershipState(Array.Empty<CharacterInstance>()),
                 definitions ?? Array.Empty<CharacterDefinition>(), selected ?? Array.Empty<CharacterDefinition>(),
                 full ?? Array.Empty<CharacterDefinition>(), items ?? Array.Empty<ItemDefinition>(),
-                shop, new ItemEffectState(), eventItem, enemies, enemyBoard, null, battle, result);
+                shop, new ItemEffectState(), eventItem, enemies, enemyBoard, null, battle, result,
+                stats, characterShop, rewards, rerollCost);
         }
+
+        private static StageProgressState ChoiceState(StageProgressConfig config)
+        {
+            StageProgressState state = StageProgressRules.CreateInitialState(config);
+            for (int i = 0; i < config.RoundsPerStage - 1; i++)
+            {
+                state = StageProgressRules.BeginCurrentEncounter(state, config).NextState;
+                state = StageProgressRules.BeginBattle(state).NextState;
+                state = StageProgressRules.ResolveBattle(state, config, true).NextState;
+                state = StageProgressRules.CompletePendingReward(state, config,
+                    new SimulationRandomStreams((ulong)i + 1).Event.CaptureState()).NextState;
+            }
+            return StageProgressRules.BeginCurrentEncounter(state, config).NextState;
+        }
+
+        private static CharacterStatDefinition TestStats() => new CharacterStatDefinition(new[]
+        {
+            new CharacterCostStats(2,
+                new[] { new CharacterStatOption(5, 1, 2), new CharacterStatOption(8, 4, 1), new CharacterStatOption(99, 99, 0) },
+                Array.Empty<CharacterStatOption>(), Array.Empty<CharacterStatOption>())
+        });
+
+        private static CharacterShopConfiguration TestCharacterShop() => new CharacterShopConfiguration(
+            new[] { 6, 6, 6, 6, 6 }, new[] { 15, 15, 15, 15, 15 },
+            new[] { new[] { 85, 15, 0, 0, 0 } }, new[] { 3 });
 
         [Test]
         public void Build_InitialStateCopiesPublicPlayerAndStageValuesWithoutRng()
@@ -238,6 +268,233 @@ namespace ProjectNST.GameCore.Tests
             Assert.That(built.Observation.Board.Slots[8].Character.Attributes[0], Is.EqualTo("Arcane"));
             Assert.Throws<NotSupportedException>(() =>
                 ((IList<string>)built.Observation.Board.Slots[8].Character.Units)[0] = "changed");
+        }
+
+        [Test]
+        public void Build_ReusesImmutableDefinitionTagsButKeepsOlderObservationDetached()
+        {
+            StageProgressConfig config = StageConfig();
+            StageProgressState prep = StageProgressRules.BeginCurrentEncounter(
+                StageProgressRules.CreateInitialState(config), config).NextState;
+            var definition = new CharacterDefinition("shared-tags", "Guard", 1,
+                new[] { "Earth" }, new[] { "Sentinel" });
+            var instance = new CharacterInstance("shared-instance", definition, 1);
+            var firstOwnership = new CharacterOwnershipState(new[] { instance });
+            var ids = new string[9]; ids[0] = instance.InstanceId;
+            var board = new BoardState(3, 3, ids);
+            var shop = new ShopState(ShopKind.Character,
+                new[] { new ShopOffer("shared-offer", ShopOfferKind.Character,
+                    definition.DefinitionId, 1, 1) }, 1, 1, 1);
+            ObservationSource firstSource = Source(prep, board: board, ownership: firstOwnership,
+                definitions: new[] { definition }, selected: new[] { definition },
+                full: new[] { definition }, shop: shop,
+                enemies: Array.Empty<EnemyDefinition>(), enemyBoard: EnemyBoardState.CreateEmpty());
+
+            ObservationBuildResult first = ObservationBuilder.Build(firstSource);
+            Assert.That(first.Succeeded, Is.True, string.Join("; ", first.Errors));
+            CharacterObservation oldCharacter = first.Observation.Board.Slots[0].Character;
+            Assert.That(oldCharacter.Units, Is.SameAs(definition.Units));
+            Assert.That(oldCharacter.Attributes, Is.SameAs(definition.Attributes));
+            Assert.Throws<NotSupportedException>(() =>
+                ((IList<string>)oldCharacter.Units)[0] = "mutated");
+
+            instance.TemporaryAttackBonus = 7;
+            var secondOwnership = new CharacterOwnershipState(new[] { instance });
+            ObservationBuildResult second = ObservationBuilder.Build(Source(prep, board: board,
+                ownership: secondOwnership, definitions: new[] { definition },
+                selected: new[] { definition }, full: new[] { definition }, shop: shop,
+                enemies: Array.Empty<EnemyDefinition>(), enemyBoard: EnemyBoardState.CreateEmpty()));
+
+            Assert.That(second.Succeeded, Is.True, string.Join("; ", second.Errors));
+            Assert.That(oldCharacter.TemporaryAttackBonus, Is.EqualTo(0),
+                "A later source state must not mutate an already returned observation.");
+            Assert.That(second.Observation.Board.Slots[0].Character.TemporaryAttackBonus, Is.EqualTo(7));
+            Assert.That(oldCharacter.Units[0], Is.EqualTo("Sentinel"));
+        }
+
+        [Test]
+        public void OwnershipState_ReusesDetachedImmutableViewsForItsLifetime()
+        {
+            var definition = new CharacterDefinition("view-cache", "Guard", 1,
+                Array.Empty<string>(), Array.Empty<string>());
+            var source = new CharacterInstance("view-cache-1", definition, 1);
+            var ownership = new CharacterOwnershipState(new[] { source });
+
+            Assert.That(ownership.TryGet(source.InstanceId, out CharacterInstanceView first), Is.True);
+            Assert.That(ownership.TryGet(source.InstanceId, out CharacterInstanceView second), Is.True);
+            Assert.That(second, Is.SameAs(first));
+            Assert.That(ownership.Instances[source.InstanceId], Is.SameAs(first));
+            Assert.Throws<NotSupportedException>(() =>
+                ((IDictionary<string, CharacterInstanceView>)ownership.Instances)[source.InstanceId] = null);
+
+            source.TemporaryAttackBonus = 99;
+            Assert.That(ownership.TryGet(source.InstanceId, out CharacterInstanceView afterSourceMutation), Is.True);
+            Assert.That(afterSourceMutation, Is.SameAs(first));
+            Assert.That(afterSourceMutation.TemporaryAttackBonus, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Build_CharacterOfferExposesDefinitionTagsRunCostPriceAndPublishedStatRange()
+        {
+            StageProgressConfig config = StageConfig();
+            StageProgressState prep = StageProgressRules.BeginCurrentEncounter(
+                StageProgressRules.CreateInitialState(config), config).NextState;
+            var definition = new CharacterDefinition("shop-char", "Shop Guard", 1,
+                new[] { "Earth" }, new[] { "Sentinel" });
+            var shop = new ShopState(ShopKind.Character,
+                new[] { new ShopOffer("char-offer", ShopOfferKind.Character, "shop-char", 11, 2) },
+                1, 1, 1);
+            var built = ObservationBuilder.Build(Source(prep, definitions: new[] { definition },
+                selected: new[] { definition }, full: new[] { definition }, shop: shop,
+                enemies: Array.Empty<EnemyDefinition>(), enemyBoard: EnemyBoardState.CreateEmpty(),
+                stats: TestStats(), characterShop: TestCharacterShop(), rerollCost: 2));
+
+            Assert.That(built.Succeeded, Is.True, string.Join("; ", built.Errors));
+            ShopOfferObservation offer = built.Observation.Shop.Offers[0];
+            Assert.That(offer.DefinitionId, Is.EqualTo("shop-char"));
+            Assert.That(offer.DisplayName, Is.EqualTo("Shop Guard"));
+            Assert.That(offer.RunCost, Is.EqualTo(2));
+            Assert.That(offer.DisplayPrice, Is.EqualTo(11));
+            Assert.That(offer.Units, Is.EqualTo(new[] { "Sentinel" }));
+            Assert.That(offer.Attributes, Is.EqualTo(new[] { "Earth" }));
+            Assert.Throws<NotSupportedException>(() =>
+                ((IList<string>)offer.Units)[0] = "mutated");
+            Assert.That(offer.CharacterStats.IsAvailable, Is.True);
+            Assert.That(offer.CharacterStats.MinimumAttack, Is.EqualTo(5));
+            Assert.That(offer.CharacterStats.MaximumAttack, Is.EqualTo(8));
+            Assert.That(offer.CharacterStats.MinimumDefense, Is.EqualTo(1));
+            Assert.That(offer.CharacterStats.MaximumDefense, Is.EqualTo(4));
+            Assert.That(built.Observation.Shop.CostWeights.Cost1Weight, Is.EqualTo(85));
+            Assert.That(built.Observation.Shop.CostWeights.Cost2Weight, Is.EqualTo(15));
+            Assert.That(built.Observation.Shop.CostWeights.TotalConfiguredWeight, Is.EqualTo(100));
+            Assert.That(typeof(ShopCostWeightObservation).GetProperty("PoolRemaining"), Is.Null);
+        }
+
+        [Test]
+        public void Build_ItemOfferReusesPublicEffectViewAndDoesNotExposePoolInformation()
+        {
+            StageProgressConfig config = StageConfig();
+            StageProgressState choice = ChoiceState(config);
+            StageProgressState itemPrep = StageSelectionRules.Select(choice, config, StageChoice.SelectB).NextState;
+            var item = new ItemDefinition("item-public", "Shield Draught", 5, "Defense -1",
+                ItemEffectTarget.AllEnemies, ItemEffectDuration.ThisBattle,
+                new[] { new ItemEffectDefinition(ItemEffectKind.Defense, -1) });
+            var shop = new ShopState(ShopKind.Item,
+                new[] { new ShopOffer("item-offer", ShopOfferKind.Item, "item-public", 5, null) },
+                1, 1, 5);
+            var built = ObservationBuilder.Build(Source(itemPrep, items: new[] { item }, shop: shop,
+                enemies: Array.Empty<EnemyDefinition>(), enemyBoard: EnemyBoardState.CreateEmpty(),
+                stageConfig: config));
+
+            Assert.That(built.Succeeded, Is.True, string.Join("; ", built.Errors));
+            ItemObservation observed = built.Observation.Shop.Offers[0].Item;
+            Assert.That(observed.DefinitionId, Is.EqualTo("item-public"));
+            Assert.That(observed.PurchasePrice, Is.EqualTo(5));
+            Assert.That(observed.Effects[0].Kind, Is.EqualTo(ItemEffectKind.Defense));
+            Assert.That(observed.Effects[0].Value, Is.EqualTo(-1));
+            Assert.That(observed.Effects[0].Target, Is.EqualTo(ItemEffectTarget.AllEnemies));
+            Assert.That(observed.Effects[0].Duration, Is.EqualTo(ItemEffectDuration.ThisBattle));
+            Assert.Throws<NotSupportedException>(() =>
+                ((IList<ItemEffectObservation>)observed.Effects)[0] = null);
+            Assert.That(built.Observation.Shop.CostWeights, Is.Null);
+        }
+
+        [Test]
+        public void Build_EconomyRulesExposeCurrentChoiceCostsAndDeterministicInterestExpectation()
+        {
+            StageProgressConfig config = StageConfig();
+            StageProgressState choice = ChoiceState(config);
+            StageProgressState selected = StageSelectionRules.Select(choice, config, StageChoice.SelectB).NextState;
+            EconomyState economy = new EconomyState(19, 2, 3, 12, 12, 0, 1, 25, 30);
+            SimulationRandomStreams streams = new SimulationRandomStreams(919UL);
+            SimulationRandomStreamsState before = streams.CaptureState();
+            var built = ObservationBuilder.Build(Source(selected, economy: economy,
+                enemies: Array.Empty<EnemyDefinition>(), enemyBoard: EnemyBoardState.CreateEmpty(),
+                rerollCost: 2, stageConfig: config,
+                shop: new ShopState(ShopKind.Item, Array.Empty<ShopOffer>(), 3, 1, 5)));
+
+            Assert.That(built.Succeeded, Is.True, string.Join("; ", built.Errors));
+            EconomyRulesObservation view = built.Observation.EconomyRules;
+            Assert.That(view.ExperiencePurchaseGoldCost, Is.EqualTo(2));
+            Assert.That(view.ExperiencePerPurchase, Is.EqualTo(1));
+            Assert.That(view.MaximumLevel, Is.EqualTo(12));
+            Assert.That(view.CanPurchaseExperience, Is.True);
+            Assert.That(view.ShopRerollGoldCost, Is.EqualTo(2));
+            Assert.That(view.CanRerollShop, Is.True);
+            Assert.That(view.GoldPerInterestThreshold, Is.EqualTo(10));
+            Assert.That(view.MaximumInterestGold, Is.EqualTo(3));
+            Assert.That(view.ExpectedInterestAtCurrentGold, Is.EqualTo(1.9m));
+            Assert.That(streams.CaptureState().Economy, Is.EqualTo(before.Economy));
+            Assert.That(streams.CaptureState().Stats, Is.EqualTo(before.Stats));
+        }
+
+        [Test]
+        public void ExpectedInterestUsesOnlyTheRemainingCapNearAndAtMaximum()
+        {
+            EconomyRulesConfiguration config = EconomyConfig();
+
+            Assert.That(EconomyRules.CalculateExpectedInterestGold(29, config), Is.EqualTo(2.9m));
+            Assert.That(EconomyRules.CalculateExpectedInterestGold(30, config), Is.EqualTo(3m));
+            Assert.That(EconomyRules.CalculateExpectedInterestGold(39, config), Is.EqualTo(3m));
+        }
+
+        [Test]
+        public void Build_ChoiceDetailsSeparateImmediateEffectsFromRewardAndMarkBossOverride()
+        {
+            var normalConfig = new StageProgressConfig(25, 5, 5, 4, 0, 0, 0,
+                1, 0, 0, 3, 6, 0, 0, 10, 4, 2, true);
+            StageProgressState normalChoice = ChoiceState(normalConfig);
+            var normalBuilt = ObservationBuilder.Build(Source(normalChoice,
+                rewards: new StageRewardConfiguration(5, 2), stageConfig: normalConfig));
+
+            Assert.That(normalBuilt.Succeeded, Is.True, string.Join("; ", normalBuilt.Errors));
+            Assert.That(normalBuilt.Observation.Stage.ChoiceDetails, Has.Count.EqualTo(4));
+            StageChoiceObservation selectD = normalBuilt.Observation.Stage.ChoiceDetails[3];
+            Assert.That(selectD.Choice, Is.EqualTo(StageChoice.SelectD));
+            Assert.That(selectD.IsAvailable, Is.True);
+            Assert.That(selectD.SelectionEffect, Is.EqualTo(StageSelectionEffectKind.HealPlayer));
+            Assert.That(selectD.SelectionEffectTiming, Is.EqualTo(StageSelectionEffectTiming.AtSelection));
+            Assert.That(selectD.SelectionEffectAmount, Is.EqualTo(10));
+            Assert.That(selectD.SelectionEffectCapsAtMaximum, Is.True);
+            Assert.That(selectD.PostBattleGold, Is.EqualTo(0));
+            Assert.That(selectD.PostBattleXP, Is.EqualTo(0));
+            Assert.That(selectD.BossRewardOverridesChoice, Is.False);
+            Assert.That(normalBuilt.Observation.Enemies, Is.Empty);
+            Assert.That(normalBuilt.Observation.Stage.SelectedChoiceDetails, Is.Null);
+
+            var bossConfig = new StageProgressConfig(25, 5, 5, 5, 0, 0, 0,
+                1, 0, 0, 3, 6, 0, 0, 10, 4, 2, true);
+            StageProgressState bossChoice = ChoiceState(bossConfig);
+            var bossBuilt = ObservationBuilder.Build(Source(bossChoice,
+                rewards: new StageRewardConfiguration(5, 2), stageConfig: bossConfig));
+            Assert.That(bossBuilt.Succeeded, Is.True, string.Join("; ", bossBuilt.Errors));
+            StageChoiceObservation bossSelectD = bossBuilt.Observation.Stage.ChoiceDetails[3];
+            Assert.That(bossSelectD.SelectionEffect, Is.EqualTo(StageSelectionEffectKind.None));
+            Assert.That(bossSelectD.PostBattleGold, Is.EqualTo(5));
+            Assert.That(bossSelectD.PostBattleXP, Is.EqualTo(2));
+            Assert.That(bossSelectD.BossRewardOverridesChoice, Is.True);
+            Assert.Throws<NotSupportedException>(() =>
+                ((IList<StageChoiceObservation>)bossBuilt.Observation.Stage.ChoiceDetails).Clear());
+        }
+
+        [Test]
+        public void Build_SelectedRosterIsOrderedImmutableAndOmitsUnassignedRunCost()
+        {
+            var first = new CharacterDefinition("roster-a", "A", 1, new[] { "Wind" }, new[] { "Swift" });
+            var second = new CharacterDefinition("roster-b", "B", 5, new[] { "Stone" }, new[] { "Guard" });
+            var built = ObservationBuilder.Build(Source(selected: new[] { first, second },
+                full: new[] { first, second }));
+
+            Assert.That(built.Succeeded, Is.True, string.Join("; ", built.Errors));
+            Assert.That(built.Observation.SelectedRoster, Has.Count.EqualTo(2));
+            Assert.That(built.Observation.SelectedRoster[0].DefinitionId, Is.EqualTo("roster-a"));
+            Assert.That(built.Observation.SelectedRoster[1].Attributes[0], Is.EqualTo("Stone"));
+            Assert.That(built.Observation.SelectedRoster[1].Units[0], Is.EqualTo("Guard"));
+            Assert.That(typeof(RosterDefinitionObservation).GetProperty("RunCost"), Is.Null);
+            Assert.Throws<NotSupportedException>(() =>
+                ((IList<RosterDefinitionObservation>)built.Observation.SelectedRoster)[0] = null);
+            Assert.Throws<NotSupportedException>(() =>
+                ((IList<string>)built.Observation.SelectedRoster[0].Units)[0] = "changed");
         }
     }
 }

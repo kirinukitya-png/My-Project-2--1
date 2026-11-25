@@ -1,0 +1,221 @@
+NST stopped Trial diagnostic (deterministic replay)
+TrialIndex=25
+TrialSeed=2483423898020626492
+Strategy=RandomStrategy v2
+StopReason=decision_limit_exceeded / DecisionLimitExceeded
+Stage=1 Round=5 Phase=Preparation Decisions=163 PhaseDecisions=100
+Detail=Decision limit reached for Preparation at EncounterIndex 4.
+Replay identical=True
+Game RNG checkpoint identical=True
+Gold=2 Level=4 XP=3 HP=27/30
+Board=0:empty,1:empty,2:C4,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty
+Hand=0:empty,1:empty,2:C:C1,3:C:C5,4:empty
+Last actions / operations (up to 20):
+#155 step=143 Action Preparation->Preparation action=BuyCharacter(character-s1-r5-g0-slot2,Board:2) status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C4,2:empty,3:empty,4:C5,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:C:C1]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C4,2:empty,3:empty,4:C5,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:C:C1]
+#156 step=144 Action Preparation->Preparation action=BuyCharacter(character-s1-r5-g0-slot2,Hand:2) status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C4,2:empty,3:empty,4:C5,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:C:C1]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C4,2:empty,3:empty,4:C5,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:C:C1]
+#157 step=145 Action Preparation->Preparation action=MoveOrSwapBoard(4->6) status=Succeeded strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C4,2:empty,3:empty,4:C5,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:C:C1]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C4,2:empty,3:empty,4:empty,5:empty,6:C5,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:C:C1]
+#158 step=146 Action Preparation->Preparation action=BuyCharacter(character-s1-r5-g0-slot1,Board:2) status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C4,2:empty,3:empty,4:empty,5:empty,6:C5,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:C:C1]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C4,2:empty,3:empty,4:empty,5:empty,6:C5,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:C:C1]
+#159 step=147 Action Preparation->Preparation action=MoveBoardToHand(6->3) status=Succeeded strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C4,2:empty,3:empty,4:empty,5:empty,6:C5,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:C:C1]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C4,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:C:C1]
+#160 step=148 Action Preparation->Preparation action=BuyCharacter(character-s1-r5-g0-slot0,Board:7) status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C4,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:C:C1]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C4,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:C:C1]
+#161 step=149 Action Preparation->Preparation action=MoveBoardToHand(1->4) status=Succeeded strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C4,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:C:C1]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:C:C4]
+#162 step=150 Action Preparation->Preparation action=BuyCharacter(character-s1-r5-g0-slot0,Board:2) status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. strategy=Selected uniformly from 74 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:C:C4]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:C:C4]
+#163 step=151 Action Preparation->Preparation action=BuyCharacter(character-s1-r5-g0-slot2,Board:0) status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:C:C4]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:C:C4]
+#164 step=152 Action Preparation->Preparation action=MoveOrSwapHand(4->1) status=Succeeded strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:C:C4]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C4,2:empty,3:C:C5,4:empty]
+#165 step=153 Action Preparation->Preparation action=MoveHandToBoard(1->3) status=Succeeded strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C4,2:empty,3:C:C5,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:C4,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:empty]
+#166 step=154 Action Preparation->Preparation action=BuyCharacter(character-s1-r5-g0-slot1,Board:6) status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:C4,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:C4,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:empty]
+#167 step=155 Action Preparation->Preparation action=BuyCharacter(character-s1-r5-g0-slot1,Hand:1) status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:C4,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:C4,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:empty]
+#168 step=156 Action Preparation->Preparation action=BuyCharacter(character-s1-r5-g0-slot0,Board:7) status=Rejected error=InvalidState: Character purchase rejected by BoardShopTransactionRules: PoolOwnershipMismatch. strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:C4,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:C4,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:empty]
+#169 step=157 Action Preparation->Preparation action=MoveHandToBoard(3->4) status=Succeeded strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:C4,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C5,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:C4,4:C5,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#170 step=158 Action Preparation->Preparation action=MoveBoardToHand(1->2) status=Succeeded strategy=Selected uniformly from 73 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:C1,2:empty,3:C4,4:C5,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:empty,2:empty,3:C4,4:C5,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C1,3:empty,4:empty]
+#171 step=159 Action Preparation->Preparation action=MoveOrSwapBoard(3->0) status=Succeeded strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:empty,1:empty,2:empty,3:C4,4:C5,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C1,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:C4,1:empty,2:empty,3:empty,4:C5,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C1,3:empty,4:empty]
+#172 step=160 Action Preparation->Preparation action=MoveBoardToHand(4->3) status=Succeeded strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:C4,1:empty,2:empty,3:empty,4:C5,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C1,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:C4,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C1,3:C:C5,4:empty]
+#173 step=161 Action Preparation->Preparation action=BuyExperience status=Succeeded strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=6 level=4 xp=2 hp=27/30 board=[0:C4,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C1,3:C:C5,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=2 level=4 xp=3 hp=27/30 board=[0:C4,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C1,3:C:C5,4:empty]
+#174 step=162 Action Preparation->Preparation action=MoveOrSwapBoard(0->2) status=Succeeded strategy=Selected uniformly from 75 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=2 level=4 xp=3 hp=27/30 board=[0:C4,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C1,3:C:C5,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=2 level=4 xp=3 hp=27/30 board=[0:empty,1:empty,2:C4,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C1,3:C:C5,4:empty]
+Character Pool consistency (diagnostic only):
+  character-data:0612954dc45544bebd147b91259ad495 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:0e5714b0606b4fc09e126f75acfd6ffd owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:14b7487ab20249c1a6223cac4d1652a2 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:203bd50997254704b70090e6a87c07da owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:21889b7d18fb4e6e9fe9bc58d1439ca1 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:25ed6f872e764400b1bfd57b5f98a9e3 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:283c9b5a31744c5eb05127e91e94684b owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:2ace6fbc1bee498083d3080c5754c401 owned=0 expected=0 reserved=1 expected=1 remaining=14 initial=15 consistent=True
+  character-data:31e185eec748485cbbd272dad17b1f6e owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:34d50c59b20a42ecb051ee734bfed03f owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:3510c2096e94459e9fae034465364186 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:4bc149c8bce845b3b25a32a28dbf71e8 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:507d64629f4543029f37d9ff6c730257 owned=0 expected=0 reserved=2 expected=2 remaining=13 initial=15 consistent=True
+  character-data:52d661a10b364454a500085b06c21866 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:567a39521b87465ea9ef6ab99d9bcb6d owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:63e470f8515641dd84fbcbe91c94a29b owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:710dfde0ec1d4b44b44f568086831312 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:7da124c2904a443b8918f5bceb71e69f owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:7e290880568f41b682511e38318ed09a owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:80b87e0bdd4b4d10ac3ec46082bd44be owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:91c7d01bdcc04eddbfddc1acd83599f3 owned=1 expected=3 reserved=0 expected=0 remaining=14 initial=15 consistent=False
+  character-data:932fa32419264532aaf154bd873fa997 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:9c9aba4550c54ebd90baa5b20cbb8eb1 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:ba20fc7fb2d7466ca0d8e23577496060 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:cd5d320fb3c84a57a928f0b6f0533c6e owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:da882de76e1f4d76946951e167465f05 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:eb03bff3735f456a9d4fc657480514ce owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:ecc8561063394e6a8c0e9a26adcd0ce5 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:f0cdbe7ff7764dd8a3cafe0b576b0f85 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:f4a589af297f457d90fdda08ac4d97d9 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+StartBattle legal in current public candidates: False
+Current RandomStrategy public candidate set:
+  BuyCharacter(character-s1-r5-g0-slot0,Board:0)
+  BuyCharacter(character-s1-r5-g0-slot0,Board:1)
+  BuyCharacter(character-s1-r5-g0-slot0,Board:3)
+  BuyCharacter(character-s1-r5-g0-slot0,Board:4)
+  BuyCharacter(character-s1-r5-g0-slot0,Board:5)
+  BuyCharacter(character-s1-r5-g0-slot0,Board:6)
+  BuyCharacter(character-s1-r5-g0-slot0,Board:7)
+  BuyCharacter(character-s1-r5-g0-slot0,Board:8)
+  BuyCharacter(character-s1-r5-g0-slot0,Hand:0)
+  BuyCharacter(character-s1-r5-g0-slot0,Hand:1)
+  BuyCharacter(character-s1-r5-g0-slot0,Hand:4)
+  BuyCharacter(character-s1-r5-g0-slot1,Board:0)
+  BuyCharacter(character-s1-r5-g0-slot1,Board:1)
+  BuyCharacter(character-s1-r5-g0-slot1,Board:3)
+  BuyCharacter(character-s1-r5-g0-slot1,Board:4)
+  BuyCharacter(character-s1-r5-g0-slot1,Board:5)
+  BuyCharacter(character-s1-r5-g0-slot1,Board:6)
+  BuyCharacter(character-s1-r5-g0-slot1,Board:7)
+  BuyCharacter(character-s1-r5-g0-slot1,Board:8)
+  BuyCharacter(character-s1-r5-g0-slot1,Hand:0)
+  BuyCharacter(character-s1-r5-g0-slot1,Hand:1)
+  BuyCharacter(character-s1-r5-g0-slot1,Hand:4)
+  BuyCharacter(character-s1-r5-g0-slot2,Board:0)
+  BuyCharacter(character-s1-r5-g0-slot2,Board:1)
+  BuyCharacter(character-s1-r5-g0-slot2,Board:3)
+  BuyCharacter(character-s1-r5-g0-slot2,Board:4)
+  BuyCharacter(character-s1-r5-g0-slot2,Board:5)
+  BuyCharacter(character-s1-r5-g0-slot2,Board:6)
+  BuyCharacter(character-s1-r5-g0-slot2,Board:7)
+  BuyCharacter(character-s1-r5-g0-slot2,Board:8)
+  BuyCharacter(character-s1-r5-g0-slot2,Hand:0)
+  BuyCharacter(character-s1-r5-g0-slot2,Hand:1)
+  BuyCharacter(character-s1-r5-g0-slot2,Hand:4)
+  RerollShop(Character)
+  MoveOrSwapBoard(2->0)
+  MoveOrSwapBoard(2->1)
+  MoveOrSwapBoard(2->3)
+  MoveOrSwapBoard(2->4)
+  MoveOrSwapBoard(2->5)
+  MoveOrSwapBoard(2->6)
+  MoveOrSwapBoard(2->7)
+  MoveOrSwapBoard(2->8)
+  MoveOrSwapHand(2->0)
+  MoveOrSwapHand(2->1)
+  MoveOrSwapHand(2->3)
+  MoveOrSwapHand(2->4)
+  MoveOrSwapHand(3->0)
+  MoveOrSwapHand(3->1)
+  MoveOrSwapHand(3->4)
+  MoveBoardToHand(2->0)
+  MoveBoardToHand(2->1)
+  MoveBoardToHand(2->2)
+  MoveBoardToHand(2->3)
+  MoveBoardToHand(2->4)
+  MoveHandToBoard(2->0)
+  MoveHandToBoard(2->1)
+  MoveHandToBoard(2->2)
+  MoveHandToBoard(2->3)
+  MoveHandToBoard(2->4)
+  MoveHandToBoard(2->5)
+  MoveHandToBoard(2->6)
+  MoveHandToBoard(2->7)
+  MoveHandToBoard(2->8)
+  MoveHandToBoard(3->0)
+  MoveHandToBoard(3->1)
+  MoveHandToBoard(3->2)
+  MoveHandToBoard(3->3)
+  MoveHandToBoard(3->4)
+  MoveHandToBoard(3->5)
+  MoveHandToBoard(3->6)
+  MoveHandToBoard(3->7)
+  MoveHandToBoard(3->8)
+  SellCharacter(C1)
+  SellCharacter(C4)
+  SellCharacter(C5)

@@ -1,0 +1,234 @@
+NST stopped Trial diagnostic (deterministic replay)
+TrialIndex=94
+TrialSeed=17735258179800415809
+Strategy=HeuristicStrategy v3
+SelectedRosterFingerprint=composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383
+BatchConfigurationId=unity-shop-100-v1|roster:composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383|event-item:Item006|pool-accounting:v2
+DeterministicCostAssignment (recomputed from same TrialSeed + Roster RNG):
+  character-data:710dfde0ec1d4b44b44f568086831312 cost=5
+  character-data:3510c2096e94459e9fae034465364186 cost=3
+  character-data:31e185eec748485cbbd272dad17b1f6e cost=3
+  character-data:ecc8561063394e6a8c0e9a26adcd0ce5 cost=4
+  character-data:da882de76e1f4d76946951e167465f05 cost=4
+  character-data:f4a589af297f457d90fdda08ac4d97d9 cost=1
+  character-data:ba20fc7fb2d7466ca0d8e23577496060 cost=1
+  character-data:f0cdbe7ff7764dd8a3cafe0b576b0f85 cost=3
+  character-data:7e290880568f41b682511e38318ed09a cost=3
+  character-data:34d50c59b20a42ecb051ee734bfed03f cost=1
+  character-data:2ace6fbc1bee498083d3080c5754c401 cost=1
+  character-data:507d64629f4543029f37d9ff6c730257 cost=2
+  character-data:14b7487ab20249c1a6223cac4d1652a2 cost=4
+  character-data:932fa32419264532aaf154bd873fa997 cost=5
+  character-data:4bc149c8bce845b3b25a32a28dbf71e8 cost=5
+  character-data:0e5714b0606b4fc09e126f75acfd6ffd cost=4
+  character-data:63e470f8515641dd84fbcbe91c94a29b cost=3
+  character-data:203bd50997254704b70090e6a87c07da cost=2
+  character-data:283c9b5a31744c5eb05127e91e94684b cost=4
+  character-data:567a39521b87465ea9ef6ab99d9bcb6d cost=1
+  character-data:80b87e0bdd4b4d10ac3ec46082bd44be cost=3
+  character-data:7da124c2904a443b8918f5bceb71e69f cost=2
+  character-data:21889b7d18fb4e6e9fe9bc58d1439ca1 cost=2
+  character-data:cd5d320fb3c84a57a928f0b6f0533c6e cost=5
+  character-data:25ed6f872e764400b1bfd57b5f98a9e3 cost=5
+  character-data:91c7d01bdcc04eddbfddc1acd83599f3 cost=2
+  character-data:0612954dc45544bebd147b91259ad495 cost=2
+  character-data:9c9aba4550c54ebd90baa5b20cbb8eb1 cost=5
+  character-data:eb03bff3735f456a9d4fc657480514ce cost=1
+  character-data:52d661a10b364454a500085b06c21866 cost=4
+StopReason=no_action_not_allowed / NoActionNotAllowed
+Stage=1 Round=4 Phase=Preparation Decisions=15 PhaseDecisions=7
+Detail=NoAction is not an end-of-turn signal in this phase.
+Replay identical=False
+Identity/stop/final-state/action-count/checkpoint comparison=False
+Game RNG checkpoint identical=True
+Strategy RNG checkpoint identical=True
+Strategy state identical=True
+Action totals: successful=14 rejected=0 actionSequence=14
+PreparationDecisionCount=7 ConsecutiveRejectionCount=0
+Roster fingerprint matches batch input=True
+Stage=1 Round=4 Phase=Preparation EncounterIndex=3 Choice=SelectA EnemyCategory=Boss ShopMode=Character
+Gold=4 Level=3 XP=2 HP=25/30
+Board=0:C4,1:C2,2:C5,3:C6,4:C3,5:C1,6:empty,7:empty,8:empty
+Hand=0:empty,1:empty,2:empty,3:empty,4:empty
+Shop=Character Stage=1 Round=4
+  OfferId=character-s1-r4-g0-slot0 Kind=Character DefinitionId=character-data:34d50c59b20a42ecb051ee734bfed03f Cost=1 Price=1 Status=Purchased
+  OfferId=character-s1-r4-g0-slot1 Kind=Character DefinitionId=character-data:91c7d01bdcc04eddbfddc1acd83599f3 Cost=2 Price=2 Status=Purchased
+  OfferId=character-s1-r4-g0-slot2 Kind=Character DefinitionId=character-data:ba20fc7fb2d7466ca0d8e23577496060 Cost=1 Price=1 Status=Purchased
+Last 20 Action records (consecutive rejection stop includes its full final rejection streak):
+#0 step=0 phase=Preparation->Preparation location=Stage=1 Round=1 ActionKind=BuyCharacter ActionId=trial:94:action:0 parameters=BuyCharacter(character-s1-r1-g0-slot0,Board:0) stageRound=Stage=1 Round=1 status=Succeeded beforeFingerprint=5ab9a5b179c4385f0f53a3867dff5cc592b04a904e0824f2b4746cef1ab5a66e afterFingerprint=d27b2314f10c896b9c06a28768afe594c81528c208d3c06bfee1978d886a7e2e strategyState=HeuristicStrategy/v3/schema1/payload=hs1|1|MjpjaGFyYWN0ZXItczEtcjEtZzAtc2xvdDA6MDow strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=123.3.
+  before: 
+phase=Preparation encounter=0 gold=7 level=1 xp=0 hp=30/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=0 gold=6 level=1 xp=0 hp=30/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#1 step=1 phase=Preparation->Battle location=Stage=1 Round=1 ActionKind=StartBattle ActionId=trial:94:action:1 parameters=StartBattle stageRound=Stage=1 Round=1 status=Succeeded beforeFingerprint=d27b2314f10c896b9c06a28768afe594c81528c208d3c06bfee1978d886a7e2e afterFingerprint=cbf50ea7eba99d5e0434d87fc625889eabf48a982169870aede57bd9b407bacb strategyState=HeuristicStrategy/v3/schema1/payload=hs1|2|MTU= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=40.1.
+  before: 
+phase=Preparation encounter=0 gold=6 level=1 xp=0 hp=30/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Battle encounter=0 gold=6 level=1 xp=0 hp=30/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#5 step=2 phase=Preparation->Preparation location=Stage=1 Round=2 ActionKind=BuyCharacter ActionId=trial:94:action:2 parameters=BuyCharacter(character-s1-r2-g0-slot2,Board:1) stageRound=Stage=1 Round=2 status=Succeeded beforeFingerprint=aaf9a0664619a61e279434f1e71e939335dd3eb85889a85962b0e23427b09335 afterFingerprint=c121efae39215caec0495b0304d7a66ac9e6b2c505944c19a5b73dd066c54f5e strategyState=HeuristicStrategy/v3/schema1/payload=hs1|3|MjpjaGFyYWN0ZXItczEtcjItZzAtc2xvdDI6MDox strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=65.72999999999999.
+  before: 
+phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=30/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=1 gold=9 level=2 xp=0 hp=30/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#6 step=3 phase=Preparation->Battle location=Stage=1 Round=2 ActionKind=StartBattle ActionId=trial:94:action:3 parameters=StartBattle stageRound=Stage=1 Round=2 status=Succeeded beforeFingerprint=c121efae39215caec0495b0304d7a66ac9e6b2c505944c19a5b73dd066c54f5e afterFingerprint=8a7bc220efbaff00fa186edbbd8d482ca611a1fa755b31f97652c830b9dc5861 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|4|MTU= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=46.8.
+  before: 
+phase=Preparation encounter=1 gold=9 level=2 xp=0 hp=30/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Battle encounter=1 gold=9 level=2 xp=0 hp=30/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#10 step=4 phase=Preparation->Preparation location=Stage=1 Round=3 ActionKind=BuyExperience ActionId=trial:94:action:4 parameters=BuyExperience stageRound=Stage=1 Round=3 status=Succeeded beforeFingerprint=13b34c35ee54375d83cf632e83a53ca099478f785efe5ebcd3f83f792ae341c9 afterFingerprint=a33d276e58b954accbc64d5199a104fad8318f777460a0c071a0a70680aab715 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|5|NQ== strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=Public XP is near a level-up threshold. Score=26.6.
+  before: 
+phase=Preparation encounter=2 gold=13 level=2 xp=1 hp=30/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=2 gold=9 level=3 xp=0 hp=30/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#11 step=5 phase=Preparation->Preparation location=Stage=1 Round=3 ActionKind=BuyCharacter ActionId=trial:94:action:5 parameters=BuyCharacter(character-s1-r3-g0-slot0,Board:2) stageRound=Stage=1 Round=3 status=Succeeded beforeFingerprint=a33d276e58b954accbc64d5199a104fad8318f777460a0c071a0a70680aab715 afterFingerprint=b5ddf55c2ff1e7e33d397e8bc025205647df1f6b85aace8290f4a56dc9634593 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|6|MjpjaGFyYWN0ZXItczEtcjMtZzAtc2xvdDA6MDoy strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=65.65.
+  before: 
+phase=Preparation encounter=2 gold=9 level=3 xp=0 hp=30/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=2 gold=8 level=3 xp=0 hp=30/30 board=[0:C1,1:C2,2:C3,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#12 step=6 phase=Preparation->Preparation location=Stage=1 Round=3 ActionKind=MoveOrSwapBoard ActionId=trial:94:action:6 parameters=MoveOrSwapBoard(0->5) stageRound=Stage=1 Round=3 status=Succeeded beforeFingerprint=b5ddf55c2ff1e7e33d397e8bc025205647df1f6b85aace8290f4a56dc9634593 afterFingerprint=2f244329e5d654567b1a2e432f808354af0d7a8bd651d482d3723e97607d6266 strategyState=HeuristicStrategy/v3/schema1/payload=hs1|7|NjowOjU= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=Relocation improves visible power or synergy placement. Score=80.
+  before: 
+phase=Preparation encounter=2 gold=8 level=3 xp=0 hp=30/30 board=[0:C1,1:C2,2:C3,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=2 gold=8 level=3 xp=0 hp=30/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#13 step=7 phase=Preparation->Battle location=Stage=1 Round=3 ActionKind=StartBattle ActionId=trial:94:action:7 parameters=StartBattle stageRound=Stage=1 Round=3 status=Succeeded beforeFingerprint=2f244329e5d654567b1a2e432f808354af0d7a8bd651d482d3723e97607d6266 afterFingerprint=c166be855022e819766c7796d09c197055b2346d9136ff7663715ca3640ac70d strategyState=HeuristicStrategy/v3/schema1/payload=hs1|8|MTU= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=51.8.
+  before: 
+phase=Preparation encounter=2 gold=8 level=3 xp=0 hp=30/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Battle encounter=2 gold=8 level=3 xp=0 hp=30/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#17 step=8 phase=Preparation->Preparation location=Stage=1 Round=4 ActionKind=BuyCharacter ActionId=trial:94:action:8 parameters=BuyCharacter(character-s1-r4-g0-slot0,Board:0) stageRound=Stage=1 Round=4 status=Succeeded beforeFingerprint=7b3d4018e8817376d115a0cfef2c6741e0d9ea2790d8bedc0fa30a5cd12576e7 afterFingerprint=f00eea2bbaaa923c5fe9ac400d39ffaf147323907aecaf05b04e5188d044090b strategyState=HeuristicStrategy/v3/schema1/payload=hs1|9|MjpjaGFyYWN0ZXItczEtcjQtZzAtc2xvdDA6MDow strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=23.889999999999997.
+  before: 
+phase=Preparation encounter=3 gold=12 level=3 xp=1 hp=25/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=3 gold=11 level=3 xp=1 hp=25/30 board=[0:C4,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#18 step=9 phase=Preparation->Preparation location=Stage=1 Round=4 ActionKind=BuyCharacter ActionId=trial:94:action:9 parameters=BuyCharacter(character-s1-r4-g0-slot2,Board:3) stageRound=Stage=1 Round=4 status=Succeeded beforeFingerprint=f00eea2bbaaa923c5fe9ac400d39ffaf147323907aecaf05b04e5188d044090b afterFingerprint=e1514d83fbd74a60c873bcc8d24122cf99918f15fd8e1ffe64d1f141c7ff0c8d strategyState=HeuristicStrategy/v3/schema1/payload=hs1|10|MjpjaGFyYWN0ZXItczEtcjQtZzAtc2xvdDI6MDoz strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=23.81.
+  before: 
+phase=Preparation encounter=3 gold=11 level=3 xp=1 hp=25/30 board=[0:C4,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=3 gold=10 level=3 xp=1 hp=25/30 board=[0:C4,1:C2,2:C3,3:C5,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#19 step=10 phase=Preparation->Preparation location=Stage=1 Round=4 ActionKind=MoveOrSwapBoard ActionId=trial:94:action:10 parameters=MoveOrSwapBoard(3->4) stageRound=Stage=1 Round=4 status=Succeeded beforeFingerprint=e1514d83fbd74a60c873bcc8d24122cf99918f15fd8e1ffe64d1f141c7ff0c8d afterFingerprint=889c397f3e9f88af078f0e5cd3533df7a77bd264f19438ad83929514ad3f64be strategyState=HeuristicStrategy/v3/schema1/payload=hs1|11|NjozOjQ= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=Relocation improves visible power or synergy placement. Score=48.
+  before: 
+phase=Preparation encounter=3 gold=10 level=3 xp=1 hp=25/30 board=[0:C4,1:C2,2:C3,3:C5,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=3 gold=10 level=3 xp=1 hp=25/30 board=[0:C4,1:C2,2:C3,3:empty,4:C5,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#20 step=11 phase=Preparation->Preparation location=Stage=1 Round=4 ActionKind=BuyCharacter ActionId=trial:94:action:11 parameters=BuyCharacter(character-s1-r4-g0-slot1,Board:3) stageRound=Stage=1 Round=4 status=Succeeded beforeFingerprint=889c397f3e9f88af078f0e5cd3533df7a77bd264f19438ad83929514ad3f64be afterFingerprint=dc70b5c40c4eef0a6596c71e2cc3e54dcc531d75412770a165885ce4becc848e strategyState=HeuristicStrategy/v3/schema1/payload=hs1|12|MjpjaGFyYWN0ZXItczEtcjQtZzAtc2xvdDE6MDoz strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=23.3.
+  before: 
+phase=Preparation encounter=3 gold=10 level=3 xp=1 hp=25/30 board=[0:C4,1:C2,2:C3,3:empty,4:C5,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=3 gold=8 level=3 xp=1 hp=25/30 board=[0:C4,1:C2,2:C3,3:C6,4:C5,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#21 step=12 phase=Preparation->Preparation location=Stage=1 Round=4 ActionKind=MoveOrSwapBoard ActionId=trial:94:action:12 parameters=MoveOrSwapBoard(2->4) stageRound=Stage=1 Round=4 status=Succeeded beforeFingerprint=dc70b5c40c4eef0a6596c71e2cc3e54dcc531d75412770a165885ce4becc848e afterFingerprint=2f2a979acd5b62dbac5efdf315599b889294eca57da6ef64fa0473d37eb7183d strategyState=HeuristicStrategy/v3/schema1/payload=hs1|13|NjoyOjQ= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=Relocation improves visible power or synergy placement. Score=48.
+  before: 
+phase=Preparation encounter=3 gold=8 level=3 xp=1 hp=25/30 board=[0:C4,1:C2,2:C3,3:C6,4:C5,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=3 gold=8 level=3 xp=1 hp=25/30 board=[0:C4,1:C2,2:C5,3:C6,4:C3,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+#22 step=13 phase=Preparation->Preparation location=Stage=1 Round=4 ActionKind=BuyExperience ActionId=trial:94:action:13 parameters=BuyExperience stageRound=Stage=1 Round=4 status=Succeeded beforeFingerprint=2f2a979acd5b62dbac5efdf315599b889294eca57da6ef64fa0473d37eb7183d afterFingerprint=a7ccbcaaf0cdf94baffacbc57dcc344c7931d48295d3a3f9355071b3d13b9b6f strategyState=HeuristicStrategy/v3/schema1/payload=hs1|14|NQ== strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17735258179800415809/state=4454485646020609167/increment=3651230116299224745 strategy=Values public XP progress against its configured cost. Score=10.6.
+  before: 
+phase=Preparation encounter=3 gold=8 level=3 xp=1 hp=25/30 board=[0:C4,1:C2,2:C5,3:C6,4:C3,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after: 
+phase=Preparation encounter=3 gold=4 level=3 xp=2 hp=25/30 board=[0:C4,1:C2,2:C5,3:C6,4:C3,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+StrategyNoAction step=14 phase=Preparation reason=No positive-value preparation action is visible; Runner may detect the stall.
+Per-decision candidate count/rank: unavailable; ExecutionHistory stores selected Action and StrategyDiagnostic, not the full candidate list. Final-state candidate inspection below is read-only and uses no Strategy RNG.
+Character Pool consistency (diagnostic only):
+  character-data:0612954dc45544bebd147b91259ad495 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:0e5714b0606b4fc09e126f75acfd6ffd owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:14b7487ab20249c1a6223cac4d1652a2 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:203bd50997254704b70090e6a87c07da owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:21889b7d18fb4e6e9fe9bc58d1439ca1 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:25ed6f872e764400b1bfd57b5f98a9e3 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:283c9b5a31744c5eb05127e91e94684b owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:2ace6fbc1bee498083d3080c5754c401 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:31e185eec748485cbbd272dad17b1f6e owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:34d50c59b20a42ecb051ee734bfed03f owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:3510c2096e94459e9fae034465364186 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:4bc149c8bce845b3b25a32a28dbf71e8 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:507d64629f4543029f37d9ff6c730257 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:52d661a10b364454a500085b06c21866 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:567a39521b87465ea9ef6ab99d9bcb6d owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:63e470f8515641dd84fbcbe91c94a29b owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:710dfde0ec1d4b44b44f568086831312 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:7da124c2904a443b8918f5bceb71e69f owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:7e290880568f41b682511e38318ed09a owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:80b87e0bdd4b4d10ac3ec46082bd44be owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:91c7d01bdcc04eddbfddc1acd83599f3 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:932fa32419264532aaf154bd873fa997 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:9c9aba4550c54ebd90baa5b20cbb8eb1 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:ba20fc7fb2d7466ca0d8e23577496060 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:cd5d320fb3c84a57a928f0b6f0533c6e owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:da882de76e1f4d76946951e167465f05 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:eb03bff3735f456a9d4fc657480514ce owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:ecc8561063394e6a8c0e9a26adcd0ce5 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:f0cdbe7ff7764dd8a3cafe0b576b0f85 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:f4a589af297f457d90fdda08ac4d97d9 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+StartBattle legal in current public candidates: False
+Current final-state Heuristic candidate count=71 (not per-decision rank).
+Current Heuristic public candidate evaluations (fresh final-state diagnostic enumeration):
+  SellCharacter(C6) score=-35.850000000000009 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C1) score=-41.82500000000001 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C5) score=-45.82500000000001 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C4) score=-46.82500000000001 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C3) score=-59.82500000000001 reason=Weighs visible sale Gold against the character and synergy value lost.
+  SellCharacter(C2) score=-64.025 reason=Weighs visible sale Gold against the character and synergy value lost.
+  RerollShop(Character) score=-100 reason=Below configured reroll Gold threshold.
+  BuyExperience score=-100 reason=XP price is unknown or Gold is below configured threshold.
+  MoveOrSwapBoard(0->1) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->2) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->3) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->4) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->5) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->6) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(0->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->2) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->3) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->4) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->5) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->6) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(1->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(2->3) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(2->4) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(2->5) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(2->6) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(2->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(2->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(3->4) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(3->5) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(3->6) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(3->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(3->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(4->5) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(4->6) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(4->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(4->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(5->6) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(5->7) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveOrSwapBoard(5->8) score=-100 reason=No observable improvement; avoids arbitrary moves.
+  MoveBoardToHand(0->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(0->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(0->2) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(0->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(0->4) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(1->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(1->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(1->2) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(1->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(1->4) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(2->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(2->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(2->2) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(2->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(2->4) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(3->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(3->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(3->2) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(3->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(3->4) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(4->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(4->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(4->2) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(4->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(4->4) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(5->0) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(5->1) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(5->2) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(5->3) score=-100 reason=No positive public placement value.
+  MoveBoardToHand(5->4) score=-100 reason=No positive public placement value.

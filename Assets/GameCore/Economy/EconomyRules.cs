@@ -6,6 +6,45 @@ namespace ProjectNST.GameCore.Economy
     /// <summary>Pure Gold, XP, interest, and stage-gold calculations for GameCore.</summary>
     public static class EconomyRules
     {
+        public static int GetExperiencePurchaseGoldCost(EconomyRulesConfiguration configuration,
+            bool useSelectBPrice)
+        {
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            return useSelectBPrice ? configuration.SelectBExperiencePurchaseGoldCost
+                : configuration.NormalExperiencePurchaseGoldCost;
+        }
+
+        /// <summary>Reports purchase availability using the same non-random guards as the transaction rule.</summary>
+        public static bool CanPurchaseExperience(EconomyState state,
+            EconomyRulesConfiguration configuration, bool useSelectBPrice)
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            int price = GetExperiencePurchaseGoldCost(configuration, useSelectBPrice);
+            if (state.Level >= state.MaximumLevel || !HasValidExperienceCurve(state, configuration) ||
+                state.Gold < price) return false;
+            return TryApplyExperience(state, configuration, configuration.ExperiencePerPurchase,
+                out _, out _, out _, out _);
+        }
+
+        /// <summary>Expected interest without drawing or advancing an RNG stream.</summary>
+        public static decimal CalculateExpectedInterestGold(int goldForInterest,
+            EconomyRulesConfiguration configuration)
+        {
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            if (goldForInterest < 0) throw new ArgumentOutOfRangeException(nameof(goldForInterest));
+            long guaranteed = Math.Min(
+                ((long)goldForInterest / configuration.GoldPerInterestThreshold) * configuration.InterestGoldPerThreshold,
+                configuration.MaximumInterestGold);
+            int remainder = goldForInterest % configuration.GoldPerInterestThreshold;
+            if (guaranteed >= configuration.MaximumInterestGold ||
+                configuration.InterestGoldPerThreshold == 0 || remainder == 0)
+                return guaranteed;
+            int extra = Math.Min(configuration.InterestGoldPerThreshold,
+                configuration.MaximumInterestGold - (int)guaranteed);
+            return guaranteed + (decimal)remainder * extra / configuration.GoldPerInterestThreshold;
+        }
+
         /// <summary>
         /// SelectB discount is supplied by the caller. Shop lock, stage-selection phase,
         /// and other action-availability rules belong to GameSession.
@@ -16,9 +55,7 @@ namespace ProjectNST.GameCore.Economy
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (configuration == null) throw new ArgumentNullException(nameof(configuration));
 
-            int price = useSelectBPrice
-                ? configuration.SelectBExperiencePurchaseGoldCost
-                : configuration.NormalExperiencePurchaseGoldCost;
+            int price = GetExperiencePurchaseGoldCost(configuration, useSelectBPrice);
             if (state.Level >= state.MaximumLevel)
                 return Failure(EconomyActionFailureReason.MaximumLevelReached, state);
             if (!HasValidExperienceCurve(state, configuration))

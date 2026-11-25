@@ -316,7 +316,7 @@ namespace ProjectNST.GameCore.Tests
             {
                 int ownedCopies = 0;
                 foreach (CharacterInstance instance in owned)
-                    if (instance.DefinitionId == definition.DefinitionId) ownedCopies += Copies(instance.Star);
+                    if (instance.DefinitionId == definition.DefinitionId) ownedCopies += instance.PoolCopies;
                 reservations.TryGetValue(definition.DefinitionId, out int reserved);
                 poolEntries.Add(new CharacterPoolEntry(definition.DefinitionId,
                     stockPerDefinition - ownedCopies - reserved, stockPerDefinition, reserved, ownedCopies));
@@ -413,7 +413,7 @@ namespace ProjectNST.GameCore.Tests
                     Is.EqualTo(entry.InitialStockLimit), "Pool conservation for " + entry.DefinitionId);
                 int ownedCopies = 0;
                 foreach (CharacterInstanceView instance in w.Ownership.GetOwnedInstances())
-                    if (instance.DefinitionId == entry.DefinitionId) ownedCopies += Copies(instance.Star);
+                    if (instance.DefinitionId == entry.DefinitionId) ownedCopies += instance.PoolCopies;
                 Assert.That(entry.OwnedCopies, Is.EqualTo(ownedCopies), "Ownership copy count for " + entry.DefinitionId);
             }
         }

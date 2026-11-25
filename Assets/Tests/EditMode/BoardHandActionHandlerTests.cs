@@ -38,7 +38,7 @@ namespace ProjectNST.GameCore.Tests
         private static CharacterPool PoolFor(IEnumerable<CharacterInstance> owned)
         {
             var counts = new Dictionary<string, int>(StringComparer.Ordinal) { ["hero"] = 0, ["mage"] = 0, ["rogue"] = 0, ["archer"] = 0 };
-            foreach (CharacterInstance instance in owned) counts[instance.DefinitionId] += instance.Star == 1 ? 1 : instance.Star == 2 ? 3 : 9;
+            foreach (CharacterInstance instance in owned) counts[instance.DefinitionId] += instance.PoolCopies;
             var entries = new List<CharacterPoolEntry>();
             foreach (KeyValuePair<string, int> pair in counts)
             {

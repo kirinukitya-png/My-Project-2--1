@@ -16,6 +16,8 @@ namespace ProjectNST.GameCore.Characters
         public string DefinitionId { get; }
         public int RunCost { get; }
         public int Star { get; private set; }
+        /// <summary>Number of finite pool copies represented by this owned instance. Independent of Star effects.</summary>
+        public int PoolCopies { get; private set; }
         public int Attack { get; private set; }
         public int Defense { get; private set; }
         public int TemporaryAttackBonus { get; set; }
@@ -23,18 +25,21 @@ namespace ProjectNST.GameCore.Characters
         public bool HasRolledStats { get; private set; }
         public bool HasTemporaryStar => _hasTemporaryStar;
 
-        public CharacterInstance(string instanceId, CharacterDefinition definition, int runCost, int star = 1)
+        public CharacterInstance(string instanceId, CharacterDefinition definition, int runCost, int star = 1,
+            int poolCopies = -1)
         {
             if (string.IsNullOrWhiteSpace(instanceId))
                 throw new ArgumentException("A unique InstanceId is required.", nameof(instanceId));
             if (definition == null) throw new ArgumentNullException(nameof(definition));
             if (runCost < 1) throw new ArgumentOutOfRangeException(nameof(runCost));
             ValidateStar(star);
+            if (poolCopies < -1) throw new ArgumentOutOfRangeException(nameof(poolCopies));
 
             InstanceId = instanceId;
             DefinitionId = definition.DefinitionId;
             RunCost = runCost;
             Star = star;
+            PoolCopies = poolCopies == -1 ? CopiesForStar(star) : poolCopies;
         }
 
         /// <summary>Creates a detached copy of this instance without consuming randomness.</summary>
@@ -50,6 +55,7 @@ namespace ProjectNST.GameCore.Characters
             DefinitionId = source.DefinitionId;
             RunCost = source.RunCost;
             Star = source.Star;
+            PoolCopies = source.PoolCopies;
             Attack = source.Attack;
             Defense = source.Defense;
             TemporaryAttackBonus = source.TemporaryAttackBonus;
@@ -76,6 +82,14 @@ namespace ProjectNST.GameCore.Characters
             if (newStar < 1 || newStar > 3) return false;
             if (!TryRollStats(definition, settings, random, newStar)) return false;
             Star = newStar;
+            return true;
+        }
+
+        /// <summary>Sets pool provenance when copies are consumed by a merge; Star changes alone never alter it.</summary>
+        internal bool TrySetPoolCopies(int copies)
+        {
+            if (copies < 0) return false;
+            PoolCopies = copies;
             return true;
         }
 
@@ -160,5 +174,7 @@ namespace ProjectNST.GameCore.Characters
         {
             if (star < 1 || star > 3) throw new ArgumentOutOfRangeException(nameof(star));
         }
+
+        private static int CopiesForStar(int star) => star == 1 ? 1 : star == 2 ? 3 : 9;
     }
 }

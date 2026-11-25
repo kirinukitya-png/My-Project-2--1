@@ -50,11 +50,21 @@ namespace ProjectNST.GameCore.Board
             Candidate survivor = candidates[0];
             Candidate consumedA = candidates[1];
             Candidate consumedB = candidates[2];
+            if (!ownership.TryGet(survivor.InstanceId, out CharacterInstanceView survivorView) ||
+                !ownership.TryGet(consumedA.InstanceId, out CharacterInstanceView consumedAView) ||
+                !ownership.TryGet(consumedB.InstanceId, out CharacterInstanceView consumedBView))
+                return Fail(board, hand, ownership, CharacterMergeFailureReason.InvalidInputState, statsRandomState);
+            int mergedPoolCopies;
+            try { mergedPoolCopies = checked(survivorView.PoolCopies + consumedAView.PoolCopies + consumedBView.PoolCopies); }
+            catch (OverflowException)
+            { return Fail(board, hand, ownership, CharacterMergeFailureReason.InvalidInputState, statsRandomState); }
             if (!ownership.TryCreateOwnedInstanceCopy(survivor.InstanceId, out CharacterInstance upgraded))
                 return Fail(board, hand, ownership, CharacterMergeFailureReason.InvalidInputState, statsRandomState);
 
             if (!upgraded.TrySetStar(targetStar + 1, definition, stats, workingRandom))
                 return Fail(board, hand, ownership, CharacterMergeFailureReason.StatsRerollFailed, statsRandomState);
+            if (!upgraded.TrySetPoolCopies(mergedPoolCopies))
+                return Fail(board, hand, ownership, CharacterMergeFailureReason.InvalidInputState, statsRandomState);
 
             if (!ownership.TryWithReplaced(upgraded, out CharacterOwnershipState nextOwnership))
                 return Fail(board, hand, ownership, CharacterMergeFailureReason.InvalidInputState, statsRandomState);

@@ -322,7 +322,7 @@ namespace ProjectNST.GameCore.Tests
                 Assert.That(entry.RemainingCopies + entry.ReservedCopies + entry.OwnedCopies,
                     Is.EqualTo(entry.InitialStockLimit));
                 int ownedCopies = w.Ownership.GetOwnedInstances().Where(x => x.DefinitionId == entry.DefinitionId)
-                    .Sum(x => x.Star == 1 ? 1 : x.Star == 2 ? 3 : 9);
+                    .Sum(x => x.PoolCopies);
                 Assert.That(entry.OwnedCopies, Is.EqualTo(ownedCopies));
                 int availableOffers = w.Shop.Offers.Count(x => x.DefinitionId == entry.DefinitionId && x.Status == ShopOfferStatus.Available);
                 Assert.That(entry.ReservedCopies, Is.EqualTo(availableOffers));

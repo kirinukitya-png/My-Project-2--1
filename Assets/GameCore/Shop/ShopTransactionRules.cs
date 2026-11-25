@@ -86,32 +86,34 @@ namespace ProjectNST.GameCore.Shop
                 if (foundIndex >= 0)
                     return SaleFailure(CharacterSaleFailureReason.AmbiguousOwnedId, economy, pool, ownedCharacters);
                 foundIndex = i;
-                if (candidate.DefinitionId != target.DefinitionId || candidate.RunCost != target.RunCost || candidate.Star != target.Star)
+                if (candidate.DefinitionId != target.DefinitionId || candidate.RunCost != target.RunCost ||
+                    candidate.Star != target.Star || candidate.PoolCopies != target.PoolCopies)
                     return SaleFailure(CharacterSaleFailureReason.NotOwned, economy, pool, ownedCharacters);
             }
             if (foundIndex < 0) return SaleFailure(CharacterSaleFailureReason.NotOwned, economy, pool, ownedCharacters);
             if (!pool.Entries.TryGetValue(target.DefinitionId, out CharacterPoolEntry entry))
                 return SaleFailure(CharacterSaleFailureReason.PoolEntryMissing, economy, pool, ownedCharacters);
 
-            int copies = CopiesForStar(target.Star);
-            if (entry.OwnedCopies < copies)
+            int returnedCopies = target.PoolCopies;
+            int saleValueCopies = CopiesForStar(target.Star);
+            if (entry.OwnedCopies < returnedCopies)
                 return SaleFailure(CharacterSaleFailureReason.InsufficientOwnedCopies, economy, pool, ownedCharacters);
 
-            long goldGainLong = (long)target.RunCost * copies;
+            long goldGainLong = (long)target.RunCost * saleValueCopies;
             long goldAfterLong = (long)economy.Gold + goldGainLong;
             if (goldGainLong > int.MaxValue || goldAfterLong > int.MaxValue)
                 return SaleFailure(CharacterSaleFailureReason.GoldOverflow, economy, pool, ownedCharacters);
 
             var nextPool = ReplacePoolEntry(pool, new CharacterPoolEntry(entry.DefinitionId,
-                checked(entry.RemainingCopies + copies), entry.InitialStockLimit,
-                entry.ReservedCopies, entry.OwnedCopies - copies));
+                checked(entry.RemainingCopies + returnedCopies), entry.InitialStockLimit,
+                entry.ReservedCopies, entry.OwnedCopies - returnedCopies));
             var nextOwned = new List<CharacterInstance>(ownedCharacters.Count - 1);
             for (int i = 0; i < ownedCharacters.Count; i++)
                 if (i != foundIndex) nextOwned.Add(ownedCharacters[i]);
 
             return new CharacterSaleResult(true, CharacterSaleFailureReason.None,
                 economy.WithGold((int)goldAfterLong), nextPool, Array.AsReadOnly(nextOwned.ToArray()),
-                copies, (int)goldGainLong);
+                returnedCopies, (int)goldGainLong);
         }
 
         private static int CopiesForStar(int star)

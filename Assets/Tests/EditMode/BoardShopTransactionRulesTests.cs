@@ -355,7 +355,7 @@ namespace ProjectNST.GameCore.Tests
         private static int CopiesInOwnership(CharacterOwnershipState ownership)
         {
             int copies = 0;
-            foreach (CharacterInstanceView view in ownership.GetOwnedInstances()) copies += Copies(view.Star);
+            foreach (CharacterInstanceView view in ownership.GetOwnedInstances()) copies += view.PoolCopies;
             return copies;
         }
 
@@ -363,7 +363,7 @@ namespace ProjectNST.GameCore.Tests
         {
             int copies = 0;
             foreach (CharacterInstanceView view in ownership.GetOwnedInstances())
-                if (view.DefinitionId == definitionId) copies += Copies(view.Star);
+                if (view.DefinitionId == definitionId) copies += view.PoolCopies;
             return copies;
         }
 

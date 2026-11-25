@@ -113,10 +113,11 @@ namespace ProjectNST.GameCore.Shop
             if (!pool.Entries.TryGetValue(target.DefinitionId, out CharacterPoolEntry entry))
                 return Fail(BoardShopTransactionFailureReason.PoolEntryMissing, shop, economy, pool, board, hand, ownership, instanceFactory, statsRandomState);
 
-            int copies = CopiesForStar(target.Star);
-            if (entry.OwnedCopies < copies || SumOwnedCopies(ownership, target.DefinitionId) < copies)
+            int poolCopies = target.PoolCopies;
+            int saleValueCopies = CopiesForStar(target.Star);
+            if (entry.OwnedCopies < poolCopies || SumOwnedCopies(ownership, target.DefinitionId) < poolCopies)
                 return Fail(BoardShopTransactionFailureReason.InsufficientOwnedCopies, shop, economy, pool, board, hand, ownership, instanceFactory, statsRandomState);
-            long goldGain = (long)target.RunCost * copies;
+            long goldGain = (long)target.RunCost * saleValueCopies;
             long goldAfter = (long)economy.Gold + goldGain;
             if (goldGain > int.MaxValue || goldAfter > int.MaxValue)
                 return Fail(BoardShopTransactionFailureReason.GoldOverflow, shop, economy, pool, board, hand, ownership, instanceFactory, statsRandomState);
@@ -134,8 +135,8 @@ namespace ProjectNST.GameCore.Shop
             try
             {
                 nextPool = ReplacePoolEntry(pool, new CharacterPoolEntry(entry.DefinitionId,
-                    checked(entry.RemainingCopies + copies), entry.InitialStockLimit,
-                    entry.ReservedCopies, entry.OwnedCopies - copies));
+                    checked(entry.RemainingCopies + poolCopies), entry.InitialStockLimit,
+                    entry.ReservedCopies, entry.OwnedCopies - poolCopies));
             }
             catch (Exception)
             {
@@ -147,7 +148,7 @@ namespace ProjectNST.GameCore.Shop
 
             return Succeed(BoardShopTransactionKind.Sale, economy.WithGold((int)goldAfter), shop, nextPool,
                 nextBoard, nextHand, nextOwnership, instanceFactory, statsRandomState, (int)goldGain,
-                copies, copies, 0, -copies, ownershipScopeMatchesPool, Array.Empty<CharacterMergeStageSummary>(), null);
+                poolCopies, poolCopies, 0, -poolCopies, ownershipScopeMatchesPool, Array.Empty<CharacterMergeStageSummary>(), null);
         }
 
         private static BoardShopTransactionResult TryNormalPurchase(ShopState shop, string offerId,
@@ -203,8 +204,16 @@ namespace ProjectNST.GameCore.Shop
 
             Candidate first = oneStarCandidates[0];
             Candidate second = oneStarCandidates[1];
+            if (!ownership.TryGet(first.InstanceId, out CharacterInstanceView firstView) ||
+                !ownership.TryGet(second.InstanceId, out CharacterInstanceView secondView))
+                return Fail(BoardShopTransactionFailureReason.MergeValidationFailed, shop, economy, pool, board, hand, ownership, factory, initialRandomState);
+            int mergedPoolCopies;
+            try { mergedPoolCopies = checked(firstView.PoolCopies + secondView.PoolCopies + 1); }
+            catch (OverflowException)
+            { return Fail(BoardShopTransactionFailureReason.MergeValidationFailed, shop, economy, pool, board, hand, ownership, factory, initialRandomState); }
             if (!ownership.TryCreateOwnedInstanceCopy(first.InstanceId, out CharacterInstance survivor) ||
-                !survivor.TrySetStar(2, definition, stats, workingRandom))
+                !survivor.TrySetStar(2, definition, stats, workingRandom) ||
+                !survivor.TrySetPoolCopies(mergedPoolCopies))
                 return Fail(BoardShopTransactionFailureReason.StatsRerollFailed, shop, economy, pool, board, hand, ownership, factory, initialRandomState);
             if (!ownership.TryWithReplaced(survivor, out CharacterOwnershipState nextOwnership) ||
                 !nextOwnership.TryWithRemoved(second.InstanceId, out nextOwnership))
@@ -361,9 +370,9 @@ namespace ProjectNST.GameCore.Shop
             var copiesByDefinition = new Dictionary<string, long>(StringComparer.Ordinal);
             foreach (CharacterInstanceView instance in ownership.GetOwnedInstances())
             {
-                if (!pool.Entries.ContainsKey(instance.DefinitionId) || instance.HasTemporaryStar) return false;
+                if (!pool.Entries.ContainsKey(instance.DefinitionId) || instance.PoolCopies < 0 || instance.HasTemporaryStar) return false;
                 if (!copiesByDefinition.TryGetValue(instance.DefinitionId, out long copies)) copies = 0;
-                copiesByDefinition[instance.DefinitionId] = copies + CopiesForStar(instance.Star);
+                copiesByDefinition[instance.DefinitionId] = copies + instance.PoolCopies;
             }
             foreach (CharacterPoolEntry entry in pool.Entries.Values)
             {
@@ -378,7 +387,7 @@ namespace ProjectNST.GameCore.Shop
             long result = 0;
             foreach (CharacterInstanceView instance in ownership.GetOwnedInstances())
                 if (string.Equals(instance.DefinitionId, definitionId, StringComparison.Ordinal))
-                    result += CopiesForStar(instance.Star);
+                    result += instance.PoolCopies;
             return result;
         }
 

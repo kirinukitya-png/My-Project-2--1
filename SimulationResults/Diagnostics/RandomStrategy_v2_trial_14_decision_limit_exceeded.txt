@@ -1,0 +1,246 @@
+NST stopped Trial diagnostic (deterministic replay)
+TrialIndex=14
+TrialSeed=17916282520732795948
+Strategy=RandomStrategy v2
+SelectedRosterFingerprint=composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383
+BatchConfigurationId=unity-shop-100-v1|roster:composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383|event-item:Item006|pool-accounting:v2
+DeterministicCostAssignment (recomputed from same TrialSeed + Roster RNG):
+  character-data:710dfde0ec1d4b44b44f568086831312 cost=1
+  character-data:3510c2096e94459e9fae034465364186 cost=1
+  character-data:31e185eec748485cbbd272dad17b1f6e cost=2
+  character-data:ecc8561063394e6a8c0e9a26adcd0ce5 cost=2
+  character-data:da882de76e1f4d76946951e167465f05 cost=4
+  character-data:f4a589af297f457d90fdda08ac4d97d9 cost=1
+  character-data:ba20fc7fb2d7466ca0d8e23577496060 cost=2
+  character-data:f0cdbe7ff7764dd8a3cafe0b576b0f85 cost=5
+  character-data:7e290880568f41b682511e38318ed09a cost=2
+  character-data:34d50c59b20a42ecb051ee734bfed03f cost=5
+  character-data:2ace6fbc1bee498083d3080c5754c401 cost=1
+  character-data:507d64629f4543029f37d9ff6c730257 cost=3
+  character-data:14b7487ab20249c1a6223cac4d1652a2 cost=3
+  character-data:932fa32419264532aaf154bd873fa997 cost=3
+  character-data:4bc149c8bce845b3b25a32a28dbf71e8 cost=1
+  character-data:0e5714b0606b4fc09e126f75acfd6ffd cost=2
+  character-data:63e470f8515641dd84fbcbe91c94a29b cost=4
+  character-data:203bd50997254704b70090e6a87c07da cost=4
+  character-data:283c9b5a31744c5eb05127e91e94684b cost=5
+  character-data:567a39521b87465ea9ef6ab99d9bcb6d cost=5
+  character-data:80b87e0bdd4b4d10ac3ec46082bd44be cost=3
+  character-data:7da124c2904a443b8918f5bceb71e69f cost=5
+  character-data:21889b7d18fb4e6e9fe9bc58d1439ca1 cost=4
+  character-data:cd5d320fb3c84a57a928f0b6f0533c6e cost=4
+  character-data:25ed6f872e764400b1bfd57b5f98a9e3 cost=2
+  character-data:91c7d01bdcc04eddbfddc1acd83599f3 cost=1
+  character-data:0612954dc45544bebd147b91259ad495 cost=4
+  character-data:9c9aba4550c54ebd90baa5b20cbb8eb1 cost=3
+  character-data:eb03bff3735f456a9d4fc657480514ce cost=5
+  character-data:52d661a10b364454a500085b06c21866 cost=3
+StopReason=decision_limit_exceeded / DecisionLimitExceeded
+Stage=1 Round=5 Phase=Preparation Decisions=139 PhaseDecisions=100
+Detail=Decision limit reached for Preparation at EncounterIndex 4.
+Replay identical=False
+Identity/stop/final-state/action-count/checkpoint comparison=False
+Game RNG checkpoint identical=True
+Strategy RNG checkpoint identical=True
+Strategy state identical=True
+Action totals: successful=125 rejected=14 actionSequence=139
+PreparationDecisionCount=100 ConsecutiveRejectionCount=2
+Roster fingerprint matches batch input=True
+Stage=1 Round=5 Phase=Preparation EncounterIndex=4 Choice=SelectD EnemyCategory=None ShopMode=Character
+Gold=8 Level=4 XP=2 HP=26/30
+Board=0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:C1,7:empty,8:empty
+Hand=0:empty,1:empty,2:C:C12,3:C:C13,4:empty
+Shop=Character Stage=1 Round=5
+  OfferId=character-s1-r5-g1-slot0 Kind=Character DefinitionId=character-data:3510c2096e94459e9fae034465364186 Cost=1 Price=1 Status=Purchased
+  OfferId=character-s1-r5-g1-slot1 Kind=Character DefinitionId=character-data:f4a589af297f457d90fdda08ac4d97d9 Cost=1 Price=1 Status=Purchased
+  OfferId=character-s1-r5-g1-slot2 Kind=Character DefinitionId=character-data:4bc149c8bce845b3b25a32a28dbf71e8 Cost=1 Price=1 Status=Purchased
+Last 20 Action records (consecutive rejection stop includes its full final rejection streak):
+#131 step=119 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveOrSwapHand ActionId=trial:14:action:119 parameters=MoveOrSwapHand(0->2) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=733a287e22856462b9859bf0e47b62f9b7b7fb56508eb8c222e3635205a50a0d afterFingerprint=f807467e89c86022c582db272a72eff72b5777691b5c3c5c36d09bde808ed6c3 strategyState=RandomStrategy/v2/schema1/payload=rg1|81|NzowOjI= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=10048043445846689250/increment=14877694843341237705 strategy=Selected uniformly from 59 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=15 level=4 xp=0 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C7,7:C12,8:C1] hand=[0:C:C13,1:empty,2:empty,3:empty,4:C:C11]
+  after: 
+phase=Preparation encounter=4 gold=15 level=4 xp=0 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C7,7:C12,8:C1] hand=[0:empty,1:empty,2:C:C13,3:empty,4:C:C11]
+#132 step=120 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveBoardToHand ActionId=trial:14:action:120 parameters=MoveBoardToHand(6->0) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=f807467e89c86022c582db272a72eff72b5777691b5c3c5c36d09bde808ed6c3 afterFingerprint=79c20be5fe802a9d574c9fa87b40a16b2917ce0766796a345edc0462b811aeca strategyState=RandomStrategy/v2/schema1/payload=rg1|82|ODo2OjA= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=15444262055388861571/increment=14877694843341237705 strategy=Selected uniformly from 59 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=15 level=4 xp=0 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:C7,7:C12,8:C1] hand=[0:empty,1:empty,2:C:C13,3:empty,4:C:C11]
+  after: 
+phase=Preparation encounter=4 gold=15 level=4 xp=0 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:C12,8:C1] hand=[0:C:C7,1:empty,2:C:C13,3:empty,4:C:C11]
+#133 step=121 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveBoardToHand ActionId=trial:14:action:121 parameters=MoveBoardToHand(7->1) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=79c20be5fe802a9d574c9fa87b40a16b2917ce0766796a345edc0462b811aeca afterFingerprint=0bd3fa7166c3d54b15e1e556fa9e5cb4af69b4460ef3d7392468c45530fce315 strategyState=RandomStrategy/v2/schema1/payload=rg1|83|ODo3OjE= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=582587827633636816/increment=14877694843341237705 strategy=Selected uniformly from 65 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=15 level=4 xp=0 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:C12,8:C1] hand=[0:C:C7,1:empty,2:C:C13,3:empty,4:C:C11]
+  after: 
+phase=Preparation encounter=4 gold=15 level=4 xp=0 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:C1] hand=[0:C:C7,1:C:C12,2:C:C13,3:empty,4:C:C11]
+#134 step=122 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveOrSwapBoard ActionId=trial:14:action:122 parameters=MoveOrSwapBoard(8->4) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=0bd3fa7166c3d54b15e1e556fa9e5cb4af69b4460ef3d7392468c45530fce315 afterFingerprint=a8d44ec3bbe3c75918c5bc49ff444df7fdc457c3945a41e5c9d3ba1146e8b490 strategyState=RandomStrategy/v2/schema1/payload=rg1|84|Njo4OjQ= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=15886722094614307673/increment=14877694843341237705 strategy=Selected uniformly from 65 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=15 level=4 xp=0 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:C1] hand=[0:C:C7,1:C:C12,2:C:C13,3:empty,4:C:C11]
+  after: 
+phase=Preparation encounter=4 gold=15 level=4 xp=0 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C1,5:empty,6:empty,7:empty,8:empty] hand=[0:C:C7,1:C:C12,2:C:C13,3:empty,4:C:C11]
+#135 step=123 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveBoardToHand ActionId=trial:14:action:123 parameters=MoveBoardToHand(4->4) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=a8d44ec3bbe3c75918c5bc49ff444df7fdc457c3945a41e5c9d3ba1146e8b490 afterFingerprint=857c3c724356c551c925e496aac93082889cd4baa26edbe922e26e90afed10fb strategyState=RandomStrategy/v2/schema1/payload=rg1|85|ODo0OjQ= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=10753818173526707054/increment=14877694843341237705 strategy=Selected uniformly from 65 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=15 level=4 xp=0 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C1,5:empty,6:empty,7:empty,8:empty] hand=[0:C:C7,1:C:C12,2:C:C13,3:empty,4:C:C11]
+  after: 
+phase=Preparation encounter=4 gold=15 level=4 xp=0 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:empty] hand=[0:C:C7,1:C:C12,2:C:C13,3:empty,4:C:C1]
+#136 step=124 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveHandToBoard ActionId=trial:14:action:124 parameters=MoveHandToBoard(1->7) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=857c3c724356c551c925e496aac93082889cd4baa26edbe922e26e90afed10fb afterFingerprint=2de8192c8361e6dc3e9e0da16800ae8d80db3c0ea521a9ddfda21cfc000a3d98 strategyState=RandomStrategy/v2/schema1/payload=rg1|86|OToxOjc= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=17599082690914451999/increment=14877694843341237705 strategy=Selected uniformly from 64 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=15 level=4 xp=0 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:empty] hand=[0:C:C7,1:C:C12,2:C:C13,3:empty,4:C:C1]
+  after: 
+phase=Preparation encounter=4 gold=15 level=4 xp=0 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:C12,8:empty] hand=[0:C:C7,1:empty,2:C:C13,3:empty,4:C:C1]
+#137 step=125 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=BuyExperience ActionId=trial:14:action:125 parameters=BuyExperience stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=2de8192c8361e6dc3e9e0da16800ae8d80db3c0ea521a9ddfda21cfc000a3d98 afterFingerprint=1b4622526c3e6b1614e2498873eb286ffca7636b9afddbdf0e3099bfea08530b strategyState=RandomStrategy/v2/schema1/payload=rg1|87|NTo= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=15656962935422004796/increment=14877694843341237705 strategy=Selected uniformly from 65 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=15 level=4 xp=0 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:C12,8:empty] hand=[0:C:C7,1:empty,2:C:C13,3:empty,4:C:C1]
+  after: 
+phase=Preparation encounter=4 gold=11 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:C12,8:empty] hand=[0:C:C7,1:empty,2:C:C13,3:empty,4:C:C1]
+#138 step=126 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveOrSwapBoard ActionId=trial:14:action:126 parameters=MoveOrSwapBoard(7->1) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=1b4622526c3e6b1614e2498873eb286ffca7636b9afddbdf0e3099bfea08530b afterFingerprint=541d9e3ffc5bafc67a1f07f2822d77e17ac1cb4ccf6c3856112b5e2f064beb9e strategyState=RandomStrategy/v2/schema1/payload=rg1|88|Njo3OjE= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=3547734606079644245/increment=14877694843341237705 strategy=Selected uniformly from 65 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=11 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:C12,8:empty] hand=[0:C:C7,1:empty,2:C:C13,3:empty,4:C:C1]
+  after: 
+phase=Preparation encounter=4 gold=11 level=4 xp=1 hp=26/30 board=[0:empty,1:C12,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:empty] hand=[0:C:C7,1:empty,2:C:C13,3:empty,4:C:C1]
+#139 step=127 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=SellCharacter ActionId=trial:14:action:127 parameters=SellCharacter(C7) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=541d9e3ffc5bafc67a1f07f2822d77e17ac1cb4ccf6c3856112b5e2f064beb9e afterFingerprint=0bf749ff787b2a8f77da9145d7bdcc304ee9a9d2fef6fce3b35e72f13439e1b1 strategyState=RandomStrategy/v2/schema1/payload=rg1|89|MTA6czI6Qzc= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=12974959234222789050/increment=14877694843341237705 strategy=Selected uniformly from 65 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=11 level=4 xp=1 hp=26/30 board=[0:empty,1:C12,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:empty] hand=[0:C:C7,1:empty,2:C:C13,3:empty,4:C:C1]
+  after: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:C12,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C13,3:empty,4:C:C1]
+#140 step=128 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveBoardToHand ActionId=trial:14:action:128 parameters=MoveBoardToHand(1->0) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=0bf749ff787b2a8f77da9145d7bdcc304ee9a9d2fef6fce3b35e72f13439e1b1 afterFingerprint=a24fefa2f2db0908ef99f20a2023a744b38674c7458f44a584dabe6314978e56 strategyState=RandomStrategy/v2/schema1/payload=rg1|90|ODoxOjA= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=6829700386339836283/increment=14877694843341237705 strategy=Selected uniformly from 56 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:C12,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C13,3:empty,4:C:C1]
+  after: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:empty] hand=[0:C:C12,1:empty,2:C:C13,3:empty,4:C:C1]
+#141 step=129 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveOrSwapHand ActionId=trial:14:action:129 parameters=MoveOrSwapHand(0->4) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=a24fefa2f2db0908ef99f20a2023a744b38674c7458f44a584dabe6314978e56 afterFingerprint=ce3700ca99fd7130f5fa74d6545cc485a6a9ec5e8fb0f35ff256efdeab5cf276 strategyState=RandomStrategy/v2/schema1/payload=rg1|91|NzowOjQ= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=2739877198169064808/increment=14877694843341237705 strategy=Selected uniformly from 54 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:empty] hand=[0:C:C12,1:empty,2:C:C13,3:empty,4:C:C1]
+  after: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:empty] hand=[0:C:C1,1:empty,2:C:C13,3:empty,4:C:C12]
+#142 step=130 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveOrSwapHand ActionId=trial:14:action:130 parameters=MoveOrSwapHand(2->1) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=ce3700ca99fd7130f5fa74d6545cc485a6a9ec5e8fb0f35ff256efdeab5cf276 afterFingerprint=989ba8c5b547da9566583abc165e2ba04b0f8a38d2ba17bdc1bb0881f3e748cb strategyState=RandomStrategy/v2/schema1/payload=rg1|92|NzoyOjE= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=4677203874114287889/increment=14877694843341237705 strategy=Selected uniformly from 54 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:empty] hand=[0:C:C1,1:empty,2:C:C13,3:empty,4:C:C12]
+  after: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:empty] hand=[0:C:C1,1:C:C13,2:empty,3:empty,4:C:C12]
+#143 step=131 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveHandToBoard ActionId=trial:14:action:131 parameters=MoveHandToBoard(0->8) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=989ba8c5b547da9566583abc165e2ba04b0f8a38d2ba17bdc1bb0881f3e748cb afterFingerprint=9e5839e2d8baf60016a92d6e214ca8c9f2c596f279aadf03fcf6756cb8e42326 strategyState=RandomStrategy/v2/schema1/payload=rg1|93|OTowOjg= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=15228345542264087750/increment=14877694843341237705 strategy=Selected uniformly from 54 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:empty] hand=[0:C:C1,1:C:C13,2:empty,3:empty,4:C:C12]
+  after: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:C1] hand=[0:empty,1:C:C13,2:empty,3:empty,4:C:C12]
+#144 step=132 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveOrSwapHand ActionId=trial:14:action:132 parameters=MoveOrSwapHand(1->3) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=9e5839e2d8baf60016a92d6e214ca8c9f2c596f279aadf03fcf6756cb8e42326 afterFingerprint=b5a28d42ba81a501a381555006e6124ef697b6aabd3ce79709f2a6cee3b91c4f strategyState=RandomStrategy/v2/schema1/payload=rg1|94|NzoxOjM= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=3829640524523986583/increment=14877694843341237705 strategy=Selected uniformly from 53 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:C1] hand=[0:empty,1:C:C13,2:empty,3:empty,4:C:C12]
+  after: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:C1] hand=[0:empty,1:empty,2:empty,3:C:C13,4:C:C12]
+#145 step=133 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveOrSwapBoard ActionId=trial:14:action:133 parameters=MoveOrSwapBoard(8->6) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=b5a28d42ba81a501a381555006e6124ef697b6aabd3ce79709f2a6cee3b91c4f afterFingerprint=71d218151b7762fce4547f8cd017e796dacaf138646ee2331c8ac17264bf1683 strategyState=RandomStrategy/v2/schema1/payload=rg1|95|Njo4OjY= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=13877109488613422932/increment=14877694843341237705 strategy=Selected uniformly from 53 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:empty,7:empty,8:C1] hand=[0:empty,1:empty,2:empty,3:C:C13,4:C:C12]
+  after: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:C1,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C13,4:C:C12]
+#146 step=134 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=BuyExperience ActionId=trial:14:action:134 parameters=BuyExperience stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=71d218151b7762fce4547f8cd017e796dacaf138646ee2331c8ac17264bf1683 afterFingerprint=865a518819d83115b3e434e286e9c3c7c73cb53f82a12ac4f595cc5d2faca39b strategyState=RandomStrategy/v2/schema1/payload=rg1|96|NTo= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=2988188275687854989/increment=14877694843341237705 strategy=Selected uniformly from 53 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=12 level=4 xp=1 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:C1,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C13,4:C:C12]
+  after: 
+phase=Preparation encounter=4 gold=8 level=4 xp=2 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:C1,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C13,4:C:C12]
+#147 step=135 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveOrSwapHand ActionId=trial:14:action:135 parameters=MoveOrSwapHand(4->0) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=865a518819d83115b3e434e286e9c3c7c73cb53f82a12ac4f595cc5d2faca39b afterFingerprint=8d6bd909cedb38742f7ea81e7011d3393df857500a2f903a1fdb319e3d698c7a strategyState=RandomStrategy/v2/schema1/payload=rg1|97|Nzo0OjA= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=13227603069015806098/increment=14877694843341237705 strategy=Selected uniformly from 53 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=8 level=4 xp=2 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:C1,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:C:C13,4:C:C12]
+  after: 
+phase=Preparation encounter=4 gold=8 level=4 xp=2 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:C1,7:empty,8:empty] hand=[0:C:C12,1:empty,2:empty,3:C:C13,4:empty]
+#148 step=136 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveOrSwapHand ActionId=trial:14:action:136 parameters=MoveOrSwapHand(0->2) stageRound=Stage=1 Round=5 status=Succeeded beforeFingerprint=8d6bd909cedb38742f7ea81e7011d3393df857500a2f903a1fdb319e3d698c7a afterFingerprint=cd7840cef7b9dc02dae3ecf6c05cd4e0b585bfeb10169f68144f24cfe5d2dbb9 strategyState=RandomStrategy/v2/schema1/payload=rg1|98|NzowOjI= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=17745966333165831539/increment=14877694843341237705 strategy=Selected uniformly from 53 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=8 level=4 xp=2 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:C1,7:empty,8:empty] hand=[0:C:C12,1:empty,2:empty,3:C:C13,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=8 level=4 xp=2 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:C1,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C12,3:C:C13,4:empty]
+#149 step=137 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveHandToBoard ActionId=trial:14:action:137 parameters=MoveHandToBoard(3->3) stageRound=Stage=1 Round=5 status=Rejected error=BoardLimitExceeded: Hand-to-Board move rejected by BoardHandRules: DuplicateDefinitionOnBoard. beforeFingerprint=cd7840cef7b9dc02dae3ecf6c05cd4e0b585bfeb10169f68144f24cfe5d2dbb9 afterFingerprint=cd7840cef7b9dc02dae3ecf6c05cd4e0b585bfeb10169f68144f24cfe5d2dbb9 strategyState=RandomStrategy/v2/schema1/payload=rg1|99|OTozOjM= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=9770025436451696640/increment=14877694843341237705 strategy=Selected uniformly from 53 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=8 level=4 xp=2 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:C1,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C12,3:C:C13,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=8 level=4 xp=2 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:C1,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C12,3:C:C13,4:empty]
+#150 step=138 phase=Preparation->Preparation location=Stage=1 Round=5 ActionKind=MoveHandToBoard ActionId=trial:14:action:138 parameters=MoveHandToBoard(3->8) stageRound=Stage=1 Round=5 status=Rejected error=BoardLimitExceeded: Hand-to-Board move rejected by BoardHandRules: DuplicateDefinitionOnBoard. beforeFingerprint=cd7840cef7b9dc02dae3ecf6c05cd4e0b585bfeb10169f68144f24cfe5d2dbb9 afterFingerprint=cd7840cef7b9dc02dae3ecf6c05cd4e0b585bfeb10169f68144f24cfe5d2dbb9 strategyState=RandomStrategy/v2/schema1/payload=rg1|100|OTozOjg= strategyRng=PCG-XSH-RR-32-v1/v1/checkpoint1/seed=17916282520732795948/state=8402746786025643465/increment=14877694843341237705 strategy=Selected uniformly from 53 observable candidates.
+  before: 
+phase=Preparation encounter=4 gold=8 level=4 xp=2 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:C1,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C12,3:C:C13,4:empty]
+  after: 
+phase=Preparation encounter=4 gold=8 level=4 xp=2 hp=26/30 board=[0:empty,1:empty,2:empty,3:empty,4:C11,5:empty,6:C1,7:empty,8:empty] hand=[0:empty,1:empty,2:C:C12,3:C:C13,4:empty]
+Per-decision candidate count/rank: unavailable; ExecutionHistory stores selected Action and StrategyDiagnostic, not the full candidate list. Final-state candidate inspection below is read-only and uses no Strategy RNG.
+Character Pool consistency (diagnostic only):
+  character-data:0612954dc45544bebd147b91259ad495 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:0e5714b0606b4fc09e126f75acfd6ffd owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:14b7487ab20249c1a6223cac4d1652a2 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:203bd50997254704b70090e6a87c07da owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:21889b7d18fb4e6e9fe9bc58d1439ca1 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:25ed6f872e764400b1bfd57b5f98a9e3 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:283c9b5a31744c5eb05127e91e94684b owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:2ace6fbc1bee498083d3080c5754c401 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:31e185eec748485cbbd272dad17b1f6e owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:34d50c59b20a42ecb051ee734bfed03f owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:3510c2096e94459e9fae034465364186 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:4bc149c8bce845b3b25a32a28dbf71e8 owned=1 expected=1 reserved=0 expected=0 remaining=14 initial=15 consistent=True
+  character-data:507d64629f4543029f37d9ff6c730257 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:52d661a10b364454a500085b06c21866 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:567a39521b87465ea9ef6ab99d9bcb6d owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:63e470f8515641dd84fbcbe91c94a29b owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:710dfde0ec1d4b44b44f568086831312 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:7da124c2904a443b8918f5bceb71e69f owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:7e290880568f41b682511e38318ed09a owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:80b87e0bdd4b4d10ac3ec46082bd44be owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:91c7d01bdcc04eddbfddc1acd83599f3 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:932fa32419264532aaf154bd873fa997 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:9c9aba4550c54ebd90baa5b20cbb8eb1 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:ba20fc7fb2d7466ca0d8e23577496060 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:cd5d320fb3c84a57a928f0b6f0533c6e owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:da882de76e1f4d76946951e167465f05 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:eb03bff3735f456a9d4fc657480514ce owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:ecc8561063394e6a8c0e9a26adcd0ce5 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:f0cdbe7ff7764dd8a3cafe0b576b0f85 owned=0 expected=0 reserved=0 expected=0 remaining=15 initial=15 consistent=True
+  character-data:f4a589af297f457d90fdda08ac4d97d9 owned=2 expected=2 reserved=0 expected=0 remaining=13 initial=15 consistent=True
+StartBattle legal in current public candidates: False
+Current final-state Random candidate count=54.
+Current RandomStrategy public candidate set (final-state diagnostic enumeration):
+  RerollShop(Character)
+  BuyExperience
+  MoveOrSwapBoard(4->0)
+  MoveOrSwapBoard(4->1)
+  MoveOrSwapBoard(4->2)
+  MoveOrSwapBoard(4->3)
+  MoveOrSwapBoard(4->5)
+  MoveOrSwapBoard(4->6)
+  MoveOrSwapBoard(4->7)
+  MoveOrSwapBoard(4->8)
+  MoveOrSwapBoard(6->0)
+  MoveOrSwapBoard(6->1)
+  MoveOrSwapBoard(6->2)
+  MoveOrSwapBoard(6->3)
+  MoveOrSwapBoard(6->5)
+  MoveOrSwapBoard(6->7)
+  MoveOrSwapBoard(6->8)
+  MoveOrSwapHand(2->0)
+  MoveOrSwapHand(2->1)
+  MoveOrSwapHand(2->3)
+  MoveOrSwapHand(2->4)
+  MoveOrSwapHand(3->0)
+  MoveOrSwapHand(3->1)
+  MoveOrSwapHand(3->4)
+  MoveBoardToHand(4->0)
+  MoveBoardToHand(4->1)
+  MoveBoardToHand(4->2)
+  MoveBoardToHand(4->4)
+  MoveBoardToHand(6->0)
+  MoveBoardToHand(6->1)
+  MoveBoardToHand(6->2)
+  MoveBoardToHand(6->3)
+  MoveBoardToHand(6->4)
+  MoveHandToBoard(2->0)
+  MoveHandToBoard(2->1)
+  MoveHandToBoard(2->2)
+  MoveHandToBoard(2->3)
+  MoveHandToBoard(2->4)
+  MoveHandToBoard(2->5)
+  MoveHandToBoard(2->6)
+  MoveHandToBoard(2->7)
+  MoveHandToBoard(2->8)
+  MoveHandToBoard(3->0)
+  MoveHandToBoard(3->1)
+  MoveHandToBoard(3->2)
+  MoveHandToBoard(3->3)
+  MoveHandToBoard(3->5)
+  MoveHandToBoard(3->6)
+  MoveHandToBoard(3->7)
+  MoveHandToBoard(3->8)
+  SellCharacter(C1)
+  SellCharacter(C11)
+  SellCharacter(C12)
+  SellCharacter(C13)

@@ -1,0 +1,28 @@
+UnityVersion=6000.6.3f1
+Strategy=HeuristicStrategy,RandomStrategy
+StrategyVersions=Heuristic v7; Random v4
+BaseSeed=12345
+TrialIndex=0..19
+ConfiguredMeasuredTrialsPerMode=20
+ExecutedRuns=84/84 Cancelled=False
+MeasuredCompleted=0
+MeasuredGameOver=80
+MeasuredStoppedOrError=0
+MeasuredRejectedActions=0
+RosterFingerprint=composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383
+ConfigurationId=unity-shop-100-v1|roster:composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383|event-item:Item006|strategies:HeuristicStrategy-v7;RandomStrategy-v4|pool-accounting:v2
+DetailedProfiling=true; AllocationSampling=True
+FullDiagnostics=false; StrategyRerun=false; ActionReplay=false; ActionHistory=false; DecisionDetails=false; ActualCandidateList=false; FinalStateDetails=false
+Warmup=2 per Strategy; excluded
+Order=warmups, then same-TrialIndex pairs; pair order alternates by Index parity
+Timer=Stopwatch.GetTimestamp; frequency=10000000 ticks/second
+ConfigurationConstructionSeconds=0.046668799999999996
+ElapsedSeconds=87.545604799999992
+ManagedMemoryStartBytes=73900032
+ManagedMemoryEndBytes=93724672
+ObservedPeakManagedMemoryBytes=96280576 (sampled only at Trial boundaries)
+GCCollections=1642;1642;1642
+AllocatedBytesAPI=GetAllocatedBytesForCurrentThread; usable per-trial deltas=0/80; non-positive or invalid samples are Unavailable
+ProcessWorkingSet=Process.GetCurrentProcess().WorkingSet64; usable per-trial samples=0/80; non-positive or failed samples are Unavailable. Managed-memory values are GC.GetTotalMemory(false) snapshots, not allocation totals.
+Nested section times provide inclusive/exclusive ticks; action-kind evaluation sections are instrumented only for Heuristic.
+Internal state-copy/individual Rule validation sections are not separated by current APIs (Unavailable).

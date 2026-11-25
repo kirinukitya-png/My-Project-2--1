@@ -7,6 +7,7 @@ namespace ProjectNST.GameCore.Characters
         public string DefinitionId { get; }
         public int RunCost { get; }
         public int Star { get; }
+        public int PoolCopies { get; }
         public int Attack { get; }
         public int Defense { get; }
         public int TemporaryAttackBonus { get; }
@@ -20,6 +21,7 @@ namespace ProjectNST.GameCore.Characters
             DefinitionId = instance.DefinitionId;
             RunCost = instance.RunCost;
             Star = instance.Star;
+            PoolCopies = instance.PoolCopies;
             Attack = instance.Attack;
             Defense = instance.Defense;
             TemporaryAttackBonus = instance.TemporaryAttackBonus;

@@ -113,6 +113,44 @@ namespace ProjectNST.GameCore.Tests
             }
         }
 
+        [Test]
+        public void EventItemResolverUsesAssignedAssetBeforeConfiguredIdAndFallsBackToItem006()
+        {
+            Type itemDataType = FindType("ItemData");
+            Type shopType = FindType("ShopManager");
+            Type menuType = FindType("NSTSimulationBatchMenu");
+            MethodInfo load = FindAssetLoadMethod();
+            if (itemDataType == null || shopType == null || menuType == null || load == null)
+                Assert.Ignore("Unity Editor ItemData resolver is unavailable in this test host.");
+
+            object sceneItem006 = load.Invoke(null, new object[] { "Assets/Data2/ItemData/Item006.asset", itemDataType });
+            object preferred = ScriptableObject.CreateInstance(itemDataType);
+            SetField(itemDataType, preferred, "itemId", "preferred-event-item");
+            GameObject holder = new GameObject("EventItemResolverTest");
+            try
+            {
+                object shop = holder.AddComponent(shopType);
+                SetField(shopType, shop, "eventItemData", preferred);
+                SetField(shopType, shop, "eventItemId", "Item006");
+                Array pool = Array.CreateInstance(itemDataType, 1);
+                pool.SetValue(sceneItem006, 0);
+                SetField(shopType, shop, "itemDataPool", pool);
+                MethodInfo resolve = menuType.GetMethod("ResolveEventItemData", BindingFlags.NonPublic | BindingFlags.Static);
+                Assert.That(resolve, Is.Not.Null);
+                Assert.That(resolve.Invoke(null, new[] { shop }), Is.SameAs(preferred),
+                    "Assigned eventItemData must take precedence over eventItemId.");
+
+                SetField(shopType, shop, "eventItemData", null);
+                Assert.That(resolve.Invoke(null, new[] { shop }), Is.SameAs(sceneItem006),
+                    "The saved scene's eventItemId Item006 must resolve from itemDataPool.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(holder);
+                UnityEngine.Object.DestroyImmediate((UnityEngine.Object)preferred);
+            }
+        }
+
         private static Type FindType(string fullName)
         {
             foreach (Assembly assembly in UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies())
