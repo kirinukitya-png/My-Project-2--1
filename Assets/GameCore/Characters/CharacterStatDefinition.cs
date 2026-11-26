@@ -7,6 +7,13 @@ namespace ProjectNST.GameCore.Characters
     public sealed class CharacterStatDefinition
     {
         private readonly List<Entry> _options;
+        internal IEnumerable<int> ConfiguredCosts
+        {
+            get
+            {
+                foreach (Entry entry in _options) yield return entry.Cost;
+            }
+        }
 
         public CharacterStatDefinition(IEnumerable<CharacterCostStats> costs)
         {

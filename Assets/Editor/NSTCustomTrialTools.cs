@@ -21,7 +21,7 @@ using Stopwatch = System.Diagnostics.Stopwatch;
 public sealed class NSTCustomTrialTools : EditorWindow
 {
     private const string ShopScene = "Assets/Scenes/shop.unity";
-    private enum StrategySet { HeuristicV7, Random, Both, HeuristicV8, HeuristicV7AndV8, HeuristicV9, HeuristicV8AndV9, HeuristicV10, HeuristicV9AndV10, HeuristicV11, HeuristicV10AndV11 }
+    private enum StrategySet { HeuristicV7, Random, Both, HeuristicV8, HeuristicV7AndV8, HeuristicV9, HeuristicV8AndV9, HeuristicV10, HeuristicV9AndV10, HeuristicV11, HeuristicV10AndV11, HeuristicV12, HeuristicV11AndV12, HeuristicV13, HeuristicV12AndV13, HeuristicV14, HeuristicV13AndV14 }
     private enum ProfileStrategySet { Heuristic, Random, Both }
     private enum ReplayScope { All, Abnormal, Rejected, Explicit }
     private StrategySet strategies = StrategySet.HeuristicV7;
@@ -50,7 +50,7 @@ public sealed class NSTCustomTrialTools : EditorWindow
     private void OnGUI()
     {
         EditorGUILayout.LabelField("NST Trial Tools", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("Strategy versions", "Heuristic v" + HeuristicStrategy.StableVersion + " / v" + HeuristicStrategy.Version8 + " / v" + HeuristicStrategy.Version9 + " / v" + HeuristicStrategy.Version10 + " / v" + HeuristicStrategy.Version11 + " / Random v" + RandomStrategy.StableVersion);
+        EditorGUILayout.LabelField("Strategy versions", "Heuristic v" + HeuristicStrategy.StableVersion + " / v" + HeuristicStrategy.Version8 + " / v" + HeuristicStrategy.Version9 + " / v" + HeuristicStrategy.Version10 + " / v" + HeuristicStrategy.Version11 + " / v" + HeuristicStrategy.Version12 + " / v" + HeuristicStrategy.Version13 + " / Random v" + RandomStrategy.StableVersion);
         strategies = (StrategySet)EditorGUILayout.EnumPopup("Strategy", strategies);
         seedText = EditorGUILayout.TextField("Base Seed", seedText);
         fullDiagnostics = EditorGUILayout.Toggle("Full diagnostics", fullDiagnostics);
@@ -281,7 +281,10 @@ public sealed class NSTCustomTrialTools : EditorWindow
         bool includeV8 = strategies == StrategySet.HeuristicV8 || strategies == StrategySet.HeuristicV7AndV8 || strategies == StrategySet.HeuristicV8AndV9;
         bool includeV9 = strategies == StrategySet.HeuristicV9 || strategies == StrategySet.HeuristicV8AndV9;
         bool includeV10 = strategies == StrategySet.HeuristicV10 || strategies == StrategySet.HeuristicV9AndV10;
-        bool includeV11 = strategies == StrategySet.HeuristicV11 || strategies == StrategySet.HeuristicV10AndV11;
+        bool includeV11 = strategies == StrategySet.HeuristicV11 || strategies == StrategySet.HeuristicV10AndV11 || strategies == StrategySet.HeuristicV11AndV12;
+        bool includeV12 = strategies == StrategySet.HeuristicV12 || strategies == StrategySet.HeuristicV11AndV12 || strategies == StrategySet.HeuristicV12AndV13;
+        bool includeV13 = strategies == StrategySet.HeuristicV13 || strategies == StrategySet.HeuristicV12AndV13 || strategies == StrategySet.HeuristicV13AndV14;
+        bool includeV14 = strategies == StrategySet.HeuristicV14 || strategies == StrategySet.HeuristicV13AndV14;
         if (strategies == StrategySet.HeuristicV9AndV10) includeV9 = true;
         if (strategies == StrategySet.HeuristicV10AndV11) includeV10 = true;
         if (includeRandom) list.Add(new SimulationStrategyFactory(RandomStrategy.StableId, RandomStrategy.StableVersion, () => NSTSimulationBatchMenu.CreateRandomStrategy(session)));
@@ -290,6 +293,12 @@ public sealed class NSTCustomTrialTools : EditorWindow
         if (includeV9) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version9, () => NSTSimulationBatchMenu.CreateHeuristicStrategyV9(session, makeTraceSink(HeuristicStrategy.Version9))));
         if (includeV10) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version10, () => NSTSimulationBatchMenu.CreateHeuristicStrategyV10(session, makeTraceSink(HeuristicStrategy.Version10))));
         if (includeV11) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version11, () => NSTSimulationBatchMenu.CreateHeuristicStrategyV11(session, makeTraceSink(HeuristicStrategy.Version11))));
+        if (includeV12) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version12,
+            () => HeuristicStrategy.CreateV12(NSTSimulationBatchMenu.CreateHeuristicStrategyV11Settings(session), makeTraceSink(HeuristicStrategy.Version12))));
+        if (includeV13) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version13,
+            () => HeuristicStrategy.CreateV13(V13Settings(session), makeTraceSink(HeuristicStrategy.Version13))));
+        if (includeV14) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version14,
+            () => HeuristicStrategy.CreateV14(V14Settings(session), makeTraceSink(HeuristicStrategy.Version14))));
         return list;
     }
 
@@ -302,8 +311,22 @@ public sealed class NSTCustomTrialTools : EditorWindow
             identity+="-"+HeuristicStrategy.GetV10PurchaseConfigurationIdentity(NSTSimulationBatchMenu.CreateHeuristicStrategyV10Settings(session));
         if(factory.StrategyId==HeuristicStrategy.StableId&&factory.StrategyVersion==HeuristicStrategy.Version11)
             identity+="-"+HeuristicStrategy.GetV11ConfigurationIdentity(NSTSimulationBatchMenu.CreateHeuristicStrategyV11Settings(session));
+        if(factory.StrategyId==HeuristicStrategy.StableId&&factory.StrategyVersion==HeuristicStrategy.Version12)
+            identity+="-"+HeuristicStrategy.GetV12ConfigurationIdentity(NSTSimulationBatchMenu.CreateHeuristicStrategyV11Settings(session));
+        if(factory.StrategyId==HeuristicStrategy.StableId&&factory.StrategyVersion==HeuristicStrategy.Version13)
+            identity+="-"+HeuristicStrategy.GetV13ConfigurationIdentity(V13Settings(session));
+        if(factory.StrategyId==HeuristicStrategy.StableId&&factory.StrategyVersion==HeuristicStrategy.Version14)
+            identity+="-"+HeuristicStrategy.GetV14ConfigurationIdentity(V14Settings(session));
         return identity;
     }
+
+    private static HeuristicV14Settings V14Settings(GameSessionConfiguration session) =>
+        new HeuristicV14Settings(selectDHealAmount: session.StageConfig.SelectDHealAmount);
+
+    private static HeuristicStrategySettings V13Settings(GameSessionConfiguration session) =>
+        HeuristicStrategy.CreateV13Settings(session.ShopRerollGoldCost,
+            session.EconomyConfig.NormalExperiencePurchaseGoldCost, session.EconomyConfig.SelectBExperiencePurchaseGoldCost,
+            session.StageConfig.SelectDHealAmount);
 
     private void WriteDetails(string output, Row row, SimulationStrategyFactory factory, SimulationRunnerConfiguration config,
         GameSessionConfiguration session, string batchId, string roster, string eventItem, bool rerunEnabled, bool replayEnabled,

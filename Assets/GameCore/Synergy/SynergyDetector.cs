@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ProjectNST.GameCore.Board;
 using ProjectNST.GameCore.Characters;
+using ProjectNST.GameCore.Observation;
 
 namespace ProjectNST.GameCore.Synergy
 {
@@ -15,6 +17,11 @@ namespace ProjectNST.GameCore.Synergy
             CharacterOwnershipState ownership,
             IEnumerable<CharacterDefinition> selectedRoster,
             IEnumerable<CharacterDefinition> fullCharacterRoster)
+            => Detect(board, hand, ownership, selectedRoster, fullCharacterRoster, null);
+
+        internal static SynergyDetectionResult Detect(BoardState board, HandState hand,
+            CharacterOwnershipState ownership, IEnumerable<CharacterDefinition> selectedRoster,
+            IEnumerable<CharacterDefinition> fullCharacterRoster, RosterRules cachedRules)
         {
             var errors = new List<string>();
             var units = new List<UnitSynergyResult>();
@@ -32,27 +39,8 @@ namespace ProjectNST.GameCore.Synergy
             if (!stateValidation.IsValid)
                 foreach (string error in stateValidation.Errors) errors.Add(error);
 
-            Dictionary<string, CharacterDefinition> catalog = new Dictionary<string, CharacterDefinition>(StringComparer.Ordinal);
-            HashSet<string> fullIds = new HashSet<string>(StringComparer.Ordinal);
-            HashSet<string> selectedIds = new HashSet<string>(StringComparer.Ordinal);
-            Dictionary<string, HashSet<string>> fullMembersByUnit =
-                new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
-            Dictionary<string, HashSet<string>> selectedMembersByUnit =
-                new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
-
-            AddDefinitions(fullCharacterRoster, catalog, fullIds, fullMembersByUnit, errors, "full roster");
-            Dictionary<string, CharacterDefinition> selectedCatalog =
-                new Dictionary<string, CharacterDefinition>(StringComparer.Ordinal);
-            AddDefinitions(selectedRoster, selectedCatalog, selectedIds, selectedMembersByUnit, errors, "selected roster");
-
-            foreach (KeyValuePair<string, CharacterDefinition> pair in selectedCatalog)
-            {
-                if (!catalog.TryGetValue(pair.Key, out CharacterDefinition fullDefinition))
-                    errors.Add("Selected roster DefinitionId '" + pair.Key + "' is absent from the full roster.");
-                else if (!TagsEqual(fullDefinition.Units, pair.Value.Units) ||
-                         !TagsEqual(fullDefinition.Attributes, pair.Value.Attributes))
-                    errors.Add("DefinitionId '" + pair.Key + "' has conflicting tags in the selected and full rosters.");
-            }
+            RosterRules rules = cachedRules ?? BuildRosterRules(selectedRoster, fullCharacterRoster);
+            errors.AddRange(rules.Errors);
 
             var boardParticipants = new List<SynergyParticipant>();
             var unitParticipants = new Dictionary<string, List<SynergyParticipant>>(StringComparer.Ordinal);
@@ -65,7 +53,7 @@ namespace ProjectNST.GameCore.Synergy
                 board.TryGetCharacterIdAt(slot, out string instanceId);
                 if (instanceId == null) continue;
                 if (!ownership.TryGet(instanceId, out CharacterInstanceView instance)) continue;
-                if (!catalog.TryGetValue(instance.DefinitionId, out CharacterDefinition definition))
+                if (!rules.Catalog.TryGetValue(instance.DefinitionId, out CharacterDefinition definition))
                 {
                     errors.Add("Board slot " + slot + " references unknown DefinitionId '" + instance.DefinitionId + "'.");
                     continue;
@@ -83,15 +71,12 @@ namespace ProjectNST.GameCore.Synergy
             {
                 List<SynergyParticipant> participants = unitParticipants[unitName];
                 if (participants.Count < 2) continue;
-                if (!fullMembersByUnit.TryGetValue(unitName, out HashSet<string> fullMembers) ||
-                    !selectedMembersByUnit.TryGetValue(unitName, out HashSet<string> selectedMembers))
-                    continue;
-                if (selectedMembers.Count != fullMembers.Count) continue;
+                if (!rules.RequirementsByName.TryGetValue(unitName, out UnitRequirementObservation requirement)) continue;
 
                 var boardMemberIds = new HashSet<string>(StringComparer.Ordinal);
                 foreach (SynergyParticipant participant in participants)
                     boardMemberIds.Add(participant.DefinitionId);
-                if (!boardMemberIds.SetEquals(selectedMembers)) continue;
+                if (!boardMemberIds.SetEquals(requirement.RequiredDefinitionIds)) continue;
 
                 var slots = new List<int>(participants.Count);
                 foreach (SynergyParticipant participant in participants) slots.Add(participant.BoardSlotIndex);
@@ -108,6 +93,56 @@ namespace ProjectNST.GameCore.Synergy
 
             units.Sort(CompareUnits);
             return new SynergyDetectionResult(true, errors, units, attributes);
+        }
+
+        internal sealed class RosterRules
+        {
+            internal IReadOnlyDictionary<string, CharacterDefinition> Catalog { get; }
+            internal IReadOnlyDictionary<string, UnitRequirementObservation> RequirementsByName { get; }
+            internal IReadOnlyList<UnitRequirementObservation> Requirements { get; }
+            internal IReadOnlyList<string> Errors { get; }
+
+            internal RosterRules(Dictionary<string, CharacterDefinition> catalog,
+                Dictionary<string, UnitRequirementObservation> requirements, List<string> errors)
+            {
+                Catalog = catalog;
+                RequirementsByName = requirements;
+                Requirements = Array.AsReadOnly(requirements.Values.OrderBy(x => x.UnitName, StringComparer.Ordinal).ToArray());
+                Errors = errors.AsReadOnly();
+            }
+        }
+
+        internal static RosterRules BuildRosterRules(IEnumerable<CharacterDefinition> selectedRoster,
+            IEnumerable<CharacterDefinition> fullCharacterRoster)
+        {
+            var catalog = new Dictionary<string, CharacterDefinition>(StringComparer.Ordinal);
+            var selectedCatalog = new Dictionary<string, CharacterDefinition>(StringComparer.Ordinal);
+            var fullMembers = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+            var selectedMembers = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+            var requirements = new Dictionary<string, UnitRequirementObservation>(StringComparer.Ordinal);
+            var errors = new List<string>();
+            AddDefinitions(fullCharacterRoster, catalog, new HashSet<string>(StringComparer.Ordinal), fullMembers, errors, "full roster");
+            AddDefinitions(selectedRoster, selectedCatalog, new HashSet<string>(StringComparer.Ordinal), selectedMembers, errors, "selected roster");
+            foreach (var pair in selectedCatalog)
+            {
+                if (!catalog.TryGetValue(pair.Key, out CharacterDefinition fullDefinition))
+                    errors.Add("Selected roster DefinitionId '" + pair.Key + "' is absent from the full roster.");
+                else if (!TagsEqual(fullDefinition.Units, pair.Value.Units) ||
+                         !TagsEqual(fullDefinition.Attributes, pair.Value.Attributes))
+                    errors.Add("DefinitionId '" + pair.Key + "' has conflicting tags in the selected and full rosters.");
+            }
+            if (errors.Count == 0)
+            {
+                foreach (var pair in selectedMembers)
+                {
+                    if (pair.Value.Count < 2 || pair.Value.Count > BoardState.StandardColumns * BoardState.StandardRows ||
+                        !fullMembers.TryGetValue(pair.Key, out var full) || pair.Value.Count != full.Count)
+                        continue;
+                    requirements.Add(pair.Key, new UnitRequirementObservation(pair.Key,
+                        pair.Value.OrderBy(id => id, StringComparer.Ordinal).ToArray()));
+                }
+            }
+            return new RosterRules(catalog, requirements, errors);
         }
 
         private static void AddDefinitions(IEnumerable<CharacterDefinition> source,

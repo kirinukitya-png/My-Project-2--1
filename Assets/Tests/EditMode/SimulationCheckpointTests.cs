@@ -122,6 +122,55 @@ namespace ProjectNST.GameCore.Tests
             Assert.Throws<ArgumentException>(() => otherRunner.ResumeTrial(checkpoint, strategy));
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void CompositionCheckpointRejectsPreviousVersionAndRecordedActionsReplay(bool v13)
+        {
+            var enemy = new EnemyDefinition("v12-replay-enemy", "Replay enemy", 0, 0, 1,
+                null, null, null, "T001", null, null, null);
+            var session = ConfigurationWithStage(OneEncounterConfig(), enemy: enemy);
+            var config = new SimulationRunnerConfiguration(session,
+                maxDecisionsPerPhase: 1, maxConsecutiveRejections: 3, maxTrialSteps: 200, recordExecutionHistory: true);
+            var runner = new SimulationRunner(config);
+            var strategy = v13 ? HeuristicStrategy.CreateV13() : HeuristicStrategy.CreateV12();
+            var result = runner.RunTrial(35, 88235, strategy);
+            var checkpoint = runner.CreateCheckpoint(result);
+            Assert.That(checkpoint.CanResume, Is.True);
+            Assert.That(checkpoint.SchemaVersion, Is.EqualTo(2));
+            Assert.That(checkpoint.StrategyVersion, Is.EqualTo(v13 ? "13" : "12"));
+            Assert.That(checkpoint.StrategyRandomState.StrategyVersion, Is.EqualTo(strategy.Version));
+            var expanded = new SimulationRunner(new SimulationRunnerConfiguration(session, 10, 3, 200));
+            Assert.Throws<ArgumentException>(() => expanded.RestoreTrial(checkpoint,
+                v13 ? HeuristicStrategy.CreateV12() : HeuristicStrategy.CreateV11()));
+            Assert.That(expanded.RestoreTrial(checkpoint, strategy).CurrentState.RandomState, Is.EqualTo(checkpoint.GameRandomState));
+            var replay = new SimulationReplayVerifier().Verify(config, result, result.ExecutionHistory);
+            Assert.That(replay.Succeeded, Is.True, replay.MismatchKind);
+        }
+
+        [Test]
+        public void V14CheckpointRestoresAndRecordedActionsReplay()
+        {
+            var enemy = new EnemyDefinition("v14-replay-enemy", "Replay enemy", 0, 0, 1,
+                null, null, null, "T001", null, null, null);
+            var session = ConfigurationWithStage(OneEncounterConfig(), enemy: enemy);
+            var config = new SimulationRunnerConfiguration(session, 1, 3, 200, recordExecutionHistory: true);
+            var runner = new SimulationRunner(config);
+            var result = runner.RunTrial(35, 88235, HeuristicStrategy.CreateV14());
+            var checkpoint = runner.CreateCheckpoint(result);
+            Assert.That(checkpoint.CanResume, Is.True);
+            Assert.That(checkpoint.SchemaVersion, Is.EqualTo(2));
+            Assert.That(checkpoint.StrategyVersion, Is.EqualTo("14"));
+            var expanded = new SimulationRunner(new SimulationRunnerConfiguration(session, 10, 3, 200));
+            Assert.Throws<ArgumentException>(() => expanded.RestoreTrial(checkpoint, HeuristicStrategy.CreateV13()));
+            Assert.That(expanded.RestoreTrial(checkpoint, HeuristicStrategy.CreateV14()).CurrentState.RandomState,
+                Is.EqualTo(checkpoint.GameRandomState));
+            var rerun = runner.RunTrial(35, 88235, HeuristicStrategy.CreateV14());
+            Assert.That(rerun.ExecutionHistory.Select(x => x.AfterFingerprint),
+                Is.EqualTo(result.ExecutionHistory.Select(x => x.AfterFingerprint)));
+            var replay = new SimulationReplayVerifier().Verify(config, result, result.ExecutionHistory);
+            Assert.That(replay.Succeeded, Is.True, replay.MismatchKind);
+        }
+
         [Test]
         public void RecordedAutomaticBattleAndRewardsReplayWithoutRerunningStrategy()
         {

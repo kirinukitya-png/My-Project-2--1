@@ -153,7 +153,11 @@ namespace ProjectNST.GameCore.Sessions
                     _state.EnemyPreparation, _state.Battle, GetObservableBattleResult(_state),
                     _configuration.CharacterStatSettings, _configuration.CharacterShopConfig,
                     _configuration.StageRewardConfig, _configuration.ShopRerollGoldCost,
-                    _configuration.SelectedRosterObservation));
+                    _configuration.SelectedRosterObservation)
+                {
+                    CachedCharacterStats = _configuration.PublicCharacterStats,
+                    CachedRosterRules = _configuration.RosterRules
+                });
             }
         }
 
@@ -500,7 +504,11 @@ namespace ProjectNST.GameCore.Sessions
                 state.EnemyBoard, state.EnemyPreparation, state.Battle,
                 GetObservableBattleResult(state), _configuration.CharacterStatSettings,
                 _configuration.CharacterShopConfig, _configuration.StageRewardConfig,
-                _configuration.ShopRerollGoldCost, _configuration.SelectedRosterObservation));
+                _configuration.ShopRerollGoldCost, _configuration.SelectedRosterObservation)
+            {
+                CachedCharacterStats = _configuration.PublicCharacterStats,
+                CachedRosterRules = _configuration.RosterRules
+            });
 
         private static CharacterPool ReturnShopReservations(ShopState shop, CharacterPool pool) =>
             shop != null && shop.Kind == ShopKind.Character
@@ -606,7 +614,11 @@ namespace ProjectNST.GameCore.Sessions
                 configuration.EnemyDefinitions, state.EnemyBoard, state.EnemyPreparation,
                 state.Battle, GetObservableBattleResult(state), configuration.CharacterStatSettings,
                 configuration.CharacterShopConfig, configuration.StageRewardConfig,
-                configuration.ShopRerollGoldCost, configuration.SelectedRosterObservation));
+                configuration.ShopRerollGoldCost, configuration.SelectedRosterObservation)
+            {
+                CachedCharacterStats = configuration.PublicCharacterStats,
+                CachedRosterRules = configuration.RosterRules
+            });
             if (!observation.Succeeded)
                 throw new ArgumentException("Checkpoint cannot produce a valid public observation: " + string.Join("; ", observation.Errors), nameof(state));
         }

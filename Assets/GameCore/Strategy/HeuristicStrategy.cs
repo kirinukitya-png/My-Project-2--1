@@ -16,6 +16,9 @@ namespace ProjectNST.GameCore.Strategy
     /// <summary>Immutable initial heuristic weights. Values are tunable hypotheses, not balance claims.</summary>
     public sealed class HeuristicStrategySettings
     {
+        internal const double LegacyOneStarProgress = 8;
+        internal const double LegacySingleTwoStarProgress = 2;
+        internal const double LegacyPairTwoStarProgress = 4;
         public int PreparationDecisionLimit { get; }
         public int? ShopRerollGoldCost { get; }
         public int? NormalExperienceGoldCost { get; }
@@ -75,6 +78,10 @@ namespace ProjectNST.GameCore.Strategy
         public double StartBattleMergeOpportunityPenalty { get; }
         public double StartBattleUnitReadinessValue { get; }
         public double PreparationUrgencyPerDecision { get; }
+        public double CompositionActionScale { get; }
+        public double CompositionHandReserveWeight { get; }
+        public double CompositionDeploymentPriority { get; }
+        public double CompositionHandDuplicateWeight { get; }
 
         public HeuristicStrategySettings(int preparationDecisionLimit = 30,
             int? shopRerollGoldCost = null, int? normalExperienceGoldCost = null,
@@ -104,10 +111,12 @@ namespace ProjectNST.GameCore.Strategy
             double characterStarValue = 3, bool includeTemporaryCharacterBonuses = false,
             double purchasePowerReference = 3.5, double immediateBoardPurchasePowerWeight = 4.0,
             double handPurchasePowerWeight = 0.5,
-            double mergeProgressOneStarValue = 8, double mergeProgressOneStarTwoStarValue = 2,
-            double mergeProgressTwoStarTwoCopiesValue = 4, double chainMergeValue = 45,
+            double mergeProgressOneStarValue = LegacyOneStarProgress, double mergeProgressOneStarTwoStarValue = LegacySingleTwoStarProgress,
+            double mergeProgressTwoStarTwoCopiesValue = LegacyPairTwoStarProgress, double chainMergeValue = 45,
             double handSlotReleaseValue = 4, double boardSlotReleaseValue = 2,
-            double handCapacityPenaltyOneEmpty = 2, double handCapacityPenaltyNoEmpty = 5)
+            double handCapacityPenaltyOneEmpty = 2, double handCapacityPenaltyNoEmpty = 5,
+            double compositionActionScale = 8, double compositionHandReserveWeight = 0.35,
+            double compositionDeploymentPriority = 100, double compositionHandDuplicateWeight = 0.25)
         {
             if (preparationDecisionLimit < 1) throw new ArgumentOutOfRangeException(nameof(preparationDecisionLimit));
             ValidateCost(shopRerollGoldCost, nameof(shopRerollGoldCost));
@@ -166,6 +175,12 @@ namespace ProjectNST.GameCore.Strategy
             StartBattleMergeOpportunityPenalty=NonNegative(startBattleMergeOpportunityPenalty,nameof(startBattleMergeOpportunityPenalty));
             StartBattleUnitReadinessValue=NonNegative(startBattleUnitReadinessValue,nameof(startBattleUnitReadinessValue));
             PreparationUrgencyPerDecision=NonNegative(preparationUrgencyPerDecision,nameof(preparationUrgencyPerDecision));
+            CompositionActionScale=NonNegative(compositionActionScale,nameof(compositionActionScale));
+            CompositionHandReserveWeight=NonNegative(compositionHandReserveWeight,nameof(compositionHandReserveWeight));
+            CompositionDeploymentPriority=NonNegative(compositionDeploymentPriority,nameof(compositionDeploymentPriority));
+            if (!(compositionHandDuplicateWeight >= 0 && compositionHandDuplicateWeight <= 1))
+                throw new ArgumentOutOfRangeException(nameof(compositionHandDuplicateWeight));
+            CompositionHandDuplicateWeight = compositionHandDuplicateWeight;
         }
         private static void ValidateCost(int? n,string name){if(n.HasValue&&n.Value<0)throw new ArgumentOutOfRangeException(name);}
         private static double Finite(double n,string name){if(double.IsNaN(n)||double.IsInfinity(n))throw new ArgumentOutOfRangeException(name);return n;}
@@ -178,13 +193,16 @@ namespace ProjectNST.GameCore.Strategy
         public GameAction Action { get; }
         public double Score { get; }
         public string Reason { get; }
-        internal HeuristicActionEvaluation(GameAction action,double score,string reason){Action=action;Score=score;Reason=reason??string.Empty;}
+        public bool IsSelectable { get; }
+        internal double? RepairScore { get; }
+        internal HeuristicActionEvaluation(GameAction action,double score,string reason,double? repairScore=null,bool isSelectable=true)
+        {Action=action;Score=score;Reason=reason??string.Empty;RepairScore=repairScore;IsSelectable=isSelectable;}
     }
 
     /// <summary>Deterministic public-observation policy; per-trial progress is in StrategyState only.</summary>
-    public sealed class HeuristicStrategy : IPlayerStrategy
+    public sealed partial class HeuristicStrategy : IPlayerStrategy
     {
-        public const string StableId="HeuristicStrategy", StableVersion="7", Version8="8", Version9="9", Version10="10", Version11="11";
+        public const string StableId="HeuristicStrategy", StableVersion="7", Version8="8", Version9="9", Version10="10", Version11="11", Version12="12", Version13="13", Version14="14";
         public const int StateSchemaVersion=2;
         private const string Prefix="hs2|";
         private readonly HeuristicStrategySettings _settings;
@@ -195,6 +213,9 @@ namespace ProjectNST.GameCore.Strategy
         public string StrategyId=>StableId;
         public string Version=>_version;
         public HeuristicStrategySettings Settings=>_settings;
+        private bool UsesUnifiedComposition => _version == Version13 || _version == Version14;
+        private bool UsesComposition => _version == Version12 || UsesUnifiedComposition;
+        private bool UsesV10PurchaseRules => _version == Version10 || _version == Version11 || _version == Version12;
 
         public HeuristicStrategy(HeuristicStrategySettings settings=null, Action<string> decisionDiagnosticSink=null, ProjectNST.GameCore.Sessions.SimulationProfileCollector profiler=null)
             : this(settings, decisionDiagnosticSink, profiler, StableVersion)
@@ -248,6 +269,55 @@ namespace ProjectNST.GameCore.Strategy
             return new HeuristicStrategy(settings, decisionDiagnosticSink, profiler, Version11);
         }
 
+        public static HeuristicStrategy CreateV12(HeuristicStrategySettings settings=null,
+            Action<string> decisionDiagnosticSink=null, ProjectNST.GameCore.Sessions.SimulationProfileCollector profiler=null)
+        {
+            settings = settings ?? new HeuristicStrategySettings(characterStarValue:0.75,
+                includeTemporaryCharacterBonuses:true);
+            return new HeuristicStrategy(settings, decisionDiagnosticSink, profiler, Version12);
+        }
+
+        public static HeuristicStrategySettings CreateV13Settings(int? shopRerollGoldCost = null,
+            int? normalExperienceGoldCost = null, int? selectBExperienceGoldCost = null, int selectDHealAmount = 10)
+            => new HeuristicStrategySettings(shopRerollGoldCost: shopRerollGoldCost,
+                normalExperienceGoldCost: normalExperienceGoldCost, selectBExperienceGoldCost: selectBExperienceGoldCost,
+                selectDHealAmount: selectDHealAmount, characterStarValue: 0.75, includeTemporaryCharacterBonuses: true,
+                mergeProgressOneStarValue: 1, mergeProgressOneStarTwoStarValue: 1, mergeProgressTwoStarTwoCopiesValue: 2);
+
+        public static HeuristicStrategy CreateV13(HeuristicStrategySettings settings = null,
+            Action<string> decisionDiagnosticSink = null, ProjectNST.GameCore.Sessions.SimulationProfileCollector profiler = null)
+            => new HeuristicStrategy(settings ?? CreateV13Settings(), decisionDiagnosticSink, profiler, Version13);
+
+        public static string GetV13ConfigurationIdentity(HeuristicStrategySettings settings)
+        {
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+            string configuration = GetV12ConfigurationIdentity(settings) +
+                FormattableString.Invariant($"|duplicateHand={settings.CompositionHandDuplicateWeight:R}") +
+                "|purchaseBase=0|excludeUnavailable|excludeIncreasingOverLevel|projectUnitRequirements|legacyRepairOrder";
+            return HashIdentity("composition-v13-", configuration);
+        }
+
+        public static string GetV12ConfigurationIdentity(HeuristicStrategySettings settings)
+        {
+            if (settings == null) throw new ArgumentNullException(nameof(settings));
+            // Include the common weights and the inherited settings, including the v11 repair-sale policy.
+            var fields = typeof(HeuristicStrategySettings).GetProperties()
+                .Where(property => property.Name != nameof(HeuristicStrategySettings.CompositionHandDuplicateWeight))
+                .OrderBy(property => property.Name, StringComparer.Ordinal)
+                .Select(property => property.Name + "=" + Convert.ToString(property.GetValue(settings), CultureInfo.InvariantCulture));
+            string configuration = "composition-v12|normalSalePenalty=0|boardCapacity=0|" +
+                FormattableString.Invariant($"handCapacity={CompositionValueEvaluator.FullHandValue:R},{CompositionValueEvaluator.OneEmptyHandSlotValue:R},0|") +
+                string.Join("|", fields);
+            return HashIdentity("composition-v12-", configuration);
+        }
+
+        private static string HashIdentity(string prefix, string configuration)
+        {
+            using (SHA256 sha = SHA256.Create())
+                return prefix + BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(configuration)))
+                    .Replace("-", string.Empty).ToLowerInvariant();
+        }
+
         public static string GetV10PurchaseConfigurationIdentity(HeuristicStrategySettings settings)
         {
             if (settings == null) throw new ArgumentNullException(nameof(settings));
@@ -297,6 +367,8 @@ namespace ProjectNST.GameCore.Strategy
             if(context==null)throw new ArgumentNullException(nameof(context));
             if(!context.IsFor(this))throw new ArgumentException("Context belongs to another Strategy.",nameof(context));
             _profiler?.Add("Strategy.ChooseActionCalls");
+            if (_version == Version14 && observation.Stage.Phase == ObservationPhase.Preparation)
+                return ChooseV14Preparation(observation, context);
             Payload state=ReadState(context.State);
             bool preparation=observation.Stage.Phase==ObservationPhase.Preparation;
             int priorPreparationDecisions=state.Decisions;
@@ -343,13 +415,15 @@ namespace ProjectNST.GameCore.Strategy
                 {
                     string signature=Signature(item.Action);
                     string reason=null;
-                    if(signature==previousAction)reason="Same action signature as previous Strategy action.";
+                    if(!item.IsSelectable)reason=item.Reason;
+                    else if(signature==previousAction)reason="Same action signature as previous Strategy action.";
                     else if(IsReverse(previousAction,item.Action))reason="Immediate reverse-operation filter.";
                     else if(IsImmediateBuyThenSell(previousAction,item.Action,observation))reason="Immediate buy-then-sell filter.";
                     else if(IsImmediateSellThenBuy(previousAction,item.Action))reason="Immediate sell-then-buy filter.";
                     if(reason!=null)excluded.Add(signature+" | "+reason);
                 }
             }
+            if(UsesUnifiedComposition) evaluations.RemoveAll(x=>!x.IsSelectable);
             evaluations.RemoveAll(x=>Signature(x.Action)==previousAction || IsReverse(previousAction,x.Action));
             evaluations.RemoveAll(x=>IsImmediateBuyThenSell(previousAction,x.Action,observation) ||
                 IsImmediateSellThenBuy(previousAction,x.Action));
@@ -427,7 +501,7 @@ namespace ProjectNST.GameCore.Strategy
                 text.AppendLine("Strategy="+StrategyId+" Version="+Version+" TrialIndex="+context.TrialIndex+" DecisionIndex="+context.DecisionStep)
                     .AppendLine("Stage="+observation.Stage.StageNumber+" Round="+observation.Stage.RoundNumber+" EncounterIndex="+observation.Stage.EncounterIndex+" Phase="+observation.Stage.Phase+" Choice="+(observation.Stage.Choice.HasValue?observation.Stage.Choice.Value.ToString():"None")+" EnemyCategory="+(observation.Stage.EnemyCategory.HasValue?observation.Stage.EnemyCategory.Value.ToString():"None"))
                     .AppendLine("PhaseDecisionCount=Unavailable (not present in StrategyContext); StrategyPreparationDecisionBefore="+previousDecisions+" After="+currentDecisions+" Limit="+_settings.PreparationDecisionLimit)
-                    .AppendLine("VisibleObservationFingerprint="+CreateVisibleObservationFingerprint(observation,_settings.IncludeTemporaryCharacterBonuses,_version)+" (hash of Strategy-visible data only).")
+                    .AppendLine("VisibleObservationFingerprint="+(_version == Version14 ? GetV14ObservationFingerprint(observation) : CreateVisibleObservationFingerprint(observation,_settings.IncludeTemporaryCharacterBonuses,_version))+" (hash of Strategy-visible data only).")
                     .AppendLine("StrategyStateBefore="+(context.State?.Payload??"Unavailable"))
                     .AppendLine("PreviousEncounter="+(before.HasEncounter?before.EncounterIndex.ToString(CultureInfo.InvariantCulture):"Unavailable")+" CurrentEncounter="+observation.Stage.EncounterIndex+" PreviousPhase="+(before.HasIdentity?before.Phase.ToString():"Unavailable")+" CurrentPhase="+observation.Stage.Phase+" CounterReset="+(observation.Stage.Phase==ObservationPhase.Preparation&&(!before.HasEncounter||before.EncounterIndex!=observation.Stage.EncounterIndex))+" ResetReason="+resetReason+" PreviousAction="+(before.LastAction??""))
                     .AppendLine("GeneratedCandidateCount="+generated.Count+" FilteredCandidateCount="+filtered.Count+" ExcludedCandidateCount="+excluded.Count);
@@ -439,6 +513,19 @@ namespace ProjectNST.GameCore.Strategy
                     text.AppendLine("Candidate generated="+DescribeCandidate(item.Action)+" score="+item.Score.ToString("R",CultureInfo.InvariantCulture)+" reason="+item.Reason+" filtered="+(remains?"yes":"no")+" exclusion="+(exclusion??"none"));
                 }
                 HeuristicActionEvaluation start=generated.FirstOrDefault(x=>x.Action is StartBattleAction);
+                if(UsesUnifiedComposition && start!=null)
+                {
+                    bool belowLevel=BoardCount(observation)<observation.Player.Level;
+                    foreach(var rejected in generated)
+                    {
+                        if(rejected.IsSelectable || !(rejected.Action is BuyCharacterAction buy)) continue;
+                        bool boardOpportunity=belowLevel&&buy.Placement.Kind==CharacterLocationKind.Board;
+                        bool mergeOpportunity=HasMergePotential(observation,buy);
+                        if(boardOpportunity||mergeOpportunity)
+                            text.AppendLine("StartBattle raw opportunity includes excluded "+DescribeCandidate(buy)+
+                                " board="+boardOpportunity+" merge="+mergeOpportunity);
+                    }
+                }
                 string startRemoval=excluded.FirstOrDefault(x=>x.StartsWith("15 | ",StringComparison.Ordinal));
                 bool startEligible=observation.Stage.Phase==ObservationPhase.Preparation&&observation.Stage.HasSelection&&
                     observation.Stage.Choice!=StageChoice.SelectB&&observation.Stage.Choice!=StageChoice.SelectD&&
@@ -458,24 +545,39 @@ namespace ProjectNST.GameCore.Strategy
         private static string CreateVisibleObservationFingerprint(GameObservation observation,bool includeTemporaryBonuses,string version)
         {
             var snapshot=new StringBuilder();
+            bool unified = version == Version13;
+            bool composition = version == Version12 || unified;
+            bool detailedCharacters = version == Version11 || composition;
+            bool mergePurchase = version == Version10 || detailedCharacters;
             if(string.Equals(version,Version8,StringComparison.Ordinal))snapshot.Append("heuristic-power-v8|");
             else if(string.Equals(version,Version9,StringComparison.Ordinal))snapshot.Append("heuristic-purchase-power-v9|");
             else if(string.Equals(version,Version10,StringComparison.Ordinal))snapshot.Append("heuristic-purchase-merge-v10|");
             else if(string.Equals(version,Version11,StringComparison.Ordinal))snapshot.Append("heuristic-sale-v11|");
+            else if(composition)snapshot.Append(unified?"heuristic-composition-v13|":"heuristic-composition-v12|");
             snapshot.Append(observation.Stage.EncounterIndex).Append('|').Append(observation.Stage.StageNumber).Append('|').Append(observation.Stage.RoundNumber)
                 .Append('|').Append(observation.Stage.Phase).Append('|').Append(observation.Stage.Choice).Append('|').Append(observation.Stage.EnemyCategory)
                 .Append('|').Append(observation.Player.Gold).Append('|').Append(observation.Player.Level).Append('|').Append(observation.Player.XP)
                 .Append('|').Append(observation.Player.HP).Append('|').Append(observation.Player.MaximumHP);
-            if(string.Equals(version,Version11,StringComparison.Ordinal))snapshot.Append("|BoardColumns=").Append(observation.Board.Columns);
+            if(detailedCharacters)snapshot.Append("|BoardColumns=").Append(observation.Board.Columns);
+            if(composition)
+                snapshot.Append("|BoardRows=").Append(observation.Board.Rows)
+                    .Append("|HandSlots=").Append(observation.Hand.SlotCount)
+                    .Append("|HandEmpty=").Append(observation.Hand.EmptySlotCount)
+                    .Append("|RequiredXP=").Append(observation.Player.RequiredXP)
+                    .Append("|MaximumLevel=").Append(observation.Player.MaximumLevel)
+                    .Append("|HasHealth=").Append(observation.Player.HasHealth)
+                    .Append("|HasSelection=").Append(observation.Stage.HasSelection)
+                    .Append("|CanReroll=").Append(observation.Stage.CanReroll);
             foreach(BoardSlotObservation slot in observation.Board.Slots)
             {
                 snapshot.Append("|B").Append(slot.SlotIndex).Append('=');
                 if(slot.Character!=null)
                 {
                     snapshot.Append(slot.Character.InstanceId).Append(':').Append(slot.Character.DefinitionId).Append(':').Append(slot.Character.Star).Append(':').Append(slot.Character.Attack).Append(':').Append(slot.Character.Defense);
-                    if(string.Equals(version,Version10,StringComparison.Ordinal)||string.Equals(version,Version11,StringComparison.Ordinal))snapshot.Append(":RC").Append(slot.Character.RunCost);
-                    if(string.Equals(version,Version11,StringComparison.Ordinal))AppendSaleFingerprintCharacter(snapshot,slot.Character);
+                    if(mergePurchase)snapshot.Append(":RC").Append(slot.Character.RunCost);
+                    if(detailedCharacters)AppendSaleFingerprintCharacter(snapshot,slot.Character);
                     if(includeTemporaryBonuses)snapshot.Append(":TB").Append(slot.Character.TemporaryAttackBonus).Append(':').Append(slot.Character.TemporaryDefenseBonus);
+                        if(unified) AppendFingerprintTags(snapshot,slot.Character.Attributes,slot.Character.Units);
                 }
             }
             foreach(HandSlotObservation slot in observation.Hand.Slots)
@@ -485,29 +587,87 @@ namespace ProjectNST.GameCore.Strategy
                 {
                     snapshot.Append(':').Append(slot.Character.InstanceId).Append(':').Append(slot.Character.DefinitionId);
                     if(string.Equals(version,Version10,StringComparison.Ordinal))snapshot.Append(":ST").Append(slot.Character.Star).Append(":RC").Append(slot.Character.RunCost).Append(":L").Append(slot.SlotIndex);
-                    if(string.Equals(version,Version11,StringComparison.Ordinal))
+                    if(detailedCharacters)
                     {snapshot.Append(":L").Append(slot.SlotIndex);AppendSaleFingerprintCharacter(snapshot,slot.Character);}
                     if(includeTemporaryBonuses)snapshot.Append(":TB").Append(slot.Character.TemporaryAttackBonus).Append(':').Append(slot.Character.TemporaryDefenseBonus);
+                    if(unified) AppendFingerprintTags(snapshot,slot.Character.Attributes,slot.Character.Units);
                 }
                 if(slot.Item!=null)snapshot.Append(':').Append(slot.Item.DefinitionId);
             }
             if(observation.Shop!=null)foreach(ShopOfferObservation offer in observation.Shop.Offers.OrderBy(x=>x.OfferIndex))
             {
                 snapshot.Append("|O").Append(offer.OfferIndex).Append(':').Append(offer.OfferId).Append(':').Append(offer.DefinitionId).Append(':').Append(offer.DisplayPrice).Append(':').Append(offer.Status);
-                if((string.Equals(version,Version9,StringComparison.Ordinal)||string.Equals(version,Version10,StringComparison.Ordinal)||string.Equals(version,Version11,StringComparison.Ordinal))&&offer.CharacterStats!=null)
+                if((version==Version9||mergePurchase)&&offer.CharacterStats!=null)
                     snapshot.Append(":S").Append(offer.CharacterStats.IsAvailable).Append(':').Append(offer.CharacterStats.MinimumAttack)
                         .Append(':').Append(offer.CharacterStats.MaximumAttack).Append(':').Append(offer.CharacterStats.MinimumDefense)
                         .Append(':').Append(offer.CharacterStats.MaximumDefense);
-                if(string.Equals(version,Version10,StringComparison.Ordinal)||string.Equals(version,Version11,StringComparison.Ordinal))snapshot.Append(":C").Append(offer.CharacterCost);
+                if(mergePurchase)snapshot.Append(":C").Append(offer.CharacterCost);
             }
-            if(string.Equals(version,Version11,StringComparison.Ordinal)&&observation.Synergy!=null)
+            if(detailedCharacters&&observation.Synergy!=null)
             {
                 snapshot.Append("|Synergy=").Append(observation.Synergy.IsAvailable);
                 foreach(SynergyUnitObservation unit in observation.Synergy.Units.OrderBy(x=>x.UnitName,StringComparer.Ordinal))
                     snapshot.Append("|SU:").Append(unit.UnitName).Append(':').Append(string.Join(",",unit.ParticipantInstanceIds.OrderBy(x=>x,StringComparer.Ordinal)));
             }
+            if(unified) AppendV13Fingerprint(snapshot,observation);
             using(SHA256 sha=SHA256.Create())
                 return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(snapshot.ToString()))).Replace("-",string.Empty).ToLowerInvariant();
+        }
+
+        private static void AppendV13Fingerprint(StringBuilder snapshot,GameObservation observation)
+        {
+            snapshot.Append("|ShopKind=").Append(observation.Shop?.Kind).Append("|ActionAllowed=").Append(observation.IsStrategyActionAllowed);
+            foreach(var stats in observation.CharacterStats.Entries.OrderBy(x=>x.RunCost).ThenBy(x=>x.Star))
+                snapshot.Append(FormattableString.Invariant(
+                    $"|PS:{stats.RunCost}:{stats.Star}:{stats.Status}:{stats.IsAvailable}:{stats.MinimumAttack}:{stats.MaximumAttack}:{stats.MinimumDefense}:{stats.MaximumDefense}:{stats.ExpectedAttack:R}:{stats.ExpectedDefense:R}"));
+            foreach(var unit in observation.UnitRequirements.OrderBy(x=>x.UnitName,StringComparer.Ordinal))
+            {
+                snapshot.Append("|UR");
+                AppendFingerprintString(snapshot,unit.UnitName);
+                foreach(string id in unit.RequiredDefinitionIds.OrderBy(x=>x,StringComparer.Ordinal))
+                    AppendFingerprintString(snapshot,id);
+            }
+            if(observation.Shop!=null)
+                foreach(var offer in observation.Shop.Offers.OrderBy(x=>x.OfferIndex))
+                {
+                    snapshot.Append("|OK:").Append(offer.Kind);
+                    AppendFingerprintTags(snapshot,offer.Attributes,offer.Units);
+                    AppendFingerprintItem(snapshot,offer.Item);
+                }
+            foreach(var slot in observation.Hand.Slots)
+                if(slot.Item!=null) AppendFingerprintItem(snapshot,slot.Item);
+            if(observation.EventItem!=null)
+            {
+                snapshot.Append("|Event:").Append(observation.EventItem.Status);
+                AppendFingerprintItem(snapshot,observation.EventItem.Item);
+            }
+            foreach(var enemy in observation.Enemies.OrderBy(x=>x.SlotIndex))
+                snapshot.Append("|Enemy:").Append(enemy.SlotIndex).Append(':').Append(enemy.Attack)
+                    .Append(':').Append(enemy.Defense).Append(':').Append(enemy.HP);
+        }
+
+        private static void AppendFingerprintTags(StringBuilder snapshot,IReadOnlyList<string> attributes,IReadOnlyList<string> units)
+        {
+            snapshot.Append("|AT");
+            if(attributes!=null)
+                foreach(string tag in attributes.OrderBy(x=>x,StringComparer.Ordinal)) AppendFingerprintString(snapshot,tag);
+            snapshot.Append("|UN");
+            if(units!=null)
+                foreach(string tag in units.OrderBy(x=>x,StringComparer.Ordinal)) AppendFingerprintString(snapshot,tag);
+        }
+
+        private static void AppendFingerprintString(StringBuilder snapshot,string value) =>
+            snapshot.Append(':').Append(value?.Length??-1).Append(':').Append(value);
+
+        private static void AppendFingerprintItem(StringBuilder snapshot,ItemObservation item)
+        {
+            if(item==null)return;
+            snapshot.Append("|Item");
+            AppendFingerprintString(snapshot,item.DefinitionId);
+            snapshot.Append(':').Append(item.Target).Append(':').Append(item.Duration);
+            foreach(var effect in item.Effects)
+                snapshot.Append(':').Append(effect.Kind).Append(':').Append(effect.Value)
+                    .Append(':').Append(effect.Target).Append(':').Append(effect.Duration);
         }
 
         private static void AppendSaleFingerprintCharacter(StringBuilder snapshot,CharacterObservation character)
@@ -589,11 +749,12 @@ namespace ProjectNST.GameCore.Strategy
             HeuristicActionEvaluation sale=evaluations
                 .Where(x=>x.Action is SellCharacterAction action &&
                     observation.Characters.Any(c=>c.InstanceId==action.InstanceId && c.LocationKind==ObservationLocationKind.Board))
-                .OrderByDescending(x=>x.Score)
+                .OrderByDescending(x=>x.RepairScore??x.Score)
                 .ThenBy(x=>Signature(x.Action),StringComparer.Ordinal).FirstOrDefault();
             if(sale!=null)
             {
-                chosen=WithReason(sale,"Board exceeds Level and no empty Hand transfer or immediately effective level-up is available; sell the Board character with the smallest visible power/synergy loss.");
+                chosen=new HeuristicActionEvaluation(sale.Action,sale.RepairScore??sale.Score,
+                    "Board exceeds Level and no empty Hand transfer or immediately effective level-up is available; sell the Board character with the smallest visible power/synergy loss.");
                 return true;
             }
             return false;
@@ -619,7 +780,9 @@ namespace ProjectNST.GameCore.Strategy
 
         /// <summary>Candidate list is exactly the existing RandomStrategy public candidate generator; only ranking differs.</summary>
         public IReadOnlyList<HeuristicActionEvaluation> GetEvaluations(GameObservation observation,ActionId actionId)
-            => GetEvaluations(observation,actionId,new Payload(0,string.Empty,false,-1,ObservationPhase.AwaitingStageChoice,false),0,out _);
+            => _version == Version14 && observation != null && observation.Stage.Phase == ObservationPhase.Preparation
+                ? InspectV14Preparation(observation, actionId)
+                : GetEvaluations(observation,actionId,new Payload(0,string.Empty,false,-1,ObservationPhase.AwaitingStageChoice,false),0,out _);
 
         private IReadOnlyList<HeuristicActionEvaluation> GetEvaluations(GameObservation observation,ActionId actionId,Payload state,int decisions,
             out BoardEvaluationContext boardContext)
@@ -632,11 +795,13 @@ namespace ProjectNST.GameCore.Strategy
                 candidates=_candidateSource.GetCandidates(observation,actionId).ToArray();
             if(_profiler!=null){_profiler.Add("Candidate.Generated.Total",candidates.Length);foreach(var group in candidates.GroupBy(x=>x.Kind))_profiler.Add("Candidate.Generated."+group.Key,group.LongCount());}
             Dictionary<string,MergeProgressCounts> mergeProgressCounts=null;
-            bool usesV10PurchaseRules=string.Equals(_version,Version10,StringComparison.Ordinal)||string.Equals(_version,Version11,StringComparison.Ordinal);
-            PurchaseMergeEstimate[] purchaseMergeEstimates=usesV10PurchaseRules
-                ?BuildPurchaseMergeEstimates(observation,string.Equals(_version,Version11,StringComparison.Ordinal),out mergeProgressCounts):null;
+            bool compositionRepair=UsesComposition&&BoardCount(observation)>observation.Player.Level;
+            CompositionValueEvaluator composition=null;
+            PurchaseMergeEstimate[] purchaseMergeEstimates=UsesV10PurchaseRules
+                ?BuildPurchaseMergeEstimates(observation,_version==Version11||compositionRepair,out mergeProgressCounts):null;
+            if(UsesUnifiedComposition&&compositionRepair) mergeProgressCounts=CollectRepairMergeCounts(observation);
             PurchasePowerEstimate[] purchasePowerEstimates=string.Equals(_version,Version9,StringComparison.Ordinal)
-                ?BuildPurchasePowerEstimates(observation):usesV10PurchaseRules
+                ?BuildPurchasePowerEstimates(observation):UsesV10PurchaseRules
                     ?BuildPurchasePowerEstimates(observation,true,purchaseMergeEstimates):null;
             var evaluated=new List<HeuristicActionEvaluation>(candidates.Length);
             foreach(GameAction candidate in candidates)
@@ -644,22 +809,31 @@ namespace ProjectNST.GameCore.Strategy
                 _profiler?.Add("Candidate.Evaluated."+candidate.Kind);
                 using(_profiler==null?default(ProjectNST.GameCore.Sessions.SimulationProfileCollector.Scope):_profiler.Measure("Strategy.Evaluation."+candidate.Kind))
                 {
-                    if(boardContext==null&&IsBoardEvaluationAction(candidate))
-                        boardContext=new BoardEvaluationContext(this,observation);
-                    evaluated.Add(Evaluate(observation,candidate,candidates,state,decisions,boardContext,purchasePowerEstimates,purchaseMergeEstimates,mergeProgressCounts));
+                    if(IsBoardEvaluationAction(candidate))
+                    {
+                        if(boardContext==null&&(!UsesComposition||compositionRepair))
+                            boardContext=new BoardEvaluationContext(this,observation);
+                        if(UsesComposition&&composition==null)
+                            composition=CreateCompositionEvaluator(observation);
+                    }
+                    if(UsesUnifiedComposition&&candidate is BuyCharacterAction&&composition==null)
+                        composition=CreateCompositionEvaluator(observation);
+                    evaluated.Add(Evaluate(observation,candidate,candidates,state,decisions,boardContext,purchasePowerEstimates,purchaseMergeEstimates,mergeProgressCounts,composition));
                 }
             }
             return Array.AsReadOnly(evaluated.OrderByDescending(x=>x.Score)
                 .ThenBy(x=>Signature(x.Action),StringComparer.Ordinal).ToArray());
         }
 
-        private HeuristicActionEvaluation Evaluate(GameObservation o,GameAction a,GameAction[] candidates,Payload state,int decisions,BoardEvaluationContext boardContext,PurchasePowerEstimate[] purchasePowerEstimates,PurchaseMergeEstimate[] purchaseMergeEstimates,Dictionary<string,MergeProgressCounts> mergeProgressCounts)
+        private HeuristicActionEvaluation Evaluate(GameObservation o,GameAction a,GameAction[] candidates,Payload state,int decisions,BoardEvaluationContext boardContext,PurchasePowerEstimate[] purchasePowerEstimates,PurchaseMergeEstimate[] purchaseMergeEstimates,Dictionary<string,MergeProgressCounts> mergeProgressCounts,CompositionValueEvaluator composition)
         {
             double score;string reason;
+            double? repairScore=null;
             switch(a)
             {
                 case SelectStageChoiceAction x: score=ChoiceScore(o,x.Choice,out reason);break;
                 case BuyCharacterAction x:
+                    if(UsesUnifiedComposition) return EvaluateV13Purchase(o,x,composition);
                     score=CharacterBuyScore(o,x,out reason);score+=PurchasePlacementBonus(o,x);
                     if(string.Equals(_version,Version9,StringComparison.Ordinal))
                     {
@@ -688,7 +862,7 @@ namespace ProjectNST.GameCore.Strategy
                             ?"Purchase score adds the configured public Stats range-midpoint adjustment to the unchanged v8 score."
                             :"Purchase score falls back to the unchanged v8 score because the public Stats range is unavailable.";
                     }
-                    else if(string.Equals(_version,Version10,StringComparison.Ordinal)||string.Equals(_version,Version11,StringComparison.Ordinal))
+                    else if(UsesV10PurchaseRules)
                     {
                         PurchaseMergeEstimate merge=FindPurchaseMergeEstimate(o,x,purchaseMergeEstimates);
                         PurchasePowerEstimate power=FindPurchasePowerEstimate(o,x,purchasePowerEstimates);
@@ -736,10 +910,39 @@ namespace ProjectNST.GameCore.Strategy
                 case BuyItemAction x: score=ItemBuyScore(o,x,out reason);break;
                 case RerollShopAction x: score=RerollScore(o,x,out reason);break;
                 case BuyExperienceAction: score=ExperienceScore(o,out reason);break;
-                case MoveOrSwapBoardAction x: score=BoardMoveScore(o,x.SourceSlot,x.TargetSlot,boardContext,out reason);break;
+                case MoveOrSwapBoardAction x:
+                    if(!UsesComposition)
+                    {
+                        score=BoardMoveScore(o,x.SourceSlot,x.TargetSlot,boardContext,out reason);
+                        break;
+                    }
+                    // A Board permutation changes only synergy. Slot-order rounding in the
+                    // unchanged Power sum must not turn a neutral move into an improvement.
+                    double synergyDelta=composition.CompareBoardMoveOrSwap(x.SourceSlot,x.TargetSlot).Delta.BoardSynergy;
+                    score=synergyDelta>0?synergyDelta*_settings.CompositionActionScale:_settings.NoImprovementPenalty;
+                    reason=UsesUnifiedComposition&&_decisionDiagnosticSink==null?"v13 Board move.":
+                        "v"+Version+" Board synergy change: "+synergyDelta.ToString("R",CultureInfo.InvariantCulture)+".";
+                    break;
                 case MoveOrSwapHandAction: score=_settings.NoImprovementPenalty;reason="Hand slots have no public strategic ordering; avoid an unproductive rearrangement.";break;
-                case MoveBoardToHandAction x: score=CrossMoveScore(o,x.BoardSlot,x.HandSlot,true,boardContext,out reason);break;
+                case MoveBoardToHandAction x:
+                    score=UsesComposition
+                        ?CompositionTransferScore(composition.CompareBoardToHand(x.BoardSlot,x.HandSlot),0,out reason)
+                        :CrossMoveScore(o,x.BoardSlot,x.HandSlot,true,boardContext,out reason);
+                    break;
                 case MoveHandToBoardAction x:
+                    if(UsesComposition)
+                    {
+                        bool empty=IsEmptyBoardSlot(o,x.BoardSlot);
+                        if(WouldDuplicateAfterHandMove(o,x.BoardSlot,x.HandSlot)||
+                            (empty&&composition.Baseline.BoardCount>=composition.Baseline.Level))
+                        {
+                            score=_settings.NoImprovementPenalty;
+                            reason="Deployment would duplicate a Board Definition ID or exceed Level capacity.";
+                        }
+                        else score=CompositionTransferScore(composition.CompareHandToBoard(x.HandSlot,x.BoardSlot),
+                            empty?_settings.CompositionDeploymentPriority:0,out reason);
+                        break;
+                    }
                     score=CrossMoveScore(o,x.BoardSlot,x.HandSlot,false,boardContext,out reason);
                     if(WouldDuplicateAfterHandMove(o,x.BoardSlot,x.HandSlot))
                     {score=_settings.NoImprovementPenalty;reason="Would create a duplicate Definition ID on Board; Dispatcher would reject the move.";}
@@ -749,6 +952,26 @@ namespace ProjectNST.GameCore.Strategy
                     {score+=_settings.HandDeploymentPriority;reason+=" Deploys an available Hand character into unused Level capacity.";}
                     break;
                 case SellCharacterAction x:
+                    if(UsesComposition)
+                    {
+                        CharacterObservation character=o.Characters.First(c=>c.InstanceId==x.InstanceId);
+                        bool onBoard=character.LocationKind==ObservationLocationKind.Board;
+                        CompositionComparison comparison=onBoard?composition.CompareBoardRemoval(character.SlotIndex):
+                            composition.CompareHandRemoval(character.SlotIndex);
+                        double gold=SaleGoldValue(o,character);
+                        score=comparison.TotalDelta*_settings.CompositionActionScale+gold;
+                        reason=UsesUnifiedComposition
+                            ? _decisionDiagnosticSink==null?"v13 composition sale.":
+                                FormattableString.Invariant($"v13 sale: Definition={character.DefinitionId}; composition delta={comparison.TotalDelta:R}; one-star progress delta={comparison.Delta.OneStarMergeProgress:R}; Gold={gold:R}.")
+                            : FormattableString.Invariant($"v12 sale: composition delta={comparison.TotalDelta:R}; Gold={gold:R}.");
+                        if(onBoard&&composition.Baseline.OverLevelCount>0)
+                        {
+                            double legacyScore=CharacterSellScoreV11(o,x.InstanceId,boardContext,mergeProgressCounts,out _);
+                            repairScore=double.IsNaN(legacyScore)||double.IsInfinity(legacyScore)
+                                ?_settings.NoImprovementPenalty:legacyScore;
+                        }
+                        break;
+                    }
                     score=string.Equals(_version,Version11,StringComparison.Ordinal)
                         ?CharacterSellScoreV11(o,x.InstanceId,boardContext,mergeProgressCounts,out reason)
                         :CharacterSellScore(o,x.InstanceId,boardContext,out reason);
@@ -761,7 +984,61 @@ namespace ProjectNST.GameCore.Strategy
                 default: score=_settings.NoImprovementPenalty;reason="Unsupported candidate.";break;
             }
             if(double.IsNaN(score)||double.IsInfinity(score)){score=_settings.NoImprovementPenalty;reason+=" Non-finite score replaced by fallback.";}
-            return new HeuristicActionEvaluation(a,score,reason);
+            return new HeuristicActionEvaluation(a,score,reason,repairScore);
+        }
+
+        private double CompositionTransferScore(CompositionComparison comparison,double deployment,out string reason)
+        {
+            double repair=(comparison.Before.OverLevelCount-comparison.After.OverLevelCount)*_settings.OverLevelReliefValue;
+            reason=UsesUnifiedComposition&&_decisionDiagnosticSink==null?"v13 composition transfer.":
+                FormattableString.Invariant($"v{Version} transfer: composition delta={comparison.TotalDelta:R}; deployment={deployment:R}; Level repair={repair:R}.");
+            return comparison.TotalDelta*_settings.CompositionActionScale+deployment+repair;
+        }
+
+        private CompositionValueEvaluator CreateCompositionEvaluator(GameObservation observation) =>
+            new CompositionValueEvaluator(observation,_settings.CompositionHandReserveWeight,_settings,
+                UsesUnifiedComposition?_settings.CompositionHandDuplicateWeight:(double?)null);
+
+        /// <summary>Scores an explicit purchase without generating candidates or executing it.</summary>
+        public HeuristicActionEvaluation EvaluateV13Purchase(GameObservation observation,BuyCharacterAction action)
+        {
+            if(!UsesUnifiedComposition) throw new InvalidOperationException("Explicit purchase scoring requires Heuristic v13.");
+            return EvaluateV13Purchase(observation,action,CreateCompositionEvaluator(observation));
+        }
+
+        private HeuristicActionEvaluation EvaluateV13Purchase(GameObservation observation,BuyCharacterAction action,
+            CompositionValueEvaluator evaluator)
+        {
+            var result=evaluator.ComparePurchase(action);
+            var preview=result.Preview;
+            string reason;
+            if(!result.Succeeded)
+            {
+                reason=result.Failure==PurchaseCompositionFailure.PreviewUnavailable?"PreviewUnavailable":"PublicStatsUnavailable";
+                if(_decisionDiagnosticSink!=null)
+                {
+                    if(!preview.Succeeded) reason+=": "+preview.Failure;
+                    else reason+=": "+string.Join(", ",result.StatRolls.Select((roll,index)=>new {roll,index})
+                        .Where(entry=>!entry.roll.Stats.IsAvailable)
+                        .Select(entry=>FormattableString.Invariant($"roll {entry.index+1} Cost {entry.roll.Roll.RunCost} Star {entry.roll.Roll.Star} {entry.roll.Stats.Status}")));
+                }
+                return new HeuristicActionEvaluation(action,double.NegativeInfinity,reason,isSelectable:false);
+            }
+            if(preview.After.OverLevelCount>preview.Before.OverLevelCount)
+            {
+                reason=_decisionDiagnosticSink==null?"Purchase increases Board Level excess.":
+                    FormattableString.Invariant($"Purchase increases Board Level excess: {preview.Before.OverLevelCount}->{preview.After.OverLevelCount}.");
+                return new HeuristicActionEvaluation(action,double.NegativeInfinity,reason,isSelectable:false);
+            }
+            double gold=ApplyPurchaseEconomy(0,observation.Player.Gold,Offer(observation,action.OfferId).DisplayPrice);
+            double deployment=preview.After.BoardCount>preview.Before.BoardCount&&preview.After.OverLevelCount==0
+                ? (preview.Before.BoardCount==0?_settings.EmptyBoardPurchasePriority:_settings.BoardFillValue) : 0;
+            double score=result.TotalDelta.Value*_settings.CompositionActionScale+gold+deployment;
+            if(double.IsNaN(score)||double.IsInfinity(score))
+                return new HeuristicActionEvaluation(action,double.NegativeInfinity,"Non-finite purchase score.",isSelectable:false);
+            reason=_decisionDiagnosticSink==null?"v13 composition purchase.":
+                FormattableString.Invariant($"v13 purchase: Definition={preview.DefinitionId}; composition delta={result.TotalDelta.Value:R}; Gold={gold:R}; deployment={deployment:R}; merge stages={preview.MergeStageCount}; Level excess={preview.Before.OverLevelCount}->{preview.After.OverLevelCount}.");
+            return new HeuristicActionEvaluation(action,score,reason);
         }
 
         private struct PurchasePowerEstimate
@@ -827,6 +1104,18 @@ namespace ProjectNST.GameCore.Strategy
             public readonly int OneStarCount,TwoStarCount;
             public MergeProgressCounts(int oneStarCount,int twoStarCount)
             {OneStarCount=oneStarCount;TwoStarCount=twoStarCount;}
+        }
+
+        private static Dictionary<string,MergeProgressCounts> CollectRepairMergeCounts(GameObservation observation)
+        {
+            var counts=new Dictionary<string,MergeProgressCounts>(StringComparer.Ordinal);
+            foreach(var character in observation.Characters)
+            {
+                counts.TryGetValue(character.DefinitionId,out var previous);
+                counts[character.DefinitionId]=new MergeProgressCounts(previous.OneStarCount+(character.Star==1?1:0),
+                    previous.TwoStarCount+(character.Star==2?1:0));
+            }
+            return counts;
         }
 
         private static PurchaseMergeEstimate[] BuildPurchaseMergeEstimates(GameObservation observation,bool includeProgressCounts,
@@ -930,12 +1219,17 @@ namespace ProjectNST.GameCore.Strategy
             double value=_settings.CharacterPurchaseValue;
             if(one>=2)value+=_settings.MergePotentialValue;
             if(one>=2&&two>=2)value+=_settings.MergeChainPotentialValue;
-            int excess=Math.Max(0,o.Player.Gold-_settings.GoldReserve);
-            value-=offer.DisplayPrice*_settings.GoldSpendPenaltyPerGold;
-            value-=Math.Max(0,offer.DisplayPrice-excess)*_settings.GoldSpendPenaltyPerGold;
-            value+=Math.Max(0,o.Player.Gold-offer.DisplayPrice-_settings.GoldReserve)*_settings.ExcessGoldValuePerGold;
+            value=ApplyPurchaseEconomy(value,o.Player.Gold,offer.DisplayPrice);
             reason=one>=2?"Visible copies suggest a possible merge; actual eligibility remains with Dispatcher.":
                 "Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation.";
+            return value;
+        }
+        private double ApplyPurchaseEconomy(double value,int gold,int price)
+        {
+            int excess=Math.Max(0,gold-_settings.GoldReserve);
+            value-=price*_settings.GoldSpendPenaltyPerGold;
+            value-=Math.Max(0,price-excess)*_settings.GoldSpendPenaltyPerGold;
+            value+=Math.Max(0,gold-price-_settings.GoldReserve)*_settings.ExcessGoldValuePerGold;
             return value;
         }
         private double PurchasePlacementBonus(GameObservation o,BuyCharacterAction a)
@@ -1030,8 +1324,6 @@ namespace ProjectNST.GameCore.Strategy
         {
             CharacterObservation c=o.Characters.FirstOrDefault(x=>x.InstanceId==id);
             if(c==null){reason="Character is not publicly owned.";return _settings.NoImprovementPenalty;}
-            int copies=c.Star==1?1:c.Star==2?3:c.Star==3?9:1;
-            int proceeds=c.RunCost*copies;
             double combatPowerLoss=c.LocationKind==ObservationLocationKind.Board
                 ?Math.Max(0,boardContext.BaseQuality-boardContext.QualityAfterReplacement(c.SlotIndex,null))
                 :Power(c)*0.35;
@@ -1048,8 +1340,7 @@ namespace ProjectNST.GameCore.Strategy
             if(c.LocationKind==ObservationLocationKind.Hand)
                 handCapacityRelief=o.Hand.EmptySlotCount==0?_settings.HandCapacityPenaltyNoEmpty:
                     o.Hand.EmptySlotCount==1?_settings.HandCapacityPenaltyOneEmpty:0;
-            double gold=Math.Min(proceeds,Math.Max(0,_settings.GoldReserve-o.Player.Gold))*_settings.SellGoldValuePerGold;
-            if(o.Player.Gold<_settings.GoldReserve)gold+=proceeds*_settings.SellGoldValuePerGold*0.25;
+            double gold=SaleGoldValue(o,c);
             reason="v11 sale: Gold="+gold.ToString("R",CultureInfo.InvariantCulture)+
                 "; BoardQualityLoss="+(c.LocationKind==ObservationLocationKind.Board?combatPowerLoss.ToString("R",CultureInfo.InvariantCulture):"0")+
                 "; HandPowerLoss="+(c.LocationKind==ObservationLocationKind.Hand?combatPowerLoss.ToString("R",CultureInfo.InvariantCulture):"0")+
@@ -1059,11 +1350,36 @@ namespace ProjectNST.GameCore.Strategy
             return gold-_settings.CharacterSaleLossPenalty-combatPowerLoss-mergeProgressLoss+handCapacityRelief;
         }
 
+        private double SaleGoldValue(GameObservation observation,CharacterObservation character)
+        {
+            int copies=character.Star==1?1:character.Star==2?3:character.Star==3?9:1;
+            int proceeds=character.RunCost*copies;
+            double gold=Math.Min(proceeds,Math.Max(0,_settings.GoldReserve-observation.Player.Gold))*_settings.SellGoldValuePerGold;
+            if(observation.Player.Gold<_settings.GoldReserve)gold+=proceeds*_settings.SellGoldValuePerGold*0.25;
+            return gold;
+        }
+
         private double MergeProgressHoldingValue(int oneStarCount,int twoStarCount)
         {
-            double oneStar=oneStarCount>=2?_settings.MergeProgressOneStarValue:0;
-            double twoStar=twoStarCount<=0?0:twoStarCount==1?
-                _settings.MergeProgressOneStarTwoStarValue:_settings.MergeProgressTwoStarTwoCopiesValue;
+            // The v13 normal sale uses the new state value. The dedicated repair ranking
+            // intentionally keeps the v12 default retention coefficients.
+            if (UsesUnifiedComposition)
+                return EvaluateMergeProgress(oneStarCount,twoStarCount,HeuristicStrategySettings.LegacyOneStarProgress,
+                    HeuristicStrategySettings.LegacySingleTwoStarProgress,HeuristicStrategySettings.LegacyPairTwoStarProgress,
+                    out _,out _);
+            return EvaluateMergeProgress(oneStarCount,twoStarCount,_settings,out _,out _);
+        }
+
+        internal static double EvaluateMergeProgress(int oneStarCount, int twoStarCount,
+            HeuristicStrategySettings settings, out double oneStar, out double twoStar)
+            => EvaluateMergeProgress(oneStarCount,twoStarCount,settings.MergeProgressOneStarValue,
+                settings.MergeProgressOneStarTwoStarValue,settings.MergeProgressTwoStarTwoCopiesValue,out oneStar,out twoStar);
+
+        private static double EvaluateMergeProgress(int oneStarCount,int twoStarCount,double pairOfOnes,
+            double singleTwo,double pairOfTwos,out double oneStar,out double twoStar)
+        {
+            oneStar=oneStarCount>=2?pairOfOnes:0;
+            twoStar=twoStarCount<=0?0:twoStarCount==1?singleTwo:pairOfTwos;
             return oneStar+twoStar;
         }
         private double HandItemScore(GameObservation o,UseHandItemAction a,out string reason)
@@ -1142,19 +1458,75 @@ namespace ProjectNST.GameCore.Strategy
         private double Quality(CharacterObservation[] board,int cols,SynergyObservation synergy)
         {
             double score=board.Where(c=>c!=null).Sum(Power);
-            var attrs=new Dictionary<string,List<int>>(StringComparer.Ordinal);var units=new Dictionary<string,List<int>>(StringComparer.Ordinal);
-            for(int i=0;i<board.Length;i++)if(board[i]!=null){foreach(string t in board[i].Attributes.Distinct(StringComparer.Ordinal)){if(!attrs.TryGetValue(t,out var l))attrs[t]=l=new List<int>();l.Add(i);}foreach(string t in board[i].Units.Distinct(StringComparer.Ordinal)){if(!units.TryGetValue(t,out var l))units[t]=l=new List<int>();l.Add(i);}}
-            score+=attrs.Values.Count(v=>v.Count>=2)*_settings.AttributeSharedValue;
-            foreach(var p in units.OrderBy(p=>p.Key,StringComparer.Ordinal))score+=Math.Max(0,MaxComponent(p.Value,board,p.Key,cols)-1)*_settings.UnitPartialValue;
-            if(synergy!=null&&synergy.IsAvailable)foreach(var u in synergy.Units){var slots=new List<int>();foreach(string id in u.ParticipantInstanceIds){int ix=Array.FindIndex(board,c=>c!=null&&c.InstanceId==id);if(ix<0){slots.Clear();break;}slots.Add(ix);}if(slots.Count>=2&&slots.Count==u.ParticipantInstanceIds.Count&&Connected(slots,cols))score+=_settings.UnitEstablishedValue;}
+            return AddBoardSynergy(board,cols,synergy,_settings,score,out _,out _,out _);
+        }
+
+        internal static double AddBoardSynergy(CharacterObservation[] board, int cols, SynergyObservation synergy,
+            HeuristicStrategySettings settings, double score, out double attribute, out double partial,
+            out double completed)
+        {
+            score = AddBoardTagSynergy(board, cols, settings, score,
+                static c => c?.Attributes, static c => c?.Units, out attribute, out partial);
+            completed = 0;
+            if (synergy != null && synergy.IsAvailable)
+            {
+                foreach (var unit in synergy.Units)
+                {
+                    var slots = new List<int>();
+                    foreach (string id in unit.ParticipantInstanceIds)
+                    {
+                        int index = Array.FindIndex(board, c => c != null && c.InstanceId == id);
+                        if (index < 0) break;
+                        slots.Add(index);
+                    }
+                    if (slots.Count < 2 || slots.Count != unit.ParticipantInstanceIds.Count || !Connected(slots, cols))
+                        continue;
+                    score += settings.UnitEstablishedValue;
+                    completed += settings.UnitEstablishedValue;
+                }
+            }
             return score;
         }
-        private static int MaxComponent(List<int> slots,CharacterObservation[] board,string unit,int cols)
-        {var left=new HashSet<int>(slots);int max=0;while(left.Count>0){int n=left.Min(),count=0;left.Remove(n);var q=new Queue<int>();q.Enqueue(n);while(q.Count>0){int x=q.Dequeue();count++;foreach(int y in Neighbors(x,cols,board.Length))if(left.Contains(y)&&board[y].Units.Contains(unit)){left.Remove(y);q.Enqueue(y);}}max=Math.Max(max,count);}return max;}
-        private static bool Connected(List<int> slots,int cols)
+        internal static double AddBoardTagSynergy<T>(T[] board, int columns, HeuristicStrategySettings settings,
+            double score, Func<T, IReadOnlyList<string>> attributes, Func<T, IReadOnlyList<string>> unitTags,
+            out double attribute, out double partial)
+        {
+            var attrs = new Dictionary<string, List<int>>(StringComparer.Ordinal);
+            var units = new Dictionary<string, List<int>>(StringComparer.Ordinal);
+            for (int slot = 0; slot < board.Length; slot++)
+            {
+                AddBoardTags(attrs, attributes(board[slot]), slot);
+                AddBoardTags(units, unitTags(board[slot]), slot);
+            }
+            attribute = attrs.Values.Count(v => v.Count >= 2) * settings.AttributeSharedValue;
+            partial = 0;
+            // Keep the original quality addition order, including one addition per Unit.
+            score += attribute;
+            foreach (var pair in units.OrderBy(p => p.Key, StringComparer.Ordinal))
+            {
+                double value = Math.Max(0, MaxComponent(pair.Value, board.Length, columns) - 1) * settings.UnitPartialValue;
+                score += value;
+                partial += value;
+            }
+            return score;
+        }
+
+        private static void AddBoardTags(Dictionary<string, List<int>> groups, IReadOnlyList<string> tags, int slot)
+        {
+            if (tags == null) return;
+            foreach (string tag in tags.Distinct(StringComparer.Ordinal))
+            {
+                if (!groups.TryGetValue(tag, out var group)) groups[tag] = group = new List<int>();
+                group.Add(slot);
+            }
+        }
+
+        private static int MaxComponent(List<int> slots,int boardLength,int cols)
+        {var left=new HashSet<int>(slots);int max=0;while(left.Count>0){int n=left.Min(),count=0;left.Remove(n);var q=new Queue<int>();q.Enqueue(n);while(q.Count>0){int x=q.Dequeue();count++;foreach(int y in Neighbors(x,cols,boardLength))if(left.Remove(y))q.Enqueue(y);}max=Math.Max(max,count);}return max;}
+        internal static bool Connected(List<int> slots,int cols)
         {var left=new HashSet<int>(slots);var q=new Queue<int>();int first=left.First();left.Remove(first);q.Enqueue(first);while(q.Count>0)foreach(int n in Neighbors(q.Dequeue(),cols,int.MaxValue))if(left.Remove(n))q.Enqueue(n);return left.Count==0;}
         private static IEnumerable<int> Neighbors(int x,int cols,int count){int col=x%cols;if(col>0)yield return x-1;if(col+1<cols&&x+1<count)yield return x+1;if(x-cols>=0)yield return x-cols;if(x+cols<count)yield return x+cols;}
-        private static CharacterObservation[] BoardCharacters(BoardObservation b){var a=new CharacterObservation[b.Slots.Count];foreach(var s in b.Slots)if(s.SlotIndex>=0&&s.SlotIndex<a.Length)a[s.SlotIndex]=s.Character;return a;}
+        internal static CharacterObservation[] BoardCharacters(BoardObservation b){var a=new CharacterObservation[b.Slots.Count];foreach(var s in b.Slots)if(s.SlotIndex>=0&&s.SlotIndex<a.Length)a[s.SlotIndex]=s.Character;return a;}
         private double Power(CharacterObservation c)=>CharacterPowerEvaluator.Evaluate(c==null?0:c.Attack,
             c==null?0:c.Defense,c==null?0:c.TemporaryAttackBonus,c==null?0:c.TemporaryDefenseBonus,
             c==null?0:c.Star,_settings.AttackValue,_settings.DefenseValue,_settings.CharacterStarValue,
@@ -1214,6 +1586,12 @@ namespace ProjectNST.GameCore.Strategy
     public static class CharacterPowerEvaluator
     {
         public static double Evaluate(int attack, int defense, int temporaryAttackBonus,
+            int temporaryDefenseBonus, int star, double attackWeight, double defenseWeight,
+            double starWeight, bool includeTemporaryBonuses)
+            => Evaluate((double)attack, defense, temporaryAttackBonus, temporaryDefenseBonus, star,
+                attackWeight, defenseWeight, starWeight, includeTemporaryBonuses);
+
+        public static double Evaluate(double attack, double defense, int temporaryAttackBonus,
             int temporaryDefenseBonus, int star, double attackWeight, double defenseWeight,
             double starWeight, bool includeTemporaryBonuses)
         {

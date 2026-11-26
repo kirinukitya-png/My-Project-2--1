@@ -12,6 +12,7 @@ using ProjectNST.GameCore.Items;
 using ProjectNST.GameCore.Observation;
 using ProjectNST.GameCore.Shop;
 using ProjectNST.GameCore.Stages;
+using ProjectNST.GameCore.Synergy;
 
 namespace ProjectNST.GameCore.Sessions
 {
@@ -38,6 +39,8 @@ namespace ProjectNST.GameCore.Sessions
         public IReadOnlyList<CharacterDefinition> SelectedRoster { get; }
         public IReadOnlyList<RosterDefinitionObservation> SelectedRosterObservation { get; }
         public IReadOnlyList<CharacterDefinition> FullCharacterRoster { get; }
+        internal PublicCharacterStatsCatalog PublicCharacterStats { get; }
+        internal SynergyDetector.RosterRules RosterRules { get; }
         public IReadOnlyList<ItemDefinition> ItemDefinitions { get; }
         public ItemDefinition EventItemDefinition { get; }
         public IReadOnlyList<ItemDefinition> ObservationItemDefinitions { get; }
@@ -92,6 +95,8 @@ namespace ProjectNST.GameCore.Sessions
             SelectedRoster = Copy(selectedRoster, nameof(selectedRoster));
             SelectedRosterObservation = BuildRosterObservation(SelectedRoster);
             FullCharacterRoster = Copy(fullCharacterRoster, nameof(fullCharacterRoster));
+            PublicCharacterStats = new PublicCharacterStatsCatalog(CharacterStatSettings);
+            RosterRules = SynergyDetector.BuildRosterRules(SelectedRoster, FullCharacterRoster);
             ItemDefinitions = Copy(itemDefinitions, nameof(itemDefinitions));
             EventItemDefinition = eventItemDefinition;
             var observationItems = new List<ItemDefinition>(ItemDefinitions);

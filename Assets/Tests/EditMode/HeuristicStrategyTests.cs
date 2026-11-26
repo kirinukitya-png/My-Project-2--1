@@ -17,7 +17,7 @@ using ProjectNST.GameCore.Strategy;
 
 namespace ProjectNST.GameCore.Tests
 {
-    public sealed class HeuristicStrategyTests
+    public sealed partial class HeuristicStrategyTests
     {
         private static readonly string Sid=HeuristicStrategy.StableId, Ver=HeuristicStrategy.StableVersion;
         private static StageProgressConfig Config(int choice=5,int eventChance=0) =>
@@ -53,6 +53,934 @@ namespace ProjectNST.GameCore.Tests
             new[]{new ShopOffer("offer",ShopOfferKind.Character,def,price,1)},1,1,1);
         private static CharacterStatDefinition Stats(params CharacterStatOption[] options)=>new CharacterStatDefinition(new[]{
             new CharacterCostStats(1,options,options,options)});
+
+        [Test]
+        public void CompositionCombatUsesObservedStatsTemporaryBonusesAndStar()
+        {
+            var definition = Def("combat");
+            var character = Inst("fighter", definition, 2);
+            Assert.That(character.EnsureStats(definition, Stats(new CharacterStatOption(2, 2, 1)),
+                new Pcg32RandomSource(1, 2)), Is.True);
+            character.TemporaryAttackBonus = 3;
+            character.TemporaryDefenseBonus = 2;
+            var observation = Build(Prep(), board: Put(BoardState.CreateStandard(), 0, character.InstanceId),
+                owned: new[] { character }, defs: new[] { definition });
+
+            var value = new CompositionValueEvaluator(observation).Baseline.Value;
+            Assert.That(value.BoardCombat, Is.EqualTo(8.15).Within(1e-12));
+            Assert.That(value.BoardSynergy, Is.Zero);
+            Assert.That(value.HandReserve, Is.Zero);
+        }
+
+        [Test]
+        public void CompositionSynergyUsesLegacyQualityForBaselineMoveSwapAndRemoval()
+        {
+            var definitions = new[]
+            {
+                Def("a", new[] { "Fire" }, new[] { "Pair" }),
+                Def("b", new[] { "Fire" }, new[] { "Pair" }),
+                Def("c")
+            };
+            var characters = definitions.Select(d => Inst(d.DefinitionId, d)).ToArray();
+            Assert.That(characters[0].EnsureStats(definitions[0], Stats(new CharacterStatOption(2, 0, 1)),
+                new Pcg32RandomSource(2, 3)), Is.True);
+            var board = Put(Put(Put(BoardState.CreateStandard(), 0, "a"), 1, "b"), 8, "c");
+            var observation = Build(Prep(), Econ(level: 2), board, owned: characters, defs: definitions);
+            var settings = HeuristicStrategy.CreateV11().Settings;
+            var evaluator = new CompositionValueEvaluator(observation);
+            var baseline = evaluator.Baseline;
+
+            Assert.That(baseline.Value.AttributeSynergy, Is.EqualTo(5));
+            Assert.That(baseline.Value.UnitPartialConnectivity, Is.EqualTo(2));
+            Assert.That(baseline.Value.CompletedUnitSynergy, Is.EqualTo(8));
+            Assert.That(baseline.Value.BoardCombat + baseline.Value.BoardSynergy, Is.EqualTo(17));
+            Assert.That(baseline.Value.Total, Is.EqualTo(17));
+            Assert.That(baseline.BoardQuality, Is.EqualTo(LegacyBoardQuality(
+                LegacyBoardCharacters(observation.Board), observation.Board.Columns, observation.Synergy, settings)));
+            Assert.That(baseline.BoardCount, Is.EqualTo(3));
+            Assert.That(baseline.Level, Is.EqualTo(2));
+            Assert.That(baseline.EmptyBoardSlots, Is.EqualTo(6));
+            Assert.That(baseline.OverLevelCount, Is.EqualTo(1));
+
+            foreach (int destination in new[] { 7, 8 })
+            {
+                var change = evaluator.CompareBoardMoveOrSwap(1, destination);
+                var projected = LegacyBoardCharacters(observation.Board);
+                (projected[1], projected[destination]) = (projected[destination], projected[1]);
+                Assert.That(change.After.BoardQuality, Is.EqualTo(LegacyBoardQuality(projected,
+                    observation.Board.Columns, observation.Synergy, settings)));
+                Assert.That(change.Delta.AttributeSynergy, Is.Zero);
+                Assert.That(change.Delta.UnitPartialConnectivity, Is.EqualTo(-2));
+                Assert.That(change.Delta.CompletedUnitSynergy, Is.EqualTo(-8));
+                Assert.That(change.TotalDelta, Is.EqualTo(-10));
+            }
+
+            var removal = evaluator.CompareBoardRemoval(0);
+            Assert.That(removal.Delta.BoardCombat, Is.EqualTo(-2));
+            Assert.That(removal.Delta.BoardSynergy, Is.EqualTo(-15));
+            Assert.That(removal.TotalDelta, Is.EqualTo(-17));
+            Assert.That(removal.After.OverLevelCount, Is.Zero);
+            Assert.That(removal.Delta.BoardCapacity, Is.Zero);
+            Assert.That(evaluator.CompareBoardMoveOrSwap(1, 8).TotalDelta, Is.EqualTo(-10));
+            Assert.That(observation.Board.Slots[0].Character, Is.SameAs(observation.Characters.Single(c => c.InstanceId == "a")));
+            Assert.That(observation.Board.Slots[1].Character.InstanceId, Is.EqualTo("b"));
+        }
+
+        [TestCase(0, -7, 5)]
+        [TestCase(1, -2, 2)]
+        [TestCase(2, 0, 0)]
+        public void CompositionHandCapacityCountsItemsButExcludesThemFromPower(int empty, int value, int relief)
+        {
+            var item = new ItemDefinition("item", "Item", 0, "", ItemEffectTarget.Player,
+                ItemEffectDuration.Immediate, new[] { new ItemEffectDefinition(ItemEffectKind.Block, 1) });
+            var hand = HandState.CreateStandard();
+            for (int slot = 0; slot < hand.SlotCount - empty; slot++)
+                hand = Put(hand, slot, HandSlotContent.Item(item.DefinitionId));
+            var observation = Build(Prep(), hand: hand, items: new[] { item });
+            var evaluator = new CompositionValueEvaluator(observation);
+
+            Assert.That(evaluator.Baseline.EmptyHandSlots, Is.EqualTo(empty));
+            Assert.That(evaluator.Baseline.Value.HandReserve, Is.Zero);
+            Assert.That(evaluator.Baseline.Value.HandCapacity, Is.EqualTo(value));
+            Assert.That(evaluator.Baseline.Value.Total, Is.EqualTo(value));
+            Assert.That(evaluator.CompareHandRemoval(0).TotalDelta, Is.EqualTo(relief));
+            Assert.That(evaluator.CompareHandMoveOrSwap(0, hand.SlotCount - 1).TotalDelta, Is.Zero);
+            Assert.Throws<InvalidOperationException>(() => evaluator.CompareHandToBoard(0, 0));
+        }
+
+        [TestCase(1, 1, 0, 0)]
+        [TestCase(1, 2, 8, 0)]
+        [TestCase(1, 3, 8, 0)]
+        [TestCase(2, 1, 0, 2)]
+        [TestCase(2, 2, 0, 4)]
+        [TestCase(2, 3, 0, 4)]
+        [TestCase(3, 2, 0, 0)]
+        public void CompositionMergeProgressCountsOnlyRealInstancesAtEachObservedStar(
+            int star, int count, int oneStar, int twoStar)
+        {
+            var definition = Def("same");
+            var characters = Enumerable.Range(0, count)
+                .Select(i => new CharacterInstance("copy" + i, definition, i + 1, star, 3)).ToArray();
+            var board = Put(BoardState.CreateStandard(), 0, characters[0].InstanceId);
+            var hand = HandState.CreateStandard();
+            for (int i = 1; i < count; i++)
+                hand = Put(hand, i - 1, HandSlotContent.Character(characters[i].InstanceId));
+            var observation = Build(Prep(), board: board, hand: hand, owned: characters, defs: new[] { definition });
+            var evaluator = new CompositionValueEvaluator(observation);
+            var value = evaluator.Baseline.Value;
+            var removal = evaluator.CompareBoardRemoval(0);
+
+            Assert.That(value.OneStarMergeProgress, Is.EqualTo(oneStar));
+            Assert.That(value.TwoStarMergeProgress, Is.EqualTo(twoStar));
+            Assert.That(evaluator.CompareBoardToHand(0, 4).Delta.MergeProgress, Is.Zero);
+            var sale = HeuristicStrategy.CreateV11().GetEvaluations(observation, new ActionId("composition-merge"))
+                .Single(x => x.Action is SellCharacterAction action && action.InstanceId == characters[0].InstanceId);
+            Assert.That(sale.Score, Is.EqualTo(-18 + removal.Delta.BoardCombat + removal.Delta.MergeProgress).Within(1e-12));
+        }
+
+        [Test]
+        public void CompositionUsesItemRaisedStarAndPreservesRandomStateDuringEvaluation()
+        {
+            var definition = Def("upgrade");
+            var character = Inst("upgraded", definition);
+            var rng = new Pcg32RandomSource(3, 5);
+            // This is the Character operation used by a battle-limited Star Item.
+            Assert.That(character.TrySetTemporaryStar(2, definition,
+                Stats(new CharacterStatOption(2, 2, 1)), rng), Is.True);
+            Assert.That(character.PoolCopies, Is.EqualTo(1));
+            var observation = Build(Prep(), hand: Put(HandState.CreateStandard(), 0,
+                HandSlotContent.Character(character.InstanceId)), owned: new[] { character }, defs: new[] { definition });
+            var rngBefore = rng.CaptureState();
+            var evaluator = new CompositionValueEvaluator(observation);
+
+            Assert.That(evaluator.Baseline.Value.OneStarMergeProgress, Is.Zero);
+            Assert.That(evaluator.Baseline.Value.TwoStarMergeProgress, Is.EqualTo(2));
+            Assert.That(evaluator.CompareHandRemoval(0).Delta.TwoStarMergeProgress, Is.EqualTo(-2));
+            Assert.That(rng.CaptureState(), Is.EqualTo(rngBefore));
+        }
+
+        [Test]
+        public void CompositionDeploymentAndReturnHaveOppositeDeltasAndLeaveObservationsIntact()
+        {
+            var definition = Def("deploy");
+            var character = Inst("resident", definition);
+            Assert.That(character.EnsureStats(definition, Stats(new CharacterStatOption(2, 2, 1)),
+                new Pcg32RandomSource(5, 7)), Is.True);
+            var handObservation = Build(Prep(), hand: Put(HandState.CreateStandard(), 0,
+                HandSlotContent.Character(character.InstanceId)), owned: new[] { character }, defs: new[] { definition });
+            var boardObservation = Build(Prep(), board: Put(BoardState.CreateStandard(), 0, character.InstanceId),
+                owned: new[] { character }, defs: new[] { definition });
+            var hand = new CompositionValueEvaluator(handObservation);
+            var board = new CompositionValueEvaluator(boardObservation);
+            var deploy = hand.CompareHandToBoard(0, 0);
+            var withdraw = board.CompareBoardToHand(0, 0);
+
+            Assert.That(hand.Baseline.Value.HandReserve, Is.EqualTo(1.12).Within(1e-12));
+            Assert.That(new CompositionValueEvaluator(handObservation, handReserveWeight: 0.5)
+                .Baseline.Value.HandReserve, Is.EqualTo(1.6).Within(1e-12));
+            Assert.That(deploy.Delta.BoardCombat, Is.EqualTo(3.2).Within(1e-12));
+            Assert.That(deploy.Delta.HandReserve, Is.EqualTo(-1.12).Within(1e-12));
+            Assert.That(deploy.Delta.BoardSynergy, Is.Zero);
+            Assert.That(deploy.Delta.MergeProgress, Is.Zero);
+            Assert.That(deploy.Delta.Capacity, Is.Zero);
+            Assert.That(deploy.TotalDelta, Is.EqualTo(2.08).Within(1e-12));
+            Assert.That(withdraw.TotalDelta, Is.EqualTo(-deploy.TotalDelta));
+            Assert.That(hand.CompareHandRemoval(0).TotalDelta, Is.EqualTo(-1.12).Within(1e-12));
+            Assert.That(hand.CompareHandToBoard(0, 0).TotalDelta, Is.EqualTo(deploy.TotalDelta));
+            Assert.That(new CompositionValueEvaluator(handObservation).Baseline.Value.Total,
+                Is.EqualTo(hand.Baseline.Value.Total));
+            Assert.That(handObservation.Board.Slots[0].Character, Is.Null);
+            Assert.That(handObservation.Hand.Slots[0].Character.LocationKind, Is.EqualTo(ObservationLocationKind.Hand));
+            Assert.That(boardObservation.Board.Slots[0].Character.LocationKind, Is.EqualTo(ObservationLocationKind.Board));
+        }
+
+        [TestCase(0, false, 31.04)]
+        [TestCase(1, false, 7.04)]
+        [TestCase(2, false, -8.96)]
+        [TestCase(0, true, -32.96)]
+        public void V12HandSaleScoresCompositionOnce(int empty, bool pair, double expected)
+        {
+            var definition = Def("sale");
+            var target = V12Fighter("target", definition, 2, 2);
+            var peer = V12Fighter("peer", definition, 2, 2);
+            var items = V12Fillers();
+            var hand = Put(HandState.CreateStandard(), 0, HandSlotContent.Character(target.InstanceId));
+            if (pair) hand = Put(hand, 1, HandSlotContent.Character(peer.InstanceId));
+            for (int slot = pair ? 2 : 1; slot < hand.SlotCount - empty; slot++)
+                hand = Put(hand, slot, HandSlotContent.Item(items[slot].DefinitionId));
+            var observation = Build(Prep(), Econ(gold: 20), hand: hand,
+                owned: pair ? new[] { target, peer } : new[] { target }, defs: new[] { definition }, items: items);
+            var scores = HeuristicStrategy.CreateV12().GetEvaluations(observation, new ActionId("v12-hand-sale"));
+            Assert.That(scores.Single(e => e.Action is SellCharacterAction sale && sale.InstanceId == target.InstanceId).Score,
+                Is.EqualTo(expected).Within(1e-12));
+            Assert.That(scores.Where(e => e.Action is MoveOrSwapHandAction).All(e => e.Score == -100), Is.True);
+        }
+
+        [TestCase(0, 156.64)]
+        [TestCase(2, 116.64)]
+        public void V12DeploymentScoresReserveAndCapacityWithPriorityOnlyBelowLevel(int empty, double expected)
+        {
+            var definition = Def("deploy-v12");
+            var target = V12Fighter("deploy-target", definition, 2, 2);
+            var items = V12Fillers();
+            var hand = Put(HandState.CreateStandard(), 0, HandSlotContent.Character(target.InstanceId));
+            for (int slot = 1; slot < hand.SlotCount - empty; slot++)
+                hand = Put(hand, slot, HandSlotContent.Item(items[slot].DefinitionId));
+            var observation = Build(Prep(), hand: hand, owned: new[] { target }, defs: new[] { definition }, items: items);
+            var oldScore = V12Score<MoveHandToBoardAction>(HeuristicStrategy.CreateV11(), observation, a => a.BoardSlot == 0);
+            var newScore = V12Score<MoveHandToBoardAction>(HeuristicStrategy.CreateV12(), observation, a => a.BoardSlot == 0);
+            Assert.That(oldScore, Is.EqualTo(275.6).Within(1e-12));
+            Assert.That(newScore, Is.EqualTo(expected).Within(1e-12));
+        }
+
+        [Test]
+        public void V12BoardSaleAndTransfersUseSignedDeltaAndSeparateLevelRelief()
+        {
+            var a = Def("v12-board");
+            var b = Def("v12-hand");
+            var boardCharacter = V12Fighter("board", a, 2, 2);
+            var handCharacter = V12Fighter("hand", b, 4, 2);
+            var board = Put(BoardState.CreateStandard(), 0, boardCharacter.InstanceId);
+            var hand = Put(HandState.CreateStandard(), 0, HandSlotContent.Character(handCharacter.InstanceId));
+            var observation = Build(Prep(), Econ(level: 1), board, hand, new[] { boardCharacter, handCharacter }, new[] { a,b });
+            var strategy = HeuristicStrategy.CreateV12();
+
+            Assert.That(V12Score<SellCharacterAction>(strategy, observation, x => x.InstanceId == "board"),
+                Is.EqualTo(-25.6).Within(1e-12));
+            Assert.That(V12Score<MoveBoardToHandAction>(strategy, observation, x => x.HandSlot == 1),
+                Is.EqualTo(-16.64).Within(1e-12));
+            Assert.That(V12Score<MoveHandToBoardAction>(strategy, observation, x => x.BoardSlot == 0),
+                Is.EqualTo(10.4).Within(1e-12));
+            Assert.That(V12Score<MoveBoardToHandAction>(strategy, observation, x => x.HandSlot == 0),
+                Is.EqualTo(10.4).Within(1e-12));
+            Assert.That(V12Score<MoveHandToBoardAction>(strategy, observation, x => x.BoardSlot == 1), Is.EqualTo(-100));
+
+            var second = V12Fighter("extra", Def("v12-extra"), 3, 2);
+            var over = Build(Prep(), Econ(level: 1), Put(board, 1, second.InstanceId), hand,
+                new[] { boardCharacter, handCharacter, second }, new[] { a,b,Def("v12-extra") });
+            Assert.That(V12Score<MoveBoardToHandAction>(strategy, over, x => x.BoardSlot == 0 && x.HandSlot == 1),
+                Is.EqualTo(83.36).Within(1e-12));
+            Assert.That(over.Board.Slots[0].Character.InstanceId, Is.EqualTo("board"));
+            Assert.That(over.Hand.Slots[0].Character.InstanceId, Is.EqualTo("hand"));
+        }
+
+        [Test]
+        public void V12BoardMovesAndSwapsPreserveLegacySynergyRankingAndRejectNeutralMoves()
+        {
+            var a = Def("ally-a", units: new[] { "Pair" });
+            var b = Def("ally-b", units: new[] { "Pair" });
+            var c = Def("ally-c");
+            var board = Put(Put(Put(BoardState.CreateStandard(), 0, "a"), 8, "b"), 1, "c");
+            var observation = Build(Prep(), board: board, owned: new[] {
+                V12Fighter("a", a, 1, 2), V12Fighter("b", b, 2, 2), V12Fighter("c", c, 3, 2) },
+                defs: new[] { a,b,c });
+            var v11 = HeuristicStrategy.CreateV11();
+            var v12 = HeuristicStrategy.CreateV12();
+            Assert.That(V12Score<MoveOrSwapBoardAction>(v12, observation, x => x.SourceSlot == 8 && x.TargetSlot == 3), Is.EqualTo(16));
+            Assert.That(V12Score<MoveOrSwapBoardAction>(v12, observation, x => x.SourceSlot == 1 && x.TargetSlot == 8),
+                Is.EqualTo(V12Score<MoveOrSwapBoardAction>(v11, observation, x => x.SourceSlot == 1 && x.TargetSlot == 8)).Within(1e-12));
+            Assert.That(V12Score<MoveOrSwapBoardAction>(v12, observation, x => x.SourceSlot == 8 && x.TargetSlot == 7), Is.EqualTo(-100));
+        }
+
+        [TestCase(1, false, false, -54.2)]
+        [TestCase(2, false, false, 35.8)]
+        [TestCase(0, true, false, -46.2)]
+        [TestCase(2, true, true, -2.2)]
+        public void V12PreservesStartBattleAndUnaffectedCandidateScores(int levelMode, bool shop, bool merge, double expected)
+        {
+            var a = Def("ready");
+            var b = Def("offer");
+            var residents = new List<CharacterInstance> { V12Fighter("ready-unit", a, 2, 2) };
+            var board = Put(BoardState.CreateStandard(), 0, residents[0].InstanceId);
+            var hand = HandState.CreateStandard();
+            int copies = merge ? 2 : levelMode == 1 ? 1 : 0;
+            for (int i = 0; i < copies; i++)
+            {
+                residents.Add(V12Fighter("copy" + i, b, 2, 2));
+                hand = Put(hand, i, HandSlotContent.Character(residents.Last().InstanceId));
+            }
+            var observation = Build(Prep(), Econ(level: levelMode == 2 ? 1 : 2), board, hand,
+                residents.ToArray(), new[] { a,b }, shop ? CharacterShop("offer") : null);
+            var v11 = HeuristicStrategy.CreateV11();
+            var v12 = HeuristicStrategy.CreateV12();
+            Assert.That(V12Score<StartBattleAction>(v12, observation), Is.EqualTo(expected).Within(1e-12));
+            var id = new ActionId("v12-parity");
+            var oldScores = v11.GetEvaluations(observation, id);
+            var newScores = v12.GetEvaluations(observation, id);
+            Assert.That(newScores.Select(e => e.Action.Kind), Is.EquivalentTo(oldScores.Select(e => e.Action.Kind)));
+            Assert.That(newScores.Where(e => e.Action is BuyCharacterAction || e.Action is StartBattleAction).Select(e => e.Score),
+                Is.EqualTo(oldScores.Where(e => e.Action is BuyCharacterAction || e.Action is StartBattleAction).Select(e => e.Score)));
+            if (shop)
+                Assert.That(V12Score<BuyCharacterAction>(v12, observation,
+                    x => x.Placement.Kind == CharacterLocationKind.Board && x.Placement.SlotIndex == 1),
+                    Is.EqualTo(merge ? 180.53 : 64.53).Within(1e-12));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void V12SelectionKeepsStartBattleAheadOfPositiveSaleAndProtectsPairs(bool pair)
+        {
+            var a = Def("ready-for-combat");
+            var b = Def("sale-pair");
+            var board = Put(BoardState.CreateStandard(), 0, "ready");
+            var hand = Put(HandState.CreateStandard(), 0, HandSlotContent.Character("target"));
+            var residents = new List<CharacterInstance> { V12Fighter("ready", a, 2, 2), V12Fighter("target", b, 2, 2) };
+            if (pair)
+            {
+                hand = Put(hand, 1, HandSlotContent.Character("pair"));
+                residents.Add(V12Fighter("pair", b, 2, 2));
+            }
+            var items = V12Fillers();
+            for (int slot = pair ? 2 : 1; slot < hand.SlotCount; slot++)
+                hand = Put(hand, slot, HandSlotContent.Item(items[slot].DefinitionId));
+            var observation = Build(Prep(), Econ(level: 1), board, hand, residents.ToArray(), new[] { a,b }, items: items);
+            var strategy = HeuristicStrategy.CreateV12();
+            Assert.That(V12Score<SellCharacterAction>(strategy, observation, x => x.InstanceId == "target"),
+                Is.EqualTo(pair ? -32.96 : 31.04).Within(1e-12));
+            Assert.That(strategy.ChooseAction(observation, Context(strategy)).Action, Is.TypeOf<StartBattleAction>());
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void CompositionSelectionRemainsDeterministicAndPreparationLimitOverridesDeployment(bool v13)
+        {
+            var a = Def("reserve");
+            var character = V12Fighter("ready", a, 2, 2);
+            var hand = Put(HandState.CreateStandard(), 0, HandSlotContent.Character("ready"));
+            var observation = Build(Prep(), Econ(level: 2), hand: hand, owned: new[] { character }, defs: new[] { a });
+            var strategy = v13 ? HeuristicStrategy.CreateV13() : HeuristicStrategy.CreateV12();
+            var rng = StrategyRandomSource.Create(123, strategy.StrategyId, strategy.Version).CaptureState();
+            var context = Context(strategy, rng: rng);
+            var first = strategy.ChooseAction(observation, context);
+            var second = strategy.ChooseAction(observation, context);
+            Assert.That(first.Action, Is.TypeOf<MoveHandToBoardAction>());
+            Assert.That(((MoveHandToBoardAction)first.Action).BoardSlot, Is.EqualTo(((MoveHandToBoardAction)second.Action).BoardSlot));
+            Assert.That(first.NextState.Payload, Is.EqualTo(second.NextState.Payload));
+            Assert.That(first.NextStrategyRngState, Is.EqualTo(rng));
+            Assert.That(first.StrategyRngAdvanced, Is.False);
+            Assert.That(first.NextState.StrategyVersion, Is.EqualTo(v13 ? "13" : "12"));
+            Assert.That(first.NextState.SchemaVersion, Is.EqualTo(2));
+            var limit = strategy.ChooseAction(observation, Context(strategy, state: V12State(strategy, observation, 29, "")));
+            Assert.That(limit.Action, Is.TypeOf<StartBattleAction>());
+            Assert.That(limit.Diagnostic, Does.Contain("decision limit"));
+            var fallback = HeuristicStrategy.CreateV12(new HeuristicStrategySettings(startBattleValue: -1000));
+            Assert.That(fallback.ChooseAction(Build(Prep()), Context(fallback)).Diagnostic, Does.Contain("existing legal StartBattle"));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void CompositionRepairUsesEmptyHandThenLevelUpThenLegacyBoardSale(bool v13)
+        {
+            var a = Def("repair-strong");
+            var b = Def("repair-weak");
+            var residents = new[] { V12Fighter("a", a, 5, 2), V12Fighter("b", b, 1, 2) };
+            var board = Put(Put(BoardState.CreateStandard(), 0, "a"), 1, "b");
+            var hand = HandState.CreateStandard();
+            var items = V12Fillers();
+            var strategy = v13 ? HeuristicStrategy.CreateV13(HeuristicStrategy.CreateV13Settings(normalExperienceGoldCost: 3)) :
+                HeuristicStrategy.CreateV12(new HeuristicStrategySettings(normalExperienceGoldCost: 3,
+                    characterStarValue: .75, includeTemporaryCharacterBonuses: true));
+            var empty = Build(Prep(), Econ(level: 1), board, hand, residents, new[] { a,b });
+            var transfer = (MoveBoardToHandAction)strategy.ChooseAction(empty, Context(strategy)).Action;
+            Assert.That(transfer.BoardSlot, Is.EqualTo(1));
+            for (int slot = 0; slot < hand.SlotCount; slot++)
+                hand = Put(hand, slot, HandSlotContent.Item(items[slot].DefinitionId));
+            var full = Build(Prep(), Econ(level: 1), board, hand, residents, new[] { a,b }, items: items);
+            Assert.That(strategy.ChooseAction(full, Context(strategy)).Action, Is.TypeOf<BuyExperienceAction>());
+            var noXp = Build(Prep(), Econ(gold: 0, level: 1), board, hand, residents, new[] { a,b }, items: items);
+            Assert.That(((SellCharacterAction)strategy.ChooseAction(noXp, Context(strategy)).Action).InstanceId, Is.EqualTo("b"));
+        }
+
+        [Test]
+        public void V12IdentityAndFingerprintCoverCompositionAndRejectV11Context()
+        {
+            var defaults = HeuristicStrategy.CreateV12();
+            Assert.That(defaults.Version, Is.EqualTo("12"));
+            Assert.That(HeuristicStrategy.StableVersion, Is.EqualTo("7"));
+            Assert.That(RandomStrategy.StableVersion, Is.EqualTo("4"));
+            string id = HeuristicStrategy.GetV12ConfigurationIdentity(defaults.Settings);
+            foreach (var settings in new[] {
+                new HeuristicStrategySettings(characterStarValue: .75, includeTemporaryCharacterBonuses: true, compositionActionScale: 4),
+                new HeuristicStrategySettings(characterStarValue: .75, includeTemporaryCharacterBonuses: true, compositionHandReserveWeight: .5),
+                new HeuristicStrategySettings(characterStarValue: .75, includeTemporaryCharacterBonuses: true, compositionDeploymentPriority: 90),
+                new HeuristicStrategySettings(characterStarValue: .75, includeTemporaryCharacterBonuses: true, overLevelReliefValue: 90) })
+                Assert.That(HeuristicStrategy.GetV12ConfigurationIdentity(settings), Is.Not.EqualTo(id));
+            Assert.That(id, Is.EqualTo(HeuristicStrategy.GetV12ConfigurationIdentity(HeuristicStrategy.CreateV12().Settings)));
+            string trace = null;
+            var strategy = HeuristicStrategy.CreateV12(decisionDiagnosticSink: value => trace = value);
+            var definition = Def("fingerprint-reserve");
+            var resident = V12Fighter("fingerprint-unit", definition, 2, 2);
+            var hand = Put(HandState.CreateStandard(), 0, HandSlotContent.Character(resident.InstanceId));
+            var first = Build(Prep(), hand: hand, owned: new[] { resident }, defs: new[] { definition });
+            resident.TemporaryDefenseBonus = 1;
+            var changed = Build(Prep(), hand: hand, owned: new[] { resident }, defs: new[] { definition });
+            string Fingerprint(GameObservation observation)
+            {
+                strategy.ChooseAction(observation, Context(strategy));
+                return trace.Split('\n').Single(line => line.StartsWith("VisibleObservationFingerprint="));
+            }
+            string fingerprint = Fingerprint(first);
+            Assert.That(Fingerprint(changed), Is.Not.EqualTo(fingerprint));
+            Assert.That(Fingerprint(first), Is.EqualTo(fingerprint));
+            Assert.Throws<ArgumentException>(() => strategy.ChooseAction(first, Context(HeuristicStrategy.CreateV11())));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void CompositionSelectionFiltersReverseSwapAndImmediateBuySellEvenWithPositiveScores(bool v13)
+        {
+            var a = Def("placed");
+            var b = Def("purchased");
+            var board = Put(BoardState.CreateStandard(), 0, "board");
+            var hand = Put(HandState.CreateStandard(), 0, HandSlotContent.Character("hand"));
+            var residents = new[] { V12Fighter("board", a, 2, 2), V12Fighter("hand", b, 4, 2) };
+            var definitions = new[] { a,b };
+            var observation = Build(Prep(), Econ(level: 1), board, hand, residents, definitions);
+            var settings = new HeuristicStrategySettings(startBattleValue: 0, startBattleUnitReadinessValue: 0, characterStarValue: .75);
+            var strategy = v13 ? HeuristicStrategy.CreateV13(settings) : HeuristicStrategy.CreateV12(settings);
+            Assert.That(strategy.ChooseAction(observation, Context(strategy)).Action, Is.TypeOf<MoveBoardToHandAction>());
+            var reverse = strategy.ChooseAction(observation, Context(strategy, state: V12State(strategy, observation, 1, "9:0:0")));
+            Assert.That(reverse.Action, Is.TypeOf<StartBattleAction>());
+
+            var items = V12Fillers();
+            for (int slot = 1; slot < hand.SlotCount; slot++)
+                hand = Put(hand, slot, HandSlotContent.Item(items[slot].DefinitionId));
+            var boughtShop = new ShopState(ShopKind.Character, new[] {
+                new ShopOffer("offer", ShopOfferKind.Character, b.DefinitionId, 1, 1, ShopOfferStatus.Purchased)
+            }, 1, 1, 1);
+            var bought = Build(Prep(), Econ(level: 1), board, hand, residents, definitions, boughtShop, items);
+            Assert.That(strategy.ChooseAction(bought, Context(strategy)).Action, Is.TypeOf<SellCharacterAction>());
+            var afterBuy = strategy.ChooseAction(bought, Context(strategy, state: V12State(strategy, bought, 1, "2:offer:1:0")));
+            Assert.That(afterBuy.Action, Is.Not.TypeOf<SellCharacterAction>());
+
+            var offer = Build(Prep(), Econ(level: 2), board, owned: new[] { residents[0] },
+                defs: definitions, shop: CharacterShop(b.DefinitionId), characterStatSettings: Stats(new CharacterStatOption(2,2,1)));
+            Assert.That(strategy.ChooseAction(offer, Context(strategy)).Action, Is.TypeOf<BuyCharacterAction>());
+            var afterSale = strategy.ChooseAction(offer, Context(strategy, state: V12State(strategy, offer, 1, "10:hand")));
+            Assert.That(afterSale.Action, Is.TypeOf<StartBattleAction>());
+        }
+
+        [Test]
+        public void V12ScaleIsConfigurableAndUsesV11SaleGoldBelowReserve()
+        {
+            var definition = Def("sale-gold");
+            var character = V12Fighter("target", definition, 2, 2);
+            var hand = Put(HandState.CreateStandard(), 0, HandSlotContent.Character("target"));
+            var observation = Build(Prep(), Econ(gold: 7), hand: hand, owned: new[] { character }, defs: new[] { definition });
+            var strategy = HeuristicStrategy.CreateV12(new HeuristicStrategySettings(compositionActionScale: 4));
+            Assert.That(V12Score<SellCharacterAction>(strategy, observation), Is.EqualTo(-1.12 * 4 + .375).Within(1e-12));
+        }
+
+        private static StrategyState V12State(HeuristicStrategy strategy, GameObservation observation, int count, string action) =>
+            new StrategyState(strategy.StrategyId, strategy.Version, HeuristicStrategy.StateSchemaVersion,
+                "hs2|" + count + "|" + observation.Stage.EncounterIndex + "|" + (int)ObservationPhase.Preparation + "|" +
+                Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(action)));
+
+        private static CharacterInstance V12Fighter(string id, CharacterDefinition definition, int attack, int defense)
+        {
+            var character = Inst(id, definition);
+            Assert.That(character.EnsureStats(definition, Stats(new CharacterStatOption(attack, defense, 1)),
+                new Pcg32RandomSource(11, 12)), Is.True);
+            return character;
+        }
+
+        private static ItemDefinition[] V12Fillers() => Enumerable.Range(0, HandState.StandardSlotCount)
+            .Select(i => new ItemDefinition("filler-" + i, "Filler", 0, "", ItemEffectTarget.Player,
+                ItemEffectDuration.Immediate, new[] { new ItemEffectDefinition(ItemEffectKind.Block, 1) })).ToArray();
+
+        private static double V12Score<T>(HeuristicStrategy strategy, GameObservation observation, Func<T,bool> match = null)
+            where T : GameAction =>
+            strategy.GetEvaluations(observation, new ActionId("v12-score"))
+                .Single(e => e.Action is T action && (match == null || match(action))).Score;
+
+        [TestCase("A", 2.4, 0, 0, 0)]
+        [TestCase("B", 0, .84, 0, 0)]
+        [TestCase("C", 0, .84, 8, 0)]
+        [TestCase("D", 0, -.1575, -6, 0)]
+        [TestCase("E", 1.75, -.77, -6, 0)]
+        [TestCase("F", 0, -.98, -12, 2)]
+        [TestCase("G", 3.95, -1.54, -6, 7)]
+        [TestCase("H", 3.95, -1.54, -6, 0)]
+        [TestCase("I", 5.55, -2.9225, -12, 0)]
+        [TestCase("J", 5.3, 0, 0, 0)]
+        [TestCase("L", 0, -.98, -10, 7)]
+        public void PurchaseCompositionMatchesWorkedExamples(string example, double combat, double reserve,
+            double progress, double capacity)
+        {
+            var observation = PurchaseExample(example, out var action);
+            foreach (var weights in new[] { (8, 2, 4), (1, 1, 2), (0, 0, 0) })
+            {
+                var settings = new HeuristicStrategySettings(characterStarValue: .75, includeTemporaryCharacterBonuses: true,
+                    mergeProgressOneStarValue: weights.Item1, mergeProgressOneStarTwoStarValue: weights.Item2,
+                    mergeProgressTwoStarTwoCopiesValue: weights.Item3);
+                var evaluator = new CompositionValueEvaluator(observation, settings: settings);
+                var result = evaluator.ComparePurchase(action);
+                Assert.That(result.Succeeded, Is.True, result.Failure.ToString());
+                Assert.That(result.Before.Value.Total, Is.EqualTo(evaluator.Baseline.Value.Total));
+                var delta = result.Delta.Value;
+                Assert.That(delta.BoardCombat, Is.EqualTo(combat).Within(1e-12));
+                Assert.That(delta.BoardSynergy, Is.Zero);
+                Assert.That(delta.HandReserve, Is.EqualTo(reserve).Within(1e-12));
+                Assert.That(delta.Capacity, Is.EqualTo(capacity));
+                if (weights.Item1 == 8) Assert.That(delta.MergeProgress, Is.EqualTo(progress));
+                Assert.That(result.TotalDelta.Value, Is.EqualTo(delta.Total).Within(1e-12));
+                if (example == "H") Assert.That(result.After.Value.OverLevelCount - result.Before.OverLevelCount, Is.EqualTo(1));
+                if (example == "I") Assert.That(result.After.Value.OverLevelCount, Is.EqualTo(result.Before.OverLevelCount));
+                if (example == "L")
+                    Assert.That(result.Preview.SlotChanges.Where(c => c.CharacterAfter != null).Select(c => c.CharacterAfter.Star),
+                        Is.EquivalentTo(new[] { 2, 3 }));
+                string Format(CompositionValue value) => FormattableString.Invariant(
+                    $"{value.BoardCombat:0.####},{value.BoardSynergy:0.####},{value.HandReserve:0.####},{value.MergeProgress:0.####},{value.Capacity:0.####}");
+                TestContext.WriteLine(FormattableString.Invariant(
+                    $"{example} {weights.Item1}/{weights.Item2}/{weights.Item3} {Format(result.Before.Value)} -> {Format(result.After.Value.Value)} delta={result.TotalDelta:0.####} x8={result.TotalDelta * 8:0.####}"));
+            }
+        }
+
+        private static GameObservation PurchaseExample(string example, out BuyCharacterAction action)
+        {
+            var target = Def("target");
+            var other = Def("other");
+            var hand = HandState.CreateStandard();
+            var board = BoardState.CreateStandard();
+            var owned = new List<CharacterInstance>();
+            var items = Enumerable.Range(0, 3).Select(i => new ItemDefinition("purchase-item-" + i, "Item", 0, "",
+                ItemEffectTarget.Player, ItemEffectDuration.Immediate,
+                new[] { new ItemEffectDefinition(ItemEffectKind.Block, 1) })).ToArray();
+            bool boardPurchase = "AGHJ".Contains(example);
+            var rng = new Pcg32RandomSource(18, 22);
+            CharacterInstance Add(CharacterDefinition definition, int star)
+            {
+                var instance = Inst("p" + owned.Count, definition, star);
+                var option = star == 1 ? new CharacterStatOption(1, 2, 1) : new CharacterStatOption(2, 2, 1);
+                Assert.That(instance.EnsureStats(definition, Stats(option), rng), Is.True);
+                owned.Add(instance);
+                return instance;
+            }
+
+            if (example != "E") board = Put(board, 0, Add(other, 1).InstanceId);
+            if (example == "E" || example == "I")
+                board = Put(board, example == "E" ? 0 : 1, Add(target, example == "E" ? 1 : 2).InstanceId);
+            string stars;
+            switch (example)
+            {
+                case "C": case "E": stars = "1"; break;
+                case "D": case "G": case "H": stars = "11"; break;
+                case "F": stars = "1122"; break;
+                case "I": stars = "112"; break;
+                case "L": stars = "22211"; break;
+                default: stars = ""; break;
+            }
+            for (int i = 0; i < stars.Length; i++)
+                hand = Put(hand, i, HandSlotContent.Character(Add(target, stars[i] - '0').InstanceId));
+            if (example == "G")
+                for (int i = 0; i < items.Length; i++) hand = Put(hand, i + 2, HandSlotContent.Item(items[i].DefinitionId));
+
+            int cost = example == "J" ? 5 : 1;
+            var offer = new ShopOffer("offer", ShopOfferKind.Character, target.DefinitionId, cost, cost);
+            var shop = new ShopState(ShopKind.Character, new[] { offer }, 1, 1, 1);
+            var stats = new CharacterStatDefinition(new[] {
+                new CharacterCostStats(1,
+                    new[] { new CharacterStatOption(1, 2, 1), new CharacterStatOption(2, 1, 1) },
+                    new[] { new CharacterStatOption(2, 2, 1), new CharacterStatOption(3, 1, 1), new CharacterStatOption(1, 3, 1) },
+                    new[] { new CharacterStatOption(5, 5, 1) }),
+                new CharacterCostStats(5, new[] { new CharacterStatOption(4, 2, 1), new CharacterStatOption(3, 4, 1) }, null, null)
+            });
+            action = new BuyCharacterAction(new ActionId("purchase-example"), offer.OfferId,
+                new GameActionLocation(boardPurchase ? CharacterLocationKind.Board : CharacterLocationKind.Hand, boardPurchase ? 8 : 4));
+            return Build(Prep(), Econ(level: example == "H" || example == "I" ? 1 : 2),
+                board, hand, owned.ToArray(), new[] { target, other }, shop, items, characterStatSettings: stats);
+        }
+
+        [TestCase(1, 15)]
+        [TestCase(4, 5)]
+        public void PurchaseCompositionEstablishesSharedTagsOnlyWhenConnected(int slot, double expected)
+        {
+            var a = Def("a", new[] { "Fire" }, new[] { "Pair" });
+            var b = Def("b", new[] { "Fire" }, new[] { "Pair" });
+            var first = V12Fighter("a", a, 1, 2);
+            var second = V12Fighter("b", b, 2, 2);
+            var board = Put(BoardState.CreateStandard(), 0, "a");
+            var stats = Stats(new CharacterStatOption(2, 2, 1));
+            var observation = Build(Prep(), board: board, owned: new[] { first }, defs: new[] { a,b },
+                shop: CharacterShop(b.DefinitionId), characterStatSettings: stats);
+            var evaluator = new CompositionValueEvaluator(observation);
+            BuyCharacterAction ActionAt(int target) => new BuyCharacterAction(new ActionId("tag-purchase"), "offer",
+                new GameActionLocation(CharacterLocationKind.Board, target));
+            var result = evaluator.ComparePurchase(ActionAt(slot));
+            Assert.That(result.Delta.Value.AttributeSynergy, Is.EqualTo(5));
+            Assert.That(result.Delta.Value.UnitPartialConnectivity, Is.EqualTo(slot == 1 ? 2 : 0));
+            Assert.That(result.Delta.Value.CompletedUnitSynergy, Is.EqualTo(slot == 1 ? 8 : 0));
+            Assert.That(result.After.Value.Value.BoardSynergy, Is.EqualTo(expected));
+            var actualBoard = Build(Prep(), board: Put(board, slot, "b"),
+                owned: new[] { first, second }, defs: new[] { a,b });
+            var actual = new CompositionValueEvaluator(actualBoard);
+            Assert.That(result.After.Value.Value.Total, Is.EqualTo(actual.Baseline.Value.Total).Within(1e-12));
+            Assert.That(actual.CompareBoardRemoval(slot).TotalDelta, Is.EqualTo(-result.TotalDelta.Value).Within(1e-12));
+            evaluator.ComparePurchase(ActionAt(slot == 1 ? 4 : 1));
+            Assert.That(evaluator.ComparePurchase(ActionAt(slot)).TotalDelta, Is.EqualTo(result.TotalDelta));
+            Assert.That(observation.Board.Slots[slot].IsOccupied, Is.False);
+        }
+
+        [Test]
+        public void PurchaseCompositionMovesSurvivorAndBreaksAnEstablishedUnit()
+        {
+            var a = Def("a", new[] { "Fire" }, new[] { "Pair" });
+            var b = Def("b", new[] { "Fire" }, new[] { "Pair" });
+            var first = V12Fighter("board-a", a, 2, 2);
+            var second = V12Fighter("board-b", b, 2, 2);
+            var peer = V12Fighter("hand-a", a, 2, 2);
+            var board = Put(Put(BoardState.CreateStandard(), 0, first.InstanceId), 1, second.InstanceId);
+            var hand = Put(HandState.CreateStandard(), 0, HandSlotContent.Character(peer.InstanceId));
+            var observation = Build(Prep(), board: board, hand: hand, owned: new[] { first,second,peer }, defs: new[] { a,b },
+                shop: CharacterShop(a.DefinitionId), characterStatSettings: Stats(new CharacterStatOption(2, 2, 1)));
+            var action = new BuyCharacterAction(new ActionId("move-survivor"), "offer", new GameActionLocation(CharacterLocationKind.Board, 8));
+            var result = new CompositionValueEvaluator(observation).ComparePurchase(action);
+            Assert.That(result.Before.Value.BoardSynergy, Is.EqualTo(15));
+            Assert.That(result.After.Value.Value.BoardSynergy, Is.EqualTo(5));
+            Assert.That(result.Delta.Value.CompletedUnitSynergy, Is.EqualTo(-8));
+            Assert.That(result.Preview.FinalLocation.Value.SlotIndex, Is.EqualTo(8));
+            var projected = Put(Put(board, 0, null), 8, first.InstanceId);
+            Assert.That(Build(Prep(), board: projected, owned: new[] { first,second }, defs: new[] { a,b }).Synergy.Units,
+                Is.Empty);
+        }
+
+        [Test]
+        public void PurchaseCompositionUsesWeightedStatsAndSeparatesZeroFromMissingAndPreviewFailure()
+        {
+            var a = Def("weighted");
+            var action = new BuyCharacterAction(new ActionId("weighted-purchase"), "offer", new GameActionLocation(CharacterLocationKind.Board, 0));
+            GameObservation Observation(CharacterStatDefinition stats) =>
+                Build(Prep(), defs: new[] { a }, shop: CharacterShop(a.DefinitionId), characterStatSettings: stats);
+            var weighted = new CompositionValueEvaluator(Observation(Stats(new CharacterStatOption(2, 2, 1),
+                new CharacterStatOption(3, 0, 1), new CharacterStatOption(1, 3, 1)))).ComparePurchase(action);
+            Assert.That(weighted.Delta.Value.BoardCombat, Is.EqualTo(3).Within(1e-12));
+            Assert.That(weighted.StatRolls[0].Stats.ExpectedDefense, Is.EqualTo(5.0 / 3).Within(1e-12));
+            var fractional = new CompositionValueEvaluator(Observation(Stats(new CharacterStatOption(2, 3, 1),
+                new CharacterStatOption(3, 0, 2)))).ComparePurchase(action);
+            Assert.That(fractional.Delta.Value.BoardCombat, Is.EqualTo(8.0 / 3 + .6).Within(1e-12));
+            var zero = new CompositionValueEvaluator(Observation(Stats(new CharacterStatOption(0, 0, 1)))).ComparePurchase(action);
+            Assert.That(zero.Succeeded, Is.True);
+            Assert.That(zero.TotalDelta, Is.Zero);
+            var missing = new CompositionValueEvaluator(Observation(null)).ComparePurchase(action);
+            Assert.That(missing.Failure, Is.EqualTo(PurchaseCompositionFailure.PublicStatsUnavailable));
+            Assert.That(missing.TotalDelta, Is.Null);
+            Assert.That(missing.StatRolls[0].Stats.Status, Is.EqualTo(PublicCharacterStatsStatus.MissingConfiguration));
+            var invalid = new CompositionValueEvaluator(Observation(null)).ComparePurchase(
+                new BuyCharacterAction(new ActionId("invalid-purchase"), "missing", action.Placement));
+            Assert.That(invalid.Failure, Is.EqualTo(PurchaseCompositionFailure.PreviewUnavailable));
+            Assert.That(invalid.Preview.Failure, Is.EqualTo(CharacterPurchasePreviewFailure.OfferUnavailable));
+            Assert.That(invalid.After, Is.Null);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void PurchaseCompositionChecksConsumedIntermediateRollAndKeepsOnlySurvivorBonuses(bool missingMiddle)
+        {
+            var d = Def("chain");
+            var original = Inst("board", d, 1, 2);
+            var options = new[] { new CharacterStatOption(2, 2, 1) };
+            var stats = new CharacterStatDefinition(new[] {
+                new CharacterCostStats(1, options, missingMiddle ? null : options, options),
+                new CharacterCostStats(2, options, options, new[] { new CharacterStatOption(5, 5, 1) })
+            });
+            var rng = new Pcg32RandomSource(3, 9);
+            Assert.That(original.TrySetTemporaryStar(2, d, stats, rng), Is.True);
+            original.TemporaryAttackBonus = 3;
+            original.TemporaryDefenseBonus = 2;
+            var oldStats = new CharacterStatDefinition(new[] {
+                new CharacterCostStats(2, options, new[] { new CharacterStatOption(40, 20, 1) }, options)
+            });
+            Assert.That(original.TrySetStar(2, d, oldStats, rng), Is.True);
+            var hand = HandState.CreateStandard();
+            var characters = new List<CharacterInstance> { original };
+            for (int i = 0; i < 3; i++)
+            {
+                var c = Inst("hand-" + i, d, i == 2 ? 2 : 1);
+                c.TemporaryAttackBonus = 10;
+                characters.Add(c);
+                hand = Put(hand, i, HandSlotContent.Character(c.InstanceId));
+            }
+            var observation = Build(Prep(), board: Put(BoardState.CreateStandard(), 0, original.InstanceId), hand: hand,
+                owned: characters.ToArray(), defs: new[] { d }, shop: CharacterShop(d.DefinitionId), characterStatSettings: stats);
+            var action = new BuyCharacterAction(new ActionId("chain"), "offer", new GameActionLocation(CharacterLocationKind.Hand, 4));
+            var checkpoint = rng.CaptureState();
+            var result = new CompositionValueEvaluator(observation).ComparePurchase(action);
+            Assert.That(rng.CaptureState(), Is.EqualTo(checkpoint));
+            Assert.That(result.StatRolls.Select(r => (r.Roll.RunCost, r.Roll.Star)),
+                Is.EqualTo(new[] { (1, 2), (2, 3) }));
+            Assert.That(result.StatRolls[1].Stats.IsAvailable, Is.True);
+            Assert.That(result.Preview.MergeStages[1].ConsumedInstanceIds, Does.Contain("hand-0"));
+            if (missingMiddle)
+            {
+                Assert.That(result.Failure, Is.EqualTo(PurchaseCompositionFailure.PublicStatsUnavailable));
+                Assert.That(result.StatRolls[0].Stats.Status, Is.EqualTo(PublicCharacterStatsStatus.NoPositiveWeight));
+                Assert.That(result.TotalDelta, Is.Null);
+                return;
+            }
+            Assert.That(result.After.Value.Value.BoardCombat, Is.EqualTo(13.7).Within(1e-12));
+            Assert.That(result.Before.Value.BoardCombat, Is.EqualTo(56.95).Within(1e-12));
+            Assert.That(result.After.Value.Value.HandReserve, Is.Zero);
+            Assert.That(result.Delta.Value.MergeProgress, Is.EqualTo(-12));
+        }
+
+        [TestCase("A",61.73)]
+        [TestCase("B",7.25)]
+        [TestCase("C",10.63)]
+        [TestCase("D",3.89)]
+        [TestCase("E",8.37)]
+        [TestCase("F",2.225)]
+        [TestCase("G",122.43)]
+        [TestCase("H",double.NegativeInfinity)]
+        [TestCase("I",6.79)]
+        [TestCase("J",83.21)]
+        [TestCase("L",50.225)]
+        public void V13PurchaseScoresMatchDesignExamples(string example,double expected)
+        {
+            var observation=PurchaseExample(example,out var action);
+            var strategy=HeuristicStrategy.CreateV13();
+            var result=strategy.EvaluateV13Purchase(observation,action);
+            Assert.That(strategy.Version,Is.EqualTo("13"));
+            Assert.That(result.IsSelectable,Is.EqualTo(example!="H"));
+            Assert.That(result.Score,Is.EqualTo(expected).Within(1e-10));
+            var candidates = strategy.GetEvaluations(observation,action.ActionId)
+                .Where(e=>e.Action is BuyCharacterAction buy && buy.Placement.Kind==action.Placement.Kind &&
+                    buy.Placement.SlotIndex==action.Placement.SlotIndex).ToArray();
+            if(example=="L") Assert.That(candidates,Is.Empty);
+            else Assert.That(candidates.Single().Score,Is.EqualTo(result.Score));
+            if(example=="H" && strategy.ChooseAction(observation,Context(strategy)).Action is BuyCharacterAction chosen)
+                Assert.That(chosen.Placement.Kind,Is.EqualTo(CharacterLocationKind.Hand));
+            if(example=="I") Assert.That(strategy.ChooseAction(observation,Context(strategy)).Action,Is.TypeOf<MoveBoardToHandAction>());
+        }
+
+        [TestCase(0.0,1.9425)]
+        [TestCase(0.25,2.135)]
+        [TestCase(0.5,2.3275)]
+        [TestCase(1.0,2.7125)]
+        public void V13HandGroupsUseMaximumAndRecomputeOnlyAffectedValue(double weight,double expected)
+        {
+            var a=Def("a");var b=Def("b");
+            var weak=V12Fighter("weak",a,1,2);
+            var strong=Inst("strong",a,2,2);
+            var rng=new Pcg32RandomSource(41,29);
+            var options=new[]{new CharacterStatOption(2,2,1)};
+            Assert.That(strong.EnsureStats(a,new CharacterStatDefinition(new[]{new CharacterCostStats(2,options,options,options)}),rng),Is.True);
+            var other=V12Fighter("other",b,1,1);
+            var hand=Put(Put(Put(HandState.CreateStandard(),0,HandSlotContent.Character("weak")),
+                1,HandSlotContent.Character("strong")),2,HandSlotContent.Character("other"));
+            var observation=Build(Prep(),hand:hand,owned:new[]{weak,strong,other},defs:new[]{a,b});
+            var evaluator=new CompositionValueEvaluator(observation,handDuplicateWeight:weight);
+            Assert.That(evaluator.Baseline.Value.HandReserve,Is.EqualTo(expected).Within(1e-12));
+            Assert.That(evaluator.CompareHandRemoval(1).After.Value.HandReserve,Is.EqualTo(1.33).Within(1e-12));
+            Assert.That(evaluator.CompareHandMoveOrSwap(0,1).Delta.HandReserve,Is.Zero);
+            if(weight==1)
+                Assert.That(evaluator.Baseline.Value.HandReserve,
+                    Is.EqualTo(new CompositionValueEvaluator(observation).Baseline.Value.HandReserve).Within(1e-12));
+        }
+
+        [TestCase("pair",30.46)]
+        [TestCase("two",20.94)]
+        [TestCase("strong-exchange",20.94)]
+        public void V13ScoresFullHandSalesWithoutAddingAPenalty(string scenario,double expected)
+        {
+            var definition=Def("sale");
+            var a=Inst("sold",definition,scenario=="pair"?1:2);
+            var b=V12Fighter("peer",definition,1,2);
+            Assert.That(a.EnsureStats(definition,Stats(new CharacterStatOption(scenario=="pair"?1:2,2,1)),
+                new Pcg32RandomSource(2,3)),Is.True);
+            var board=BoardState.CreateStandard();
+            var hand=Put(HandState.CreateStandard(),0,HandSlotContent.Character("sold"));
+            int fill=1;
+            if(scenario=="pair")
+            {
+                hand=Put(hand,1,HandSlotContent.Character("peer"));
+                fill=2;
+            }
+            if(scenario=="strong-exchange") board=Put(board,0,"peer");
+            var items=V12Fillers();
+            for(int i=fill;i<hand.SlotCount;i++) hand=Put(hand,i,HandSlotContent.Item(items[i].DefinitionId));
+            var observation=Build(Prep(),Econ(gold:20),board,hand,
+                scenario=="two"?new[]{a}:new[]{a,b},new[]{definition},items:items);
+            var strategy=HeuristicStrategy.CreateV13();
+            Assert.That(strategy.GetEvaluations(observation,new ActionId("v13-sale"))
+                .Single(e=>e.Action is SellCharacterAction sale&&sale.InstanceId=="sold").Score,Is.EqualTo(expected).Within(1e-12));
+        }
+
+        [Test]
+        public void V13UnitProjectionAgreesAcrossPurchaseDeploymentRelocationWithdrawalAndSale()
+        {
+            var a=Def("a",new[]{"Fire"},new[]{"Pair"});
+            var b=Def("b",new[]{"Fire"},new[]{"Pair"});
+            var c=Def("c");
+            var first=V12Fighter("a",a,1,2);
+            var second=V12Fighter("b",b,2,2);
+            var third=V12Fighter("c",c,1,1);
+            var board=Put(BoardState.CreateStandard(),0,"a");
+            var stats=Stats(new CharacterStatOption(2,2,1));
+            var offered=Build(Prep(),board:board,owned:new[]{first},defs:new[]{a,b,c},
+                shop:CharacterShop("b"),characterStatSettings:stats);
+            var hand=Put(HandState.CreateStandard(),0,HandSlotContent.Character("b"));
+            var held=Build(Prep(),board:board,hand:hand,owned:new[]{first,second},defs:new[]{a,b,c});
+            var deployed=Build(Prep(),board:Put(board,1,"b"),owned:new[]{first,second},defs:new[]{a,b,c});
+            var separated=Build(Prep(),board:Put(Put(board,4,"b"),1,"c"),
+                owned:new[]{first,second,third},defs:new[]{a,b,c});
+            var reverse=Build(Prep(),board:Put(Put(board,1,"b"),4,"c"),
+                owned:new[]{first,second,third},defs:new[]{a,b,c});
+            CompositionValueEvaluator Evaluate(GameObservation o) => new CompositionValueEvaluator(o,
+                settings:HeuristicStrategy.CreateV13Settings(),handDuplicateWeight:.25);
+            var action=new BuyCharacterAction(new ActionId("v13-unit"),"offer",new GameActionLocation(CharacterLocationKind.Board,1));
+            var strategy=HeuristicStrategy.CreateV13();
+            Assert.That(strategy.EvaluateV13Purchase(offered,action).Score,Is.EqualTo(188.13).Within(1e-12));
+            var purchase=Evaluate(offered).ComparePurchase(action);
+            var deployment=Evaluate(held).CompareHandToBoard(0,1);
+            var withdrawal=Evaluate(deployed).CompareBoardToHand(1,0);
+            var sale=Evaluate(deployed).CompareBoardRemoval(1);
+            Assert.That(purchase.After.Value.Value.Total,Is.EqualTo(deployment.After.Value.Total).Within(1e-12));
+            Assert.That(withdrawal.TotalDelta,Is.EqualTo(-deployment.TotalDelta).Within(1e-12));
+            Assert.That(sale.TotalDelta,Is.EqualTo(-purchase.TotalDelta.Value).Within(1e-12));
+            Assert.That(Evaluate(separated).CompareBoardMoveOrSwap(4,1).Delta.CompletedUnitSynergy,Is.EqualTo(8));
+            Assert.That(Evaluate(reverse).CompareBoardMoveOrSwap(1,4).Delta.CompletedUnitSynergy,Is.EqualTo(-8));
+            Assert.That(Evaluate(separated).CompareBoardMoveOrSwap(4,3).Delta.CompletedUnitSynergy,Is.EqualTo(8));
+            Assert.That(V12Score<MoveHandToBoardAction>(strategy,held,x=>x.BoardSlot==1),
+                Is.EqualTo(100+8*deployment.TotalDelta).Within(1e-12));
+        }
+
+        [Test]
+        public void V13SameDefinitionExchangeUpdatesPowerAndDoesNotChangeMergeProgress()
+        {
+            var definition=Def("same");
+            var weak=V12Fighter("weak",definition,1,2);
+            var strong=V12Fighter("strong",definition,4,2);
+            var board=Put(BoardState.CreateStandard(),0,"weak");
+            var hand=Put(HandState.CreateStandard(),0,HandSlotContent.Character("strong"));
+            var observation=Build(Prep(),Econ(level:1),board,hand,new[]{weak,strong},new[]{definition});
+            var context=new CompositionValueEvaluator(observation,settings:HeuristicStrategy.CreateV13Settings(),handDuplicateWeight:.25);
+            var change=context.CompareHandToBoard(0,0);
+            Assert.That(change.Delta.BoardCombat,Is.EqualTo(3).Within(1e-12));
+            Assert.That(change.Delta.HandReserve,Is.EqualTo(-1.05).Within(1e-12));
+            Assert.That(change.Delta.MergeProgress,Is.Zero);
+            Assert.That(context.CompareBoardToHand(0,0).TotalDelta,Is.EqualTo(change.TotalDelta));
+        }
+
+        [Test]
+        public void V13BoardRepairKeepsLegacySaleRankingWhenNormalScoresReverseIt()
+        {
+            var a=Def("repair-peer");
+            var b=Def("repair-solo");
+            var weak=V12Fighter("weak",a,1,2);
+            var peer=V12Fighter("peer",a,1,2);
+            var strong=V12Fighter("strong",b,4,2);
+            var board=Put(Put(BoardState.CreateStandard(),0,"weak"),1,"strong");
+            var hand=Put(HandState.CreateStandard(),0,HandSlotContent.Character("peer"));
+            var items=V12Fillers();
+            for(int i=1;i<hand.SlotCount;i++) hand=Put(hand,i,HandSlotContent.Item(items[i].DefinitionId));
+            var observation=Build(Prep(),Econ(gold:0,level:1),board,hand,new[]{weak,peer,strong},new[]{a,b},items:items);
+            var strategy=HeuristicStrategy.CreateV13();
+            var normalSales=strategy.GetEvaluations(observation,new ActionId("v13-repair-order"))
+                .Where(e=>e.Action is SellCharacterAction sale&&sale.InstanceId!="peer");
+            Assert.That(((SellCharacterAction)normalSales.First().Action).InstanceId,Is.EqualTo("weak"));
+            Assert.That(((SellCharacterAction)strategy.ChooseAction(observation,Context(strategy)).Action).InstanceId,Is.EqualTo("strong"));
+        }
+
+        [Test]
+        public void V13ExcludesMissingStatsButRetainsRawStartBattleOpportunityAndZeroDelta()
+        {
+            var d=Def("missing");
+            string trace=null;
+            var strategy=HeuristicStrategy.CreateV13(decisionDiagnosticSink:value=>trace=value);
+            var observation=Build(Prep(),defs:new[]{d},shop:CharacterShop(d.DefinitionId));
+            var evals=strategy.GetEvaluations(observation,new ActionId("missing-stats"));
+            Assert.That(evals.Where(e=>e.Action is BuyCharacterAction).All(e=>!e.IsSelectable),Is.True);
+            Assert.That(evals.Single(e=>e.Action is StartBattleAction).Score,Is.EqualTo(-51.2).Within(1e-12));
+            Assert.That(strategy.ChooseAction(observation,Context(strategy)).Action,Is.TypeOf<StartBattleAction>());
+            Assert.That(trace,Does.Contain("StartBattle raw opportunity includes excluded"));
+            Assert.That(trace,Does.Contain("Cost 1 Star 1"));
+            var noBattle=Build(EnemylessPreparation(StageChoice.SelectD),defs:new[]{d},shop:CharacterShop(d.DefinitionId));
+            Assert.That(strategy.ChooseAction(noBattle,Context(strategy)).HasAction,Is.False);
+            var zero=Build(Prep(),defs:new[]{d},shop:CharacterShop(d.DefinitionId),characterStatSettings:Stats(new CharacterStatOption(0,0,1)));
+            var buy=new BuyCharacterAction(new ActionId("zero"),"offer",new GameActionLocation(CharacterLocationKind.Board,0));
+            var scored=strategy.EvaluateV13Purchase(zero,buy);
+            Assert.That(scored.IsSelectable,Is.True);
+            Assert.That(scored.Score,Is.EqualTo(100.53).Within(1e-12));
+            var missingOffer=new BuyCharacterAction(new ActionId("missing"),"none",buy.Placement);
+            Assert.That(strategy.EvaluateV13Purchase(zero,missingOffer).IsSelectable,Is.False);
+        }
+
+        [Test]
+        public void V13FingerprintTracksPublicStatsAndUnitRequirementsAndConfigurationRemainsVersioned()
+        {
+            var a=Def("a",units:new[]{"Pair"});
+            var b=Def("b",units:new[]{"Pair"});
+            var c=Def("c",units:new[]{"Pair"});
+            GameObservation Observe(int weight,CharacterDefinition[] roster)
+            {
+                var one=new[]{new CharacterStatOption(2,2,1),new CharacterStatOption(4,0,weight)};
+                return Build(Prep(),defs:roster,shop:CharacterShop("a"),characterStatSettings:Stats(one));
+            }
+            string trace=null;
+            string Fingerprint(HeuristicStrategy strategy,GameObservation observation)
+            {
+                strategy.ChooseAction(observation,Context(strategy));
+                return trace.Split('\n').Single(x=>x.StartsWith("VisibleObservationFingerprint=",StringComparison.Ordinal));
+            }
+            var v12=HeuristicStrategy.CreateV12(decisionDiagnosticSink:value=>trace=value);
+            var v13=HeuristicStrategy.CreateV13(decisionDiagnosticSink:value=>trace=value);
+            var first=Observe(1,new[]{a,b});
+            var reordered=Observe(1,new[]{b,a});
+            var changedStats=Observe(3,new[]{a,b});
+            var changedUnit=Observe(1,new[]{a,b,c});
+            var hash=Fingerprint(v13,first);
+            Assert.That(Fingerprint(v13,reordered),Is.EqualTo(hash));
+            Assert.That(Fingerprint(v13,changedStats),Is.Not.EqualTo(hash));
+            Assert.That(Fingerprint(v13,changedUnit),Is.Not.EqualTo(hash));
+            Assert.That(Fingerprint(v12,changedStats),Is.EqualTo(Fingerprint(v12,first)));
+            var settings1=new HeuristicStrategySettings(compositionHandDuplicateWeight:.25);
+            var settings2=new HeuristicStrategySettings(compositionHandDuplicateWeight:.5);
+            Assert.That(HeuristicStrategy.GetV12ConfigurationIdentity(settings1),Is.EqualTo(HeuristicStrategy.GetV12ConfigurationIdentity(settings2)));
+            Assert.That(HeuristicStrategy.GetV13ConfigurationIdentity(settings1),Is.Not.EqualTo(HeuristicStrategy.GetV13ConfigurationIdentity(settings2)));
+            Assert.That(new HeuristicStrategy().Version,Is.EqualTo("7"));
+            Assert.That(new RandomStrategy().Version,Is.EqualTo("4"));
+            Assert.That(HeuristicStrategy.StateSchemaVersion,Is.EqualTo(2));
+        }
 
         [Test] public void MetadataSettingsAndValidationAreStable()
         {
@@ -1264,6 +2192,36 @@ var available=Build(ev,board:board,owned:new[]{hero},defs:new[]{d},items:new[]{i
             Assert.That(two, Is.EqualTo(2.95).Within(1e-12));
             Assert.That(three, Is.EqualTo(3.7).Within(1e-12));
             Assert.That(double.IsNaN(large) || double.IsInfinity(large), Is.False);
+        }
+
+        [Test]
+        public void LegacyStrategiesIgnoreNewStatSummariesInScoresAndFingerprints()
+        {
+            var definition = Def("public-stats-parity");
+            GameObservation WithWeights(int weight)
+            {
+                var one = new[] { new CharacterStatOption(2, 1, 1), new CharacterStatOption(6, 3, weight) };
+                var upgraded = new[] { new CharacterStatOption(10 * weight, 3, 1) };
+                return Build(Prep(), defs: new[] { definition }, shop: CharacterShop(definition.DefinitionId),
+                    characterStatSettings: new CharacterStatDefinition(new[] { new CharacterCostStats(1, one, upgraded, upgraded) }));
+            }
+            var first = WithWeights(1);
+            var second = WithWeights(3);
+            Assert.That(first.CharacterStats.Get(1, 1).ExpectedAttack,
+                Is.Not.EqualTo(second.CharacterStats.Get(1, 1).ExpectedAttack));
+            string trace = null;
+            Action<string> sink = value => trace = value;
+            foreach (var strategy in new[] {
+                new HeuristicStrategy(null, sink), HeuristicStrategy.CreateV8(decisionDiagnosticSink: sink),
+                HeuristicStrategy.CreateV9(decisionDiagnosticSink: sink), HeuristicStrategy.CreateV10(decisionDiagnosticSink: sink),
+                HeuristicStrategy.CreateV11(decisionDiagnosticSink: sink), HeuristicStrategy.CreateV12(decisionDiagnosticSink: sink) })
+            {
+                var expected = strategy.ChooseAction(first, Context(strategy, "public-rules-parity"));
+                var expectedTrace = trace;
+                var actual = strategy.ChooseAction(second, Context(strategy, "public-rules-parity"));
+                Assert.That(actual.NextState.Payload, Is.EqualTo(expected.NextState.Payload), strategy.Version);
+                Assert.That(trace, Is.EqualTo(expectedTrace), strategy.Version);
+            }
         }
 
         [Test]

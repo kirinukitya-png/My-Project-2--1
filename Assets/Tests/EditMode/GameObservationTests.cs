@@ -73,6 +73,93 @@ namespace ProjectNST.GameCore.Tests
             new[] { 6, 6, 6, 6, 6 }, new[] { 15, 15, 15, 15, 15 },
             new[] { new[] { 85, 15, 0, 0, 0 } }, new[] { 3 });
 
+        [TestCase(1, 1, 3, 0, 3, 2.0, 5.0 / 3.0)]
+        [TestCase(2, 0, 4, 0, 3, 3.0, 0.75)]
+        [TestCase(3, 0, 0, 0, 0, 0.0, 0.0)]
+        public void PublicStatsUsesPositiveWeightsAtEveryStar(int star, int minA, int maxA, int minD,
+            int maxD, double expectedA, double expectedD)
+        {
+            var stats = new CharacterStatDefinition(new[] { new CharacterCostStats(2,
+                new[] { new CharacterStatOption(2, 2, 1), new CharacterStatOption(3, 0, 1), new CharacterStatOption(1, 3, 1) },
+                new[] { new CharacterStatOption(0, 3, 1), new CharacterStatOption(4, 0, 3), new CharacterStatOption(99, 99, 0) },
+                new[] { new CharacterStatOption(0, 0, 1) }) });
+            var observation = ObservationBuilder.Build(Source(stats: stats)).Observation;
+            var value = observation.CharacterStats.Get(2, star);
+            Assert.That(value.IsAvailable, Is.True);
+            Assert.That((value.RunCost, value.Star), Is.EqualTo((2, star)));
+            Assert.That((value.MinimumAttack, value.MaximumAttack, value.MinimumDefense, value.MaximumDefense),
+                Is.EqualTo(((int?)minA, (int?)maxA, (int?)minD, (int?)maxD)));
+            Assert.That(value.ExpectedAttack, Is.EqualTo(expectedA).Within(1e-12));
+            Assert.That(value.ExpectedDefense, Is.EqualTo(expectedD).Within(1e-12));
+            if (star == 1)
+            {
+                Assert.That(value.ExpectedAttack.Value + .6 * value.ExpectedDefense.Value, Is.EqualTo(3.0).Within(1e-12));
+                double midpointPower = (minA + maxA) / 2.0 + .6 * (minD + maxD) / 2.0;
+                Assert.That(midpointPower, Is.EqualTo(2.9).Within(1e-12));
+            }
+        }
+
+        [TestCase(4, 1, PublicCharacterStatsStatus.MissingConfiguration)]
+        [TestCase(2, 4, PublicCharacterStatsStatus.MissingConfiguration)]
+        [TestCase(2, 1, PublicCharacterStatsStatus.NoPositiveWeight)]
+        [TestCase(2, 2, PublicCharacterStatsStatus.InvalidWeights)]
+        [TestCase(2, 3, PublicCharacterStatsStatus.InvalidWeights)]
+        public void UnavailableStatsDoNotPublishZeroValues(int cost, int star, PublicCharacterStatsStatus status)
+        {
+            var stats = new CharacterStatDefinition(new[] { new CharacterCostStats(2,
+                new[] { new CharacterStatOption(8, 8, 0) },
+                new[] { new CharacterStatOption(2, 2, -1), new CharacterStatOption(1, 1, 1) },
+                new[] { new CharacterStatOption(2, 2, int.MaxValue), new CharacterStatOption(1, 1, 1) }) });
+            var value = ObservationBuilder.Build(Source(stats: stats)).Observation.CharacterStats.Get(cost, star);
+            Assert.That(value.Status, Is.EqualTo(status));
+            Assert.That(value.IsAvailable, Is.False);
+            Assert.That(value.MinimumAttack, Is.Null);
+            Assert.That(value.MaximumDefense, Is.Null);
+            Assert.That(value.ExpectedAttack, Is.Null);
+            Assert.That(value.ExpectedDefense, Is.Null);
+        }
+
+        [TestCase(true, -1, false)]
+        [TestCase(true, 1, true)]
+        [TestCase(true, 4, false)]
+        [TestCase(false, 1, false)]
+        public void UnitRequirementsArePublicBeforeEstablishmentAndMatchRosterAndBoardRules(
+            bool completeRoster, int secondSlot, bool established)
+        {
+            var a = new CharacterDefinition("A", "A", 1, null, new[] { "Pair", "Solo", "Incomplete" });
+            var b = new CharacterDefinition("B", "B", 1, null, new[] { "Pair", "Incomplete" });
+            var hidden = new CharacterDefinition("Hidden", "Hidden", 1, null, new[] { "Incomplete" });
+            var full = new[] { a, b, hidden };
+            var selected = completeRoster ? new[] { b, a } : new[] { a };
+            var instances = new[] { new CharacterInstance("a", a, 1), new CharacterInstance("b", b, 1) };
+            var ids = new string[9];
+            ids[0] = "a";
+            var hand = HandState.CreateStandard();
+            if (secondSlot < 0) Assert.That(hand.TryWithSlot(0, HandSlotContent.Character("b"), out hand), Is.True);
+            else ids[secondSlot] = "b";
+            var config = StageConfig();
+            var prep = StageProgressRules.BeginCurrentEncounter(StageProgressRules.CreateInitialState(config), config).NextState;
+            var shop = new ShopState(ShopKind.Character, Array.Empty<ShopOffer>(), 0, 1, 1);
+            var result = ObservationBuilder.Build(Source(prep, board: new BoardState(3, 3, ids), hand: hand,
+                ownership: new CharacterOwnershipState(instances), definitions: full, selected: selected, full: full,
+                shop: shop, enemies: Array.Empty<EnemyDefinition>(), enemyBoard: EnemyBoardState.CreateEmpty()));
+            Assert.That(result.Succeeded, Is.True, string.Join("; ", result.Errors));
+            var observation = result.Observation;
+            Assert.That(observation.Synergy.Units.Count, Is.EqualTo(established ? 1 : 0));
+            Assert.That(observation.UnitRequirements.Count, Is.EqualTo(completeRoster ? 1 : 0));
+            if (completeRoster)
+            {
+                var requirement = observation.UnitRequirements[0];
+                Assert.That(requirement.UnitName, Is.EqualTo("Pair"));
+                Assert.That(requirement.RequiredMemberCount, Is.EqualTo(2));
+                Assert.That(requirement.RequiredDefinitionIds, Is.EqualTo(new[] { "A", "B" }));
+                Assert.Throws<NotSupportedException>(() => ((IList<string>)requirement.RequiredDefinitionIds)[0] = "Changed");
+                Assert.Throws<NotSupportedException>(() => ((IList<UnitRequirementObservation>)observation.UnitRequirements).Clear());
+                if (established)
+                    Assert.That(observation.Synergy.Units[0].UnitName, Is.EqualTo(requirement.UnitName));
+            }
+        }
+
         [Test]
         public void Build_InitialStateCopiesPublicPlayerAndStageValuesWithoutRng()
         {

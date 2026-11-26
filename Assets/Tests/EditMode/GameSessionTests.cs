@@ -386,6 +386,29 @@ namespace ProjectNST.GameCore.Tests
         }
 
         [Test]
+        public void PublicPurchaseRulesAreSharedAcrossObservationsAndRestoredCheckpoint()
+        {
+            var roster = Roster.Select((definition, i) => i < 2 ? new CharacterDefinition(
+                definition.DefinitionId, definition.CharacterName, definition.BaseCost, null, new[] { "Shared" })
+                : definition).ToArray();
+            var config = Configuration(characters: roster, selected: roster, fullRoster: roster);
+            var original = GameSession.Create(config, 321);
+            var checkpoint = original.CaptureCheckpoint();
+            var first = original.GetObservation().Observation;
+            var again = original.GetObservation().Observation;
+            var restored = GameSession.Restore(config, checkpoint);
+            var afterRestore = restored.GetObservation().Observation;
+            Assert.That(again.CharacterStats, Is.SameAs(first.CharacterStats));
+            Assert.That(afterRestore.CharacterStats, Is.SameAs(first.CharacterStats));
+            Assert.That(again.UnitRequirements, Is.SameAs(first.UnitRequirements));
+            Assert.That(afterRestore.UnitRequirements, Is.SameAs(first.UnitRequirements));
+            Assert.That(first.UnitRequirements.Single(x => x.UnitName == "Shared").RequiredMemberCount, Is.EqualTo(2));
+            Assert.That(afterRestore.CharacterStats.Get(5, 3).ExpectedAttack, Is.EqualTo(14));
+            Assert.That(original.CurrentState.RandomState, Is.EqualTo(checkpoint.RandomState));
+            Assert.That(restored.CurrentState.RandomState, Is.EqualTo(checkpoint.RandomState));
+        }
+
+        [Test]
         public void RestoredSessionObservationPublishesConfiguredDetailsWithoutAdvancingCheckpoint()
         {
             GameSession original = Create(seed: 1414);

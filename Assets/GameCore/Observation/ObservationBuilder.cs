@@ -39,6 +39,8 @@ namespace ProjectNST.GameCore.Observation
         public StageRewardConfiguration StageRewardConfig { get; }
         public int? ShopRerollGoldCost { get; }
         public IReadOnlyList<RosterDefinitionObservation> SelectedRosterObservation { get; }
+        internal PublicCharacterStatsCatalog CachedCharacterStats { get; set; }
+        internal SynergyDetector.RosterRules CachedRosterRules { get; set; }
 
         public ObservationSource(StageProgressState stage, StageProgressConfig stageConfig,
             EconomyState economy, EconomyRulesConfiguration economyConfig, BoardState board,
@@ -233,12 +235,14 @@ namespace ProjectNST.GameCore.Observation
                     source.ShopRerollGoldCost, selection != null && selection.CanReroll && source.Shop != null);
                 IReadOnlyList<RosterDefinitionObservation> roster = source.SelectedRosterObservation ??
                     BuildRosterSnapshot(source.SelectedRoster);
+                SynergyDetector.RosterRules rosterRules = source.CachedRosterRules ??
+                    SynergyDetector.BuildRosterRules(source.SelectedRoster, source.FullCharacterRoster);
 
                 SynergyObservation synergy = null;
                 if (source.Stage.Phase == StageProgressPhase.Preparation)
                 {
                     SynergyDetectionResult detected = SynergyDetector.Detect(source.Board, source.Hand,
-                        source.Ownership, source.SelectedRoster, source.FullCharacterRoster);
+                        source.Ownership, source.SelectedRoster, source.FullCharacterRoster, rosterRules);
                     if (!detected.IsValid)
                         foreach (string error in detected.Errors) errors.Add("Synergy: " + error);
                     else synergy = new SynergyObservation(detected);
@@ -265,7 +269,9 @@ namespace ProjectNST.GameCore.Observation
                         new BoardObservation(source.Board.Columns, source.Board.Rows, boardSlots),
                         new HandObservation(source.Hand.SlotCount, source.Hand.EmptySlotCount, handSlots),
                         allCharacters, eventItemDto, synergy, enemyDtos, battle, actionAllowed,
-                        economyRules, roster),
+                        economyRules, roster,
+                        source.CachedCharacterStats ?? new PublicCharacterStatsCatalog(source.CharacterStatSettings),
+                        rosterRules.Requirements),
                     Array.Empty<string>());
             }
             catch (ArgumentException exception)

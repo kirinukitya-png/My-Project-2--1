@@ -150,6 +150,7 @@ namespace ProjectNST.GameCore.Observation
     {
         public int ExperiencePurchaseGoldCost { get; }
         public int ExperiencePerPurchase { get; }
+        public ExperienceCurve ExperienceCurve { get; }
         public int MaximumLevel { get; }
         public bool CanPurchaseExperience { get; }
         public int? ShopRerollGoldCost { get; }
@@ -167,6 +168,7 @@ namespace ProjectNST.GameCore.Observation
         {
             ExperiencePurchaseGoldCost = EconomyRules.GetExperiencePurchaseGoldCost(config, selectB);
             ExperiencePerPurchase = config.ExperiencePerPurchase;
+            ExperienceCurve = config.ExperienceCurve;
             MaximumLevel = state.MaximumLevel;
             CanPurchaseExperience = EconomyRules.CanPurchaseExperience(state, config, selectB);
             ShopRerollGoldCost = rerollCost;
@@ -198,6 +200,7 @@ namespace ProjectNST.GameCore.Observation
     public sealed class ShopCostWeightObservation
     {
         public int StageNumber { get; }
+        public IReadOnlyList<int> CharactersPerCost { get; }
         public int Cost1Weight { get; }
         public int Cost2Weight { get; }
         public int Cost3Weight { get; }
@@ -206,6 +209,7 @@ namespace ProjectNST.GameCore.Observation
         public int TotalConfiguredWeight { get; }
         internal ShopCostWeightObservation(int stage, CharacterShopConfiguration config)
         {
+            CharactersPerCost = config.CharactersPerCost;
             StageNumber = stage; Cost1Weight = config.GetCostWeight(stage, 1);
             Cost2Weight = config.GetCostWeight(stage, 2); Cost3Weight = config.GetCostWeight(stage, 3);
             Cost4Weight = config.GetCostWeight(stage, 4); Cost5Weight = config.GetCostWeight(stage, 5);
@@ -222,6 +226,104 @@ namespace ProjectNST.GameCore.Observation
         internal RosterDefinitionObservation(CharacterDefinition definition)
         { DefinitionId = definition.DefinitionId; DisplayName = definition.CharacterName;
           Units = definition.Units; Attributes = definition.Attributes; }
+    }
+
+    public enum PublicCharacterStatsStatus { MissingConfiguration, NoPositiveWeight, InvalidWeights, Available }
+
+    public readonly struct PublicCharacterStats
+    {
+        public int RunCost { get; }
+        public int Star { get; }
+        public PublicCharacterStatsStatus Status { get; }
+        public bool IsAvailable => Status == PublicCharacterStatsStatus.Available;
+        public int? MinimumAttack { get; }
+        public int? MaximumAttack { get; }
+        public int? MinimumDefense { get; }
+        public int? MaximumDefense { get; }
+        public double? ExpectedAttack { get; }
+        public double? ExpectedDefense { get; }
+
+        internal PublicCharacterStats(int cost, int star, PublicCharacterStatsStatus status,
+            int? minAttack = null, int? maxAttack = null, int? minDefense = null, int? maxDefense = null,
+            double? expectedAttack = null, double? expectedDefense = null)
+        {
+            RunCost = cost;
+            Star = star;
+            Status = status;
+            MinimumAttack = minAttack;
+            MaximumAttack = maxAttack;
+            MinimumDefense = minDefense;
+            MaximumDefense = maxDefense;
+            ExpectedAttack = expectedAttack;
+            ExpectedDefense = expectedDefense;
+        }
+    }
+
+    public sealed class PublicCharacterStatsCatalog
+    {
+        private readonly Dictionary<(int Cost, int Star), PublicCharacterStats> _entries =
+            new Dictionary<(int, int), PublicCharacterStats>();
+        internal IEnumerable<PublicCharacterStats> Entries => _entries.Values;
+
+        internal PublicCharacterStatsCatalog(CharacterStatDefinition definition)
+        {
+            if (definition == null) return;
+            var costs = new HashSet<int>();
+            foreach (int cost in definition.ConfiguredCosts)
+            {
+                if (cost <= 0 || !costs.Add(cost)) continue;
+                for (int star = 1; star <= 3; star++)
+                    if (definition.TryGetOptions(cost, star, out var options))
+                        _entries.Add((cost, star), Summarize(cost, star, options));
+            }
+        }
+
+        public PublicCharacterStats Get(int runCost, int star) =>
+            _entries.TryGetValue((runCost, star), out var stats) ? stats :
+                new PublicCharacterStats(runCost, star, PublicCharacterStatsStatus.MissingConfiguration);
+
+        public PublicCharacterStats Get(PurchaseStatRoll roll)
+        {
+            if (roll == null) throw new ArgumentNullException(nameof(roll));
+            return Get(roll.RunCost, roll.Star);
+        }
+
+        private static PublicCharacterStats Summarize(int cost, int star, IReadOnlyList<CharacterStatOption> options)
+        {
+            long weight = 0, attack = 0, defense = 0;
+            int minAttack = int.MaxValue, minDefense = int.MaxValue;
+            int maxAttack = int.MinValue, maxDefense = int.MinValue;
+            foreach (CharacterStatOption option in options)
+            {
+                // Match the generator's valid draw interval, before accumulating products.
+                if (option.Weight < 0 || weight + option.Weight > int.MaxValue)
+                    return new PublicCharacterStats(cost, star, PublicCharacterStatsStatus.InvalidWeights);
+                if (option.Weight == 0) continue;
+                weight += option.Weight;
+                attack += (long)option.Attack * option.Weight;
+                defense += (long)option.Defense * option.Weight;
+                minAttack = Math.Min(minAttack, option.Attack);
+                maxAttack = Math.Max(maxAttack, option.Attack);
+                minDefense = Math.Min(minDefense, option.Defense);
+                maxDefense = Math.Max(maxDefense, option.Defense);
+            }
+            if (weight == 0) return new PublicCharacterStats(cost, star, PublicCharacterStatsStatus.NoPositiveWeight);
+            return new PublicCharacterStats(cost, star, PublicCharacterStatsStatus.Available,
+                minAttack, maxAttack, minDefense, maxDefense, (double)attack / weight, (double)defense / weight);
+        }
+    }
+
+    public sealed class UnitRequirementObservation
+    {
+        public string UnitName { get; }
+        public IReadOnlyList<string> RequiredDefinitionIds { get; }
+        public int RequiredMemberCount => RequiredDefinitionIds.Count;
+
+        internal UnitRequirementObservation(string unitName, string[] definitionIds)
+        {
+            UnitName = unitName;
+            RequiredDefinitionIds = Array.AsReadOnly(definitionIds);
+        }
     }
 
     public sealed class StageChoiceObservation
@@ -559,17 +661,22 @@ namespace ProjectNST.GameCore.Observation
         public bool IsStrategyActionAllowed { get; }
         public EconomyRulesObservation EconomyRules { get; }
         public IReadOnlyList<RosterDefinitionObservation> SelectedRoster { get; }
+        public PublicCharacterStatsCatalog CharacterStats { get; }
+        public IReadOnlyList<UnitRequirementObservation> UnitRequirements { get; }
 
         internal GameObservation(PlayerObservation player, StageObservation stage, ShopObservation shop,
             BoardObservation board, HandObservation hand, CharacterObservation[] characters,
             EventItemObservation eventItem, SynergyObservation synergy, EnemyObservation[] enemies,
             BattleObservation battle, bool actionAllowed, EconomyRulesObservation economyRules,
-            IReadOnlyList<RosterDefinitionObservation> selectedRoster)
+            IReadOnlyList<RosterDefinitionObservation> selectedRoster,
+            PublicCharacterStatsCatalog characterStats, IReadOnlyList<UnitRequirementObservation> unitRequirements)
         {
             Player=player; Stage=stage; Shop=shop; Board=board; Hand=hand;
             Characters=Array.AsReadOnly(characters); EventItem=eventItem; Synergy=synergy;
             Enemies=Array.AsReadOnly(enemies); Battle=battle; IsStrategyActionAllowed=actionAllowed;
             EconomyRules=economyRules; SelectedRoster=selectedRoster;
+            CharacterStats = characterStats;
+            UnitRequirements = unitRequirements;
         }
     }
 }

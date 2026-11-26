@@ -32,17 +32,24 @@ namespace ProjectNST.GameCore.Economy
             EconomyRulesConfiguration configuration)
         {
             if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            return CalculateExpectedInterestGold(goldForInterest, configuration.GoldPerInterestThreshold,
+                configuration.InterestGoldPerThreshold, configuration.MaximumInterestGold);
+        }
+
+        internal static decimal CalculateExpectedInterestGold(int goldForInterest, int goldPerThreshold,
+            int interestPerThreshold, int maximumInterest)
+        {
             if (goldForInterest < 0) throw new ArgumentOutOfRangeException(nameof(goldForInterest));
             long guaranteed = Math.Min(
-                ((long)goldForInterest / configuration.GoldPerInterestThreshold) * configuration.InterestGoldPerThreshold,
-                configuration.MaximumInterestGold);
-            int remainder = goldForInterest % configuration.GoldPerInterestThreshold;
-            if (guaranteed >= configuration.MaximumInterestGold ||
-                configuration.InterestGoldPerThreshold == 0 || remainder == 0)
+                ((long)goldForInterest / goldPerThreshold) * interestPerThreshold,
+                maximumInterest);
+            int remainder = goldForInterest % goldPerThreshold;
+            if (guaranteed >= maximumInterest ||
+                interestPerThreshold == 0 || remainder == 0)
                 return guaranteed;
-            int extra = Math.Min(configuration.InterestGoldPerThreshold,
-                configuration.MaximumInterestGold - (int)guaranteed);
-            return guaranteed + (decimal)remainder * extra / configuration.GoldPerInterestThreshold;
+            int extra = Math.Min(interestPerThreshold,
+                maximumInterest - (int)guaranteed);
+            return guaranteed + (decimal)remainder * extra / goldPerThreshold;
         }
 
         /// <summary>
@@ -237,29 +244,10 @@ namespace ProjectNST.GameCore.Economy
                 return false;
             }
 
-            long xp = (long)state.XP + amount;
-            while (nextLevel < state.MaximumLevel)
-            {
-                int needed = configuration.GetRequiredExperience(nextLevel);
-                if (needed < 1)
-                {
-                    failure = EconomyActionFailureReason.ExperienceCurveMismatch;
-                    return false;
-                }
-                if (xp < needed) break;
-                xp -= needed;
-                nextLevel++;
-                levelsGained++;
-            }
-
-            if (nextLevel >= state.MaximumLevel)
-                nextXP = 0;
-            else if (xp > int.MaxValue)
-            {
-                failure = EconomyActionFailureReason.ExperienceOverflow;
-                return false;
-            }
-            else nextXP = (int)xp;
+            var progress = configuration.ExperienceCurve.AdvanceCore(state.Level, state.XP, amount);
+            nextLevel = progress.AfterLevel;
+            nextXP = progress.AfterXP;
+            levelsGained = progress.LevelsGained;
             return true;
         }
 

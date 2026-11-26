@@ -11,6 +11,8 @@ namespace ProjectNST.GameCore.Shop
         private readonly int[][] _stageCostWeights;
         private readonly int[] _shopSlotsByStage;
 
+        public IReadOnlyList<int> CharactersPerCost { get; }
+
         public int StageCount => _stageCostWeights.Length;
 
         public CharacterShopConfiguration(IEnumerable<int> charactersPerCost,
@@ -19,6 +21,7 @@ namespace ProjectNST.GameCore.Shop
             IEnumerable<int> shopSlotsByStage)
         {
             _charactersPerCost = CopyFiveCounts(charactersPerCost, nameof(charactersPerCost));
+            CharactersPerCost = Array.AsReadOnly(_charactersPerCost);
             _initialPoolCountsByCost = CopyFiveCounts(initialPoolCountsByCost, nameof(initialPoolCountsByCost));
             _stageCostWeights = CopyStageWeights(stageCostWeights);
             _shopSlotsByStage = CopyCounts(shopSlotsByStage, nameof(shopSlotsByStage));
