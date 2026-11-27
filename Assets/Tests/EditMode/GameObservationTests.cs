@@ -14,7 +14,7 @@ using ProjectNST.GameCore.Stages;
 
 namespace ProjectNST.GameCore.Tests
 {
-    public sealed class GameObservationTests
+    public sealed partial class GameObservationTests
     {
         private static StageProgressConfig StageConfig() =>
             new StageProgressConfig(25, 5, 5, 4, 0, 0, 0, 1, 0, 0,

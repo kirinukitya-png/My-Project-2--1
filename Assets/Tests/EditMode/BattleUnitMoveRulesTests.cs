@@ -12,7 +12,7 @@ using ProjectNST.GameCore.Stages;
 
 namespace ProjectNST.GameCore.Tests
 {
-    public sealed class BattleUnitMoveRulesTests
+    public sealed partial class BattleUnitMoveRulesTests
     {
         private static Pcg32State Rng(ulong seed = 111) => new Pcg32RandomSource(seed, 17).CaptureState();
         private static StageProgressConfig StageConfig() => new StageProgressConfig(25, 5, 5, 4, 0, 0, 100, 1, 0, 0, 3, 6, 0, 0, 10, 4, 2, true);

@@ -87,7 +87,7 @@ namespace ProjectNST.GameCore.Synergy
             foreach (string attributeName in attributeOrder)
             {
                 List<SynergyParticipant> participants = attributeParticipants[attributeName];
-                if (participants.Count >= 2)
+                if (IsSharedAttribute(participants.Count))
                     attributes.Add(new AttributeSynergyResult(attributeName, participants));
             }
 
@@ -203,7 +203,7 @@ namespace ProjectNST.GameCore.Synergy
             }
         }
 
-        private static bool AreConnected(IList<int> slots, int columns)
+        internal static bool AreConnected(IList<int> slots, int columns)
         {
             if (slots == null || slots.Count < 2 || columns <= 0) return false;
             var remaining = new HashSet<int>(slots);
@@ -213,14 +213,10 @@ namespace ProjectNST.GameCore.Synergy
             while (queue.Count > 0)
             {
                 int current = queue.Dequeue();
-                int row = current / columns;
-                int column = current % columns;
                 var found = new List<int>();
                 foreach (int candidate in remaining)
                 {
-                    int candidateRow = candidate / columns;
-                    int candidateColumn = candidate % columns;
-                    if (Math.Abs(row - candidateRow) + Math.Abs(column - candidateColumn) == 1)
+                    if (AreOrthogonalNeighbors(current, candidate, columns))
                         found.Add(candidate);
                 }
                 found.Sort();
@@ -233,18 +229,14 @@ namespace ProjectNST.GameCore.Synergy
             return remaining.Count == 0;
         }
 
-        private static int CompareUnits(UnitSynergyResult left, UnitSynergyResult right)
-        {
-            int countComparison = right.ParticipantCount.CompareTo(left.ParticipantCount);
-            if (countComparison != 0) return countComparison;
-            int count = Math.Min(left.ParticipantBoardSlotIndexes.Count, right.ParticipantBoardSlotIndexes.Count);
-            for (int i = 0; i < count; i++)
-            {
-                int slotComparison = left.ParticipantBoardSlotIndexes[i].CompareTo(right.ParticipantBoardSlotIndexes[i]);
-                if (slotComparison != 0) return slotComparison;
-            }
-            return string.CompareOrdinal(left.UnitName, right.UnitName);
-        }
+        internal static bool IsSharedAttribute(int participantCount) => participantCount >= 2;
+
+        internal static bool AreOrthogonalNeighbors(int first, int second, int columns) =>
+            Math.Abs(first / columns - second / columns) + Math.Abs(first % columns - second % columns) == 1;
+
+        private static int CompareUnits(UnitSynergyResult left, UnitSynergyResult right) =>
+            UnitMovePriority.Compare(left.UnitName, left.ParticipantBoardSlotIndexes,
+                right.UnitName, right.ParticipantBoardSlotIndexes);
 
         private static bool TagsEqual(IReadOnlyList<string> left, IReadOnlyList<string> right)
         {

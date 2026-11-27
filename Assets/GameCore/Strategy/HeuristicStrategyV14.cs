@@ -135,10 +135,21 @@ namespace ProjectNST.GameCore.Strategy
             public bool IncreasesBoard { get; set; }
             public bool? GoldGatePassed { get; set; }
             public CompositionValue? Composition { get; set; }
+            public IntegratedCompositionComparison? IntegratedComposition { get; set; }
+            public IntegratedPurchaseEvaluation IntegratedPurchase { get; set; }
             public PurchaseCompositionFailure? PurchaseFailure { get; set; }
+            public int? RunCost { get; set; }
+            public int? Price { get; set; }
+            public int? MergeStages { get; set; }
+            public V14CapacityUse? CapacityUse { get; set; }
             public EconomyValueComparison? Economy { get; set; }
             public GrowthValueComparison? Growth { get; set; }
             public ShopOpportunityResult Shop { get; set; }
+            public ShopOpportunityResult CorrectedShop { get; set; }
+            public decimal? CorrectedScore { get; set; }
+            public decimal? BattleDelta { get; set; }
+            public ProjectNST.GameCore.Battle.BattleValueStatus? BattleStatus { get; set; }
+            public ProjectNST.GameCore.Battle.BattleValueComparison BattleComparison { get; set; }
             public V14Evaluation(GameAction action, V14Status status = V14Status.Scored) { Action = action; Status = status; }
         }
 
@@ -147,22 +158,41 @@ namespace ProjectNST.GameCore.Strategy
             private readonly HeuristicStrategy _strategy;
             private readonly GameObservation _observation;
             private CompositionValueEvaluator _composition;
+            private IntegratedCompositionValueEvaluator _integrated;
+            private readonly bool _useCache, _includeDetails;
+            private readonly bool _retainTraceStates;
+            private int _purchaseHits;
             private EconomyValueEvaluator _economy;
             private EconomyValueEvaluator.Baseline _gold;
             private GrowthValueEvaluator.Baseline _growth;
             private ShopOpportunityResult _shop;
+            public ShopOpportunityResult CorrectedShop { get; private set; }
+            public V16DecisionBattle Battle { get; }
             private readonly Dictionary<(string, CharacterLocationKind, int), PurchaseCompositionEvaluation> _purchases =
                 new Dictionary<(string, CharacterLocationKind, int), PurchaseCompositionEvaluation>();
+            private Dictionary<(string, CharacterLocationKind, int), IntegratedPurchaseEvaluation> _integratedPurchases;
 
-            public V14DecisionValues(HeuristicStrategy strategy, GameObservation observation)
+            public V14DecisionValues(HeuristicStrategy strategy, GameObservation observation,
+                bool useCache = true, bool includeDetails = false, bool retainTraceStates = false)
             {
                 _strategy = strategy;
                 _observation = observation;
+                _useCache = useCache;
+                _includeDetails = includeDetails;
+                _retainTraceStates = retainTraceStates;
+                if (strategy._v16 != null)
+                    Battle = new V16DecisionBattle(observation, strategy._v16.Battle, useCache,
+                        strategy._decisionDiagnosticSink != null, strategy._decisionDiagnosticSink != null && strategy._v16DetailedTrace);
             }
 
             public CompositionValueEvaluator Composition => _composition ??= new CompositionValueEvaluator(_observation,
                 _strategy._settings.CompositionHandReserveWeight, _strategy._settings,
                 _strategy._settings.CompositionHandDuplicateWeight);
+            public bool UsesIntegrated => _strategy._v15 != null;
+            public IntegratedCompositionValueEvaluator Integrated => _integrated ??= new IntegratedCompositionValueEvaluator(
+                _observation, _strategy._v15.Composition, _includeDetails, _useCache, _retainTraceStates);
+            public IntegratedCompositionValueEvaluator ExistingIntegrated => _integrated;
+            public (int Entries, int Reuses) PurchaseCounts => (_integratedPurchases?.Count ?? 0, _purchaseHits);
             public EconomyValueEvaluator Economy => _economy ??= new EconomyValueEvaluator(_strategy._v14.Economy,
                 EconomyInterestObservation.FromObservation(_observation));
             public EconomyValueEvaluator.Baseline Gold => _gold ??= Economy.CreateBaseline(_observation.Player.Gold);
@@ -180,13 +210,55 @@ namespace ProjectNST.GameCore.Strategy
                 return result;
             }
 
+            public IntegratedPurchaseEvaluation IntegratedPurchase(BuyCharacterAction action)
+            {
+                _integratedPurchases ??= new Dictionary<(string, CharacterLocationKind, int), IntegratedPurchaseEvaluation>();
+                var key = (action.OfferId, action.Placement.Kind, action.Placement.SlotIndex);
+                if (!_integratedPurchases.TryGetValue(key, out var result))
+                {
+                    result = Integrated.ComparePurchase(action);
+                    _integratedPurchases.Add(key, result);
+                }
+                else _purchaseHits++;
+                return result;
+            }
+
             public ShopOpportunityResult Shop()
             {
                 if (_shop != null) return _shop;
-                _strategy._profiler?.Add("Strategy.V14.RerollEvaluations");
+                string path = UsesIntegrated ? "Strategy.V15" : "Strategy.V14";
+                _strategy._profiler?.Add(path + ".RerollEvaluations");
                 using (_strategy._profiler == null ? default(SimulationProfileCollector.Scope) :
-                    _strategy._profiler.Measure("Strategy.V14.ShopOpportunity"))
-                    return _shop = _strategy._v14Shop.EvaluateShared(_observation, Composition, Economy, Gold, Purchase);
+                    _strategy._profiler.Measure(path + ".ShopOpportunity"))
+                {
+                    if (Battle?.CanEvaluate == true)
+                    {
+                        var result = _strategy._v14Shop.EvaluateWithBattle(_observation, Integrated, Economy, Gold,
+                            IntegratedPurchase, _includeDetails || _retainTraceStates ||
+                                (_strategy._decisionDiagnosticSink != null && _strategy._v16DetailedTrace),
+                            (preview, source, id) => 8m * Battle.CorrectPurchase(preview, source, id));
+                        CorrectedShop = result.Corrected;
+                        return _shop = result.Original;
+                    }
+                    return _shop = UsesIntegrated
+                        ? _strategy._v14Shop.EvaluateIntegrated(_observation, Integrated, Economy, Gold, IntegratedPurchase,
+                            _includeDetails || _retainTraceStates)
+                        : _strategy._v14Shop.EvaluateShared(_observation, Composition, Economy, Gold, Purchase);
+                }
+            }
+
+            public void RecordIntegratedCounters()
+            {
+                var profiler = _strategy._profiler;
+                if (_integrated == null || profiler == null) return;
+                var counts = _integrated.CacheStatistics;
+                profiler.Add("Strategy.V15.IntegratedContexts");
+                profiler.Add("Strategy.V15.SynergyEvaluations", counts.SynergyEvaluations);
+                profiler.Add("Strategy.V15.SynergyCacheHits", counts.SynergyCacheHits);
+                profiler.Add("Strategy.V15.OptionCacheHits", counts.OptionCacheHits);
+                profiler.Add("Strategy.V15.OptionSearches", _integrated.DiagnosticCounts.OptionSearches);
+                if (_shop != null)
+                    profiler.Add("Strategy.V15.HypotheticalPurchasePreviews", _shop.HypotheticalPreviewCount);
             }
         }
 
@@ -201,6 +273,12 @@ namespace ProjectNST.GameCore.Strategy
 
         private IReadOnlyList<HeuristicActionEvaluation> InspectV14Preparation(GameObservation o, ActionId id)
         {
+            if (_v16 != null)
+                return Array.AsReadOnly(InspectV16Preparation(o, id).Candidates.OrderByDescending(r => r.UsedScore)
+                    .ThenBy(r => Signature(r.Action), StringComparer.Ordinal).Select(r => new HeuristicActionEvaluation(
+                        r.Action, r.UsedScore.HasValue ? (double)r.UsedScore.Value :
+                            (r.Status == nameof(V14Status.Finish) ? (double)r.Minimum : double.NegativeInfinity),
+                        r.Status, isSelectable: r.UsedScore.HasValue || r.Status == nameof(V14Status.Finish))).ToArray());
             var candidates = V14Candidates(o, id);
             var values = new V14DecisionValues(this, o);
             bool enemyless = IsEnemylessPreparation(o);
@@ -220,21 +298,41 @@ namespace ProjectNST.GameCore.Strategy
             bool enemyless = IsEnemylessPreparation(o);
             bool limit = decisions >= _v14.PreparationLimit;
             var trace = _decisionDiagnosticSink == null ? null : new List<V14Evaluation>();
+            V14DecisionValues values = null;
+            var evaluations = new List<V14Evaluation>();
+            GameAction originalChoice = null;
+            V14Evaluation originalTop = null, correctedTop = null;
+            bool compared = false;
 
+            bool candidatesGenerated = false;
+            int generatedCount = 0;
             StrategyDecision Finish(GameAction action, string reason)
             {
                 var next = NewState(decisions, action == null ? string.Empty : Signature(action),
                     o.Stage.EncounterIndex, o.Stage.Phase);
                 var decision = action == null ? context.NoAction(next, reason) : context.Decide(action, next, reason);
-                if (trace != null) PublishV14(o, context, decisions, trace, action, reason);
+                if (_v16 != null && (_v16Telemetry != null || trace != null))
+                {
+                    var summary = ObserveV16(o, values?.Battle, evaluations, compared, originalChoice, action, generatedCount);
+                    SendV16Telemetry(summary);
+                    if (trace != null)
+                        PublishV16(o, context, trace, action, reason, values, summary, originalChoice, compared,
+                            originalTop?.Action, correctedTop?.Action);
+                }
+                if (trace != null)
+                {
+                    if (_v15 == null) PublishV14(o, context, decisions, trace, action, reason, candidatesGenerated);
+                    else if (_v16 == null) PublishV15(o, context, decisions, trace, action, reason, candidatesGenerated, values);
+                }
                 return decision;
             }
 
             if (!o.IsStrategyActionAllowed) return Finish(null, "No player decision is required.");
             if (enemyless && limit) return Finish(null, "Preparation limit; ResolveEnemylessStage.");
             var generated = V14Candidates(o, context.NextActionId);
+            candidatesGenerated = true;
+            generatedCount = generated.Length;
             var candidates = new List<GameAction>();
-            var evaluations = new List<V14Evaluation>();
             foreach (var a in generated)
             {
                 if (Signature(a) == previous || IsReverse(previous, a) ||
@@ -272,31 +370,53 @@ namespace ProjectNST.GameCore.Strategy
                 return End("Preparation limit");
             }
 
-            var values = new V14DecisionValues(this, o);
-            void EvaluateCandidate(GameAction a)
+            values = new V14DecisionValues(this, o, retainTraceStates: trace != null && _v15 != null && _v15TraceDetails);
+            void EvaluateCandidate(GameAction a, bool correct = true)
             {
                 var result = EvaluateV14(o, a, generated, values, enemyless);
+                if (correct) values.Battle?.Correct(result);
                 evaluations.Add(result);
                 trace?.Add(result);
             }
-            V14Evaluation Best(Func<V14Evaluation, bool> eligible) => evaluations.Where(eligible)
-                .OrderByDescending(x => x.Score).ThenBy(x => Signature(x.Action), StringComparer.Ordinal).FirstOrDefault();
+            decimal? UsedScore(V14Evaluation row) => values.Battle?.RequiresFallback == false
+                ? row.CorrectedScore ?? row.Score : row.Score;
+            V14Evaluation Best(Func<V14Evaluation, bool> eligible, bool original = false) => evaluations.Where(eligible)
+                .OrderByDescending(x => original ? x.Score : UsedScore(x))
+                .ThenBy(x => Signature(x.Action), StringComparer.Ordinal).FirstOrDefault();
 
             bool emptyPriority = !enemyless && BoardCount(o) == 0;
             if (emptyPriority)
             {
                 foreach (var a in candidates.Where(IsV14BoardAddition))
-                    EvaluateCandidate(a);
-                var addition = Best(x => x.IncreasesBoard && x.Score > 0);
+                    EvaluateCandidate(a, correct: false);
+                var addition = Best(x => x.IncreasesBoard && x.Score > 0, original: true);
                 if (addition != null)
                 {
                     TraceDeferred();
+                    values.RecordIntegratedCounters();
                     return Finish(addition.Action, "EmptyBoardPriority: positive legal Board addition.");
                 }
+                if (values.Battle != null)
+                    foreach (var row in evaluations) values.Battle.Correct(row);
             }
+            bool deferReroll = values.Battle?.CanEvaluate == true;
             foreach (var a in candidates)
-                if (!emptyPriority || !IsV14BoardAddition(a)) EvaluateCandidate(a);
-            var winner = Best(x => x.Passes);
+                if ((!emptyPriority || !IsV14BoardAddition(a)) && (!deferReroll || !(a is RerollShopAction)))
+                    EvaluateCandidate(a);
+            if (deferReroll)
+                foreach (var a in candidates.OfType<RerollShopAction>()) EvaluateCandidate(a);
+            var winner = Best(x => UsedScore(x) > x.Minimum);
+            if (_v16 != null && (_v16Telemetry != null || trace != null))
+            {
+                compared = true;
+                originalChoice = Best(x => x.Score > x.Minimum, original: true)?.Action ?? start;
+                if (trace != null)
+                {
+                    originalTop = Best(x => x.Score.HasValue, original: true);
+                    if (values.Battle?.RequiresFallback != true) correctedTop = Best(x => UsedScore(x).HasValue);
+                }
+            }
+            values.RecordIntegratedCounters();
             return winner == null ? End("No preparation candidate strictly exceeds its minimum benefit") :
                 Finish(winner.Action, "Highest raw score among eligible preparation candidates.");
         }
@@ -315,6 +435,13 @@ namespace ProjectNST.GameCore.Strategy
                 r.IncreasesBoard = change.After.BoardCount > change.Before.BoardCount;
                 score += _v14.Shop.CompositionWeight * (decimal)(synergyOnly ? change.Delta.BoardSynergy : change.TotalDelta);
             }
+            void IntegratedShape(IntegratedCompositionComparison change, bool boardMove = false)
+            {
+                r.IntegratedComposition = change;
+                r.IncreasesBoard = change.After.BoardCount > change.Before.BoardCount;
+                score += _v14.Shop.CompositionWeight * (boardMove
+                    ? change.Delta.BoardSynergy + change.Delta.HandUnitOption : change.TotalDelta);
+            }
             void Funds(int change)
             {
                 r.Economy = values.Gold.CompareGoldChange(change);
@@ -327,35 +454,54 @@ namespace ProjectNST.GameCore.Strategy
                     r.Status = V14Status.Finish;
                     break;
                 case BuyCharacterAction buy:
-                    var purchase = values.Purchase(buy);
-                    r.PurchaseFailure = purchase.Failure;
-                    if (purchase.Preview.After.OverLevelCount > purchase.Preview.Before.OverLevelCount)
+                    var integratedPurchase = values.UsesIntegrated ? values.IntegratedPurchase(buy) : null;
+                    r.IntegratedPurchase = integratedPurchase;
+                    var purchase = values.UsesIntegrated ? null : values.Purchase(buy);
+                    var preview = integratedPurchase?.Preview ?? purchase.Preview;
+                    r.PurchaseFailure = integratedPurchase?.Failure ?? purchase.Failure;
+                    var offer = Offer(o, buy.OfferId);
+                    r.RunCost = offer?.RunCost;
+                    r.Price = offer?.DisplayPrice;
+                    if (preview.Succeeded) r.MergeStages = preview.MergeStageCount;
+                    if (preview.After.OverLevelCount > preview.Before.OverLevelCount)
                         r.Status = V14Status.OverLevel;
-                    else if (!purchase.Comparison.HasValue)
+                    else if (!(integratedPurchase?.Succeeded ?? purchase.Succeeded))
                         r.Status = V14Status.UnavailablePurchase;
                     else
                     {
-                        Shape(purchase.Comparison.Value);
+                        if (integratedPurchase != null) IntegratedShape(integratedPurchase.Comparison.Value);
+                        else Shape(purchase.Comparison.Value);
                         Funds(-Offer(o, buy.OfferId).DisplayPrice);
                     }
                     break;
                 case SellCharacterAction sell:
                     var c = o.Characters.First(x => x.InstanceId == sell.InstanceId);
-                    Shape(c.LocationKind == ObservationLocationKind.Board ? values.Composition.CompareBoardRemoval(c.SlotIndex)
+                    if (values.UsesIntegrated)
+                        IntegratedShape(c.LocationKind == ObservationLocationKind.Board
+                            ? values.Integrated.CompareBoardRemoval(c.SlotIndex) : values.Integrated.CompareHandRemoval(c.SlotIndex));
+                    else Shape(c.LocationKind == ObservationLocationKind.Board ? values.Composition.CompareBoardRemoval(c.SlotIndex)
                         : values.Composition.CompareHandRemoval(c.SlotIndex));
-                    Funds(checked(c.RunCost * (c.Star == 3 ? 9 : c.Star == 2 ? 3 : 1)));
+                    r.RunCost = c.RunCost;
+                    r.Price = checked(c.RunCost * (c.Star == 3 ? 9 : c.Star == 2 ? 3 : 1));
+                    Funds(r.Price.Value);
                     break;
                 case MoveOrSwapBoardAction board:
-                    Shape(values.Composition.CompareBoardMoveOrSwap(board.SourceSlot, board.TargetSlot), true);
+                    if (values.UsesIntegrated)
+                        IntegratedShape(values.Integrated.CompareBoardMoveOrSwap(board.SourceSlot, board.TargetSlot), true);
+                    else Shape(values.Composition.CompareBoardMoveOrSwap(board.SourceSlot, board.TargetSlot), true);
                     break;
                 case MoveBoardToHandAction transfer:
-                    Shape(values.Composition.CompareBoardToHand(transfer.BoardSlot, transfer.HandSlot));
+                    if (values.UsesIntegrated)
+                        IntegratedShape(values.Integrated.CompareBoardToHand(transfer.BoardSlot, transfer.HandSlot));
+                    else Shape(values.Composition.CompareBoardToHand(transfer.BoardSlot, transfer.HandSlot));
                     break;
                 case MoveHandToBoardAction deploy:
                     if (WouldDuplicateAfterHandMove(o, deploy.BoardSlot, deploy.HandSlot))
                         r.Status = V14Status.DuplicateDefinition;
                     else if (IsEmptyBoardSlot(o, deploy.BoardSlot) && BoardCount(o) >= o.Player.Level)
                         r.Status = V14Status.OverLevel;
+                    else if (values.UsesIntegrated)
+                        IntegratedShape(values.Integrated.CompareHandToBoard(deploy.HandSlot, deploy.BoardSlot));
                     else Shape(values.Composition.CompareHandToBoard(deploy.HandSlot, deploy.BoardSlot));
                     break;
                 case MoveOrSwapHandAction:
@@ -371,8 +517,9 @@ namespace ProjectNST.GameCore.Strategy
                     var growth = values.Growth.CompareExperienceGain(rules.ExperiencePerPurchase);
                     r.Growth = growth;
                     Funds(-rules.ExperiencePurchaseGoldCost);
-                    r.GoldGatePassed = o.Player.Gold >= _v14.ExperienceMinimumGold ||
-                        CanUseNewV14Capacity(o, generated, values, growth, r.Economy.Value.After.Gold);
+                    if (o.Player.Gold < _v14.ExperienceMinimumGold)
+                        r.CapacityUse = GetNewV14CapacityUse(o, generated, values, growth, r.Economy.Value.After.Gold);
+                    r.GoldGatePassed = !r.CapacityUse.HasValue || r.CapacityUse != V14CapacityUse.None;
                     if (r.GoldGatePassed == false) r.Status = V14Status.LowGoldExperience;
                     else score += growth.TotalDelta;
                     break;
@@ -385,6 +532,8 @@ namespace ProjectNST.GameCore.Strategy
                         else
                         {
                             r.Shop = values.Shop();
+                            r.CorrectedShop = values.CorrectedShop;
+                            r.CorrectedScore = r.CorrectedShop?.Score;
                             r.Economy = r.Shop.RerollEconomy;
                             if (r.Shop.Score.HasValue) score = r.Shop.Score.Value;
                             else r.Status = V14Status.UnavailableReroll;
@@ -413,32 +562,37 @@ namespace ProjectNST.GameCore.Strategy
             return r;
         }
 
-        private static bool CanUseNewV14Capacity(GameObservation o, IReadOnlyList<GameAction> generated,
+        private enum V14CapacityUse { None, HandPlacement, PublicShopPurchase }
+
+        private static V14CapacityUse GetNewV14CapacityUse(GameObservation o, IReadOnlyList<GameAction> generated,
             V14DecisionValues values, GrowthValueComparison growth, int remainingGold)
         {
             int beforeCapacity = growth.Before.EffectiveCapacity;
             int afterCapacity = growth.After.EffectiveCapacity;
-            if (afterCapacity <= beforeCapacity) return false;
+            if (afterCapacity <= beforeCapacity) return V14CapacityUse.None;
             int occupied = BoardCount(o);
             foreach (var a in generated)
             {
                 if (a is MoveHandToBoardAction move && occupied >= beforeCapacity && occupied < afterCapacity &&
                     IsEmptyBoardSlot(o, move.BoardSlot) && !WouldDuplicateAfterHandMove(o, move.BoardSlot, move.HandSlot))
-                    return true;
+                    return V14CapacityUse.HandPlacement;
                 if (!(a is BuyCharacterAction buy) || Offer(o, buy.OfferId).DisplayPrice > remainingGold) continue;
-                var purchase = values.Purchase(buy);
-                var preview = purchase.Preview;
-                if (purchase.Comparison.HasValue && preview.After.BoardCount > occupied &&
+                var integrated = values.UsesIntegrated ? values.IntegratedPurchase(buy) : null;
+                var purchase = values.UsesIntegrated ? null : values.Purchase(buy);
+                var preview = integrated?.Preview ?? purchase.Preview;
+                if ((integrated?.Succeeded ?? purchase.Succeeded) && preview.After.BoardCount > occupied &&
                     preview.After.BoardCount > beforeCapacity && preview.After.BoardCount <= afterCapacity)
-                    return true;
+                    return V14CapacityUse.PublicShopPurchase;
             }
-            return false;
+            return V14CapacityUse.None;
         }
 
         private static string FormatV14(V14Evaluation r)
         {
             var text = new StringBuilder(FormattableString.Invariant(
-                $"status={r.Status} score={r.Score?.ToString(CultureInfo.InvariantCulture) ?? "Unavailable"} minimum={r.Minimum} passes={r.Passes} boardAddition={r.IncreasesBoard} goldGate={r.GoldGatePassed}"));
+                $"status={r.Status} score={r.Score?.ToString(CultureInfo.InvariantCulture) ?? "Unavailable"} minimum={(r.Status == V14Status.Scored || r.Status == V14Status.Finish ? r.Minimum.ToString(CultureInfo.InvariantCulture) : "Unavailable")} passes={(r.Score.HasValue ? r.Passes.ToString() : "Unavailable")} boardAddition={r.IncreasesBoard} goldGate={r.GoldGatePassed}"));
+            if (r.Price.HasValue) text.Append(FormattableString.Invariant($" runCost={r.RunCost} price={r.Price} mergeStages={r.MergeStages?.ToString(CultureInfo.InvariantCulture) ?? "Unavailable"}"));
+            if (r.CapacityUse.HasValue) text.Append(" lowGoldXp=").Append(r.CapacityUse);
             if (r.PurchaseFailure.HasValue) text.Append(" purchase=").Append(r.PurchaseFailure);
             if (r.Composition.HasValue)
             {
@@ -453,33 +607,45 @@ namespace ProjectNST.GameCore.Strategy
             if (r.Growth.HasValue)
             {
                 var g = r.Growth.Value;
-                text.Append(FormattableString.Invariant($" growth={g.TotalDelta} level={g.Before.Level}->{g.After.Level} xp={g.Before.XP}->{g.After.XP} slots={g.After.EffectiveCapacity-g.Before.EffectiveCapacity} progress={g.DeltaProgress} opportunity={g.DeltaOpportunity}"));
+                text.Append(FormattableString.Invariant($" growth={g.TotalDelta} level={g.Before.Level}->{g.After.Level} xp={g.Before.XP}->{g.After.XP} immediateLevelUp={g.After.Level > g.Before.Level} slots={g.After.EffectiveCapacity-g.Before.EffectiveCapacity} progress={g.DeltaProgress} opportunity={g.DeltaOpportunity}"));
             }
             if (r.Shop != null)
-                text.Append(FormattableString.Invariant($" shopStatus={r.Shop.Status} current={r.Shop.CurrentOpportunity} future={r.Shop.ExpectedFutureOpportunity} discounted={r.Shop.DiscountedFutureOpportunity} unknownMass={r.Shop.FutureMass?.Unavailable} reason={r.Shop.UnavailableReason}"));
+                text.Append(FormattableString.Invariant($" shopStatus={r.Shop.Status} current={r.Shop.CurrentOpportunity} future={r.Shop.ExpectedFutureOpportunity} discounted={r.Shop.DiscountedFutureOpportunity} unknownMass={r.Shop.FutureMass?.Unavailable} discount={r.Shop.FutureDiscount} hypotheticalPreviews={r.Shop.HypotheticalPreviewCount} reason={r.Shop.UnavailableReason}"));
             return text.ToString();
         }
 
+        private static string V14TraceOutcome(V14Evaluation row, GameAction selected, string reason)
+        {
+            if (ReferenceEquals(row.Action, selected)) return "Selected";
+            if (row.Status == V14Status.Deferred)
+                return reason.StartsWith("LevelRepair", StringComparison.Ordinal) ? "DeferredLevelRepair" :
+                    reason.StartsWith("EmptyBoardPriority", StringComparison.Ordinal) ? "DeferredEmptyBoard" : "DeferredLimit";
+            if (row.Status != V14Status.Scored) return row.Status.ToString();
+            if (reason.StartsWith("EmptyBoardPriority", StringComparison.Ordinal)) return "OtherEmptyBoardAddition";
+            return row.Score <= 0 ? "NonPositive" : row.Passes ? "OtherActionWon" : "BelowMinimum";
+        }
+
         private void PublishV14(GameObservation o, StrategyContext context, int decisions,
-            List<V14Evaluation> trace, GameAction action, string reason)
+            List<V14Evaluation> trace, GameAction action, string reason, bool candidatesGenerated)
         {
             try
             {
                 var b = new StringBuilder()
                     .AppendLine(FormattableString.Invariant($"Strategy={StrategyId} Version={Version} TrialIndex={context.TrialIndex} DecisionIndex={context.DecisionStep}"))
                     .AppendLine(FormattableString.Invariant($"Stage={o.Stage.StageNumber} Round={o.Stage.RoundNumber} EncounterIndex={o.Stage.EncounterIndex} Phase={o.Stage.Phase} Choice={o.Stage.Choice} EnemyCategory={o.Stage.EnemyCategory} PreparationDecisions={decisions}"))
-                    .AppendLine("VisibleObservationFingerprint=" + GetV14ObservationFingerprint(o));
+                    .AppendLine("VisibleObservationFingerprint=" + (_v15 == null ? GetV14ObservationFingerprint(o) :
+                        GetV15ObservationFingerprint(o, _v15)))
+                    .AppendLine(FormattableString.Invariant($"PublicState gold={o.Player.Gold} level={o.Player.Level} xp={o.Player.XP} board={BoardCount(o)}/{o.Board.Slots.Count} handOccupied={o.Hand.SlotCount-o.Hand.EmptySlotCount}/{o.Hand.SlotCount} handCharacters={o.Hand.Slots.Count(x => x.Character != null)} handItems={o.Hand.Slots.Count(x => x.Item != null)}"))
+                    .AppendLine("RerollGeneration=" + (!candidatesGenerated ? "NotRun" : trace.Any(x => x.Action is RerollShopAction) ? "Generated" : "NoCandidate"))
+                    .AppendLine(FormattableString.Invariant($"ShopEvaluation calls={trace.Count(x => x.Shop != null)} expectedComputed={trace.Count(x => x.Shop?.ExpectedFutureOpportunity.HasValue == true)} currentComputed={trace.Count(x => x.Shop?.CurrentOpportunity.HasValue == true)} unavailable={trace.Count(x => x.Shop != null && !x.Shop.Score.HasValue)}"));
                 foreach (var result in trace)
                     b.Append("Candidate generated=").Append(DescribeCandidate(result.Action)).Append(" signature=")
-                        .Append(Signature(result.Action)).Append(' ').AppendLine(FormatV14(result));
+                        .Append(Signature(result.Action)).Append(' ').Append(FormatV14(result)).Append(" outcome=").AppendLine(V14TraceOutcome(result, action, reason));
                 b.Append("FinalAction=").Append(action == null ? "NoAction" : DescribeCandidate(action))
                     .Append(" FinalReason=").AppendLine(reason);
-                _decisionDiagnosticSink(b.ToString());
+                SendDecisionTrace(b.ToString());
             }
-            catch (Exception)
-            {
-                // Diagnostics must not affect the selected action or Strategy RNG.
-            }
+            catch (Exception error) { ReportDecisionTraceError(false, error); }
         }
     }
 }

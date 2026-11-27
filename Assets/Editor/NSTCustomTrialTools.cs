@@ -12,6 +12,7 @@ using ProjectNST.GameCore.Sessions;
 using ProjectNST.GameCore.Shop;
 using ProjectNST.GameCore.Strategy;
 using ProjectNST.GameUnityAdapter;
+using ProjectNST.SimulationExport;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -21,7 +22,7 @@ using Stopwatch = System.Diagnostics.Stopwatch;
 public sealed class NSTCustomTrialTools : EditorWindow
 {
     private const string ShopScene = "Assets/Scenes/shop.unity";
-    private enum StrategySet { HeuristicV7, Random, Both, HeuristicV8, HeuristicV7AndV8, HeuristicV9, HeuristicV8AndV9, HeuristicV10, HeuristicV9AndV10, HeuristicV11, HeuristicV10AndV11, HeuristicV12, HeuristicV11AndV12, HeuristicV13, HeuristicV12AndV13, HeuristicV14, HeuristicV13AndV14 }
+    private enum StrategySet { HeuristicV7, Random, Both, HeuristicV8, HeuristicV7AndV8, HeuristicV9, HeuristicV8AndV9, HeuristicV10, HeuristicV9AndV10, HeuristicV11, HeuristicV10AndV11, HeuristicV12, HeuristicV11AndV12, HeuristicV13, HeuristicV12AndV13, HeuristicV14, HeuristicV13AndV14, HeuristicV15, HeuristicV14AndV15, HeuristicV16, HeuristicV15AndV16 }
     private enum ProfileStrategySet { Heuristic, Random, Both }
     private enum ReplayScope { All, Abnormal, Rejected, Explicit }
     private StrategySet strategies = StrategySet.HeuristicV7;
@@ -31,14 +32,17 @@ public sealed class NSTCustomTrialTools : EditorWindow
     private string originalCsv = "", originalSummary = "";
     private long startIndex;
     private int count = 100;
+    private int v14V15Count = 20;
+    private int v15V16Count = 20;
+    private bool detailedV16DecisionTrace;
     private long profileStartIndex;
     private int profileCount = 20;
     private bool fullDiagnostics = true, strategyRerun = true, actionReplay = true;
     private bool writeActionHistory = true, writeDecisionDetails = true, writeFinalState = true, validatePool = true, measurePerformance = true;
     private bool captureHeuristicDecisionTrace;
+    private bool detailedV15DecisionTrace;
     private bool detailedProfiling;
     private bool allocationProfiling;
-    private long activeDecisionTraceTrial = -1;
     private static bool running;
 
     [MenuItem("Tools/NST/Diagnose Specific Trials")]
@@ -50,7 +54,7 @@ public sealed class NSTCustomTrialTools : EditorWindow
     private void OnGUI()
     {
         EditorGUILayout.LabelField("NST Trial Tools", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("Strategy versions", "Heuristic v" + HeuristicStrategy.StableVersion + " / v" + HeuristicStrategy.Version8 + " / v" + HeuristicStrategy.Version9 + " / v" + HeuristicStrategy.Version10 + " / v" + HeuristicStrategy.Version11 + " / v" + HeuristicStrategy.Version12 + " / v" + HeuristicStrategy.Version13 + " / Random v" + RandomStrategy.StableVersion);
+        EditorGUILayout.LabelField("Strategy versions", "Heuristic v7–v16 / Random v" + RandomStrategy.StableVersion);
         strategies = (StrategySet)EditorGUILayout.EnumPopup("Strategy", strategies);
         seedText = EditorGUILayout.TextField("Base Seed", seedText);
         fullDiagnostics = EditorGUILayout.Toggle("Full diagnostics", fullDiagnostics);
@@ -66,6 +70,12 @@ public sealed class NSTCustomTrialTools : EditorWindow
             validatePool = EditorGUILayout.Toggle("Pool validation", validatePool);
             measurePerformance = EditorGUILayout.Toggle("Performance timing", measurePerformance);
             captureHeuristicDecisionTrace = EditorGUILayout.Toggle("Capture actual Heuristic decision candidates", captureHeuristicDecisionTrace);
+            if (captureHeuristicDecisionTrace &&
+                (strategies == StrategySet.HeuristicV15 || strategies == StrategySet.HeuristicV14AndV15))
+                detailedV15DecisionTrace = EditorGUILayout.Toggle("Detailed v15 candidate trace", detailedV15DecisionTrace);
+            if (captureHeuristicDecisionTrace &&
+                (strategies == StrategySet.HeuristicV16 || strategies == StrategySet.HeuristicV15AndV16))
+                detailedV16DecisionTrace = EditorGUILayout.Toggle("Detailed v16 candidate trace", detailedV16DecisionTrace);
             replayScope = (ReplayScope)EditorGUILayout.EnumPopup("Replay scope", replayScope);
             if (replayScope == ReplayScope.Explicit) replayText = EditorGUILayout.TextField("Replay indices", replayText);
         }
@@ -82,12 +92,17 @@ public sealed class NSTCustomTrialTools : EditorWindow
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Custom range", EditorStyles.boldLabel);
         startIndex = EditorGUILayout.LongField("Starting TrialIndex", startIndex);
-        count = EditorGUILayout.IntField("Trial count", count);
+        bool v15Comparison = strategies == StrategySet.HeuristicV14AndV15;
+        bool v16Comparison = strategies == StrategySet.HeuristicV15AndV16;
+        int selectedCount = EditorGUILayout.IntField("Trial count", v16Comparison ? v15V16Count : v15Comparison ? v14V15Count : count);
+        if (v16Comparison) v15V16Count = selectedCount;
+        else if (v15Comparison) v14V15Count = selectedCount;
+        else count = selectedCount;
         if (GUILayout.Button("Run Custom Trials"))
         {
-            if (count < 1 || startIndex < 0 || startIndex > long.MaxValue - count + 1L)
+            if (selectedCount < 1 || startIndex < 0 || startIndex > long.MaxValue - selectedCount + 1L)
                 EditorUtility.DisplayDialog("NST", "Trial count must be positive and the TrialIndex range must be valid.", "OK");
-            else Run(Enumerable.Range(0, count).Select(i => startIndex + i).ToArray(), false);
+            else Run(Enumerable.Range(0, selectedCount).Select(i => startIndex + i).ToArray(), false);
         }
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Performance profiling", EditorStyles.boldLabel);
@@ -108,6 +123,20 @@ public sealed class NSTCustomTrialTools : EditorWindow
         string replayError = null;
         if (fullDiagnostics && replayScope == ReplayScope.Explicit && !TrialIndexSelectionParser.TryParse(replayText, out _, out replayError))
         { EditorUtility.DisplayDialog("NST", replayError, "OK"); return; }
+        var selectedStrategies = strategies;
+        bool v15Details = fullDiagnostics && captureHeuristicDecisionTrace && detailedV15DecisionTrace &&
+            (selectedStrategies == StrategySet.HeuristicV15 || selectedStrategies == StrategySet.HeuristicV14AndV15);
+        bool v16Details = fullDiagnostics && captureHeuristicDecisionTrace && detailedV16DecisionTrace;
+        var flags = (Full: fullDiagnostics, Capture: captureHeuristicDecisionTrace, History: writeActionHistory,
+            Decisions: writeDecisionDetails, Final: writeFinalState, Pool: validatePool, Timing: measurePerformance,
+            Rerun: strategyRerun, Replay: actionReplay, Scope: replayScope);
+        var replayIndices = ResolveReplayIndices(indices);
+        string settings = FormattableString.Invariant(
+            $"StrategySelection={selectedStrategies}\nRunMode={(specific ? "Specific" : "CustomRange")}\nStartingTrialIndex={indices[0]}\nTrialCountPerStrategy={indices.Count}\nTrialIndices={string.Join(",", indices.Select(i => i.ToString(CultureInfo.InvariantCulture)))}\nFullDiagnostics={flags.Full}\nActionHistoryOutput={flags.Full && flags.History}\nDecisionDetailsOutput={flags.Full && flags.Decisions}\nCaptureActualHeuristicDecisionCandidates={flags.Capture}\nCaptureEnabledBySettings={flags.Full && flags.Capture}\nPerformanceTiming={flags.Full && flags.Timing}\nPoolValidation={flags.Full && flags.Pool}\nFinalStateOutput={flags.Full && flags.Final}\nStrategyRerun={flags.Full && flags.Rerun}\nActionReplay={flags.Full && flags.Replay}\nReplayScope={flags.Scope}\nDetailedPerformanceProfiling=False\nAllocationSampling=False\n");
+        if (selectedStrategies == StrategySet.HeuristicV15 || selectedStrategies == StrategySet.HeuristicV14AndV15)
+            settings += $"DetailedV15CandidateTrace={v15Details}\n";
+        bool hasV16 = selectedStrategies == StrategySet.HeuristicV16 || selectedStrategies == StrategySet.HeuristicV15AndV16;
+        if (hasV16) settings += $"DetailedV16CandidateTrace={v16Details}\nV16BattleSummary=True\n";
         running = true;
         Scene scene = default(Scene), previous = SceneManager.GetActiveScene(); bool opened = false;
         var timer = Stopwatch.StartNew();
@@ -125,19 +154,27 @@ public sealed class NSTCustomTrialTools : EditorWindow
             string eventItem = ItemDataMapper.ToDefinition(NSTSimulationBatchMenu.ResolveEventItemData(shop)).DefinitionId;
             string roster = CompositionRosterDataReader.ComputeFingerprint(session.SelectedRoster.Select(x => x.DefinitionId));
             string checkpointId = CompositionRosterDataReader.CreateCheckpointConfigurationId(roster);
-            var runnerConfig = new SimulationRunnerConfiguration(session, 100, 10, 100000, fullDiagnostics, checkpointId, eventItem);
+            var runnerConfig = new SimulationRunnerConfiguration(session, 100, 10, 100000, flags.Full, checkpointId, eventItem);
             string output = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "SimulationResults",
                 specific ? "SpecificTrialDiagnostics" : "CustomTrials", DateTime.Now.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture)));
             Directory.CreateDirectory(output);
-            var factories = MakeFactories(session, output, fullDiagnostics && captureHeuristicDecisionTrace);
+            string summaryPath = Path.Combine(output, "batch_execution_summary.txt");
+            File.WriteAllText(summaryPath, FormattableString.Invariant($"Status=Running\nBaseSeed={baseSeed}\n") + settings, new UTF8Encoding(false));
+            var factories = MakeFactories(session, selectedStrategies);
             string batchId = CompositionRosterDataReader.CreateBatchConfigurationId(roster, eventItem,
                 factories.Select(factory => StrategyIdentity(factory, session)));
             var runner = new SimulationRunner(runnerConfig);
             var results = new List<Row>();
             int planned = checked(indices.Count * factories.Count), completed = 0; bool cancelled = false;
-            var replayIndices = ResolveReplayIndices(indices);
+            var captures = new List<DecisionTraceCapture>();
+            var battleSummary = hasV16 ? new V16BattleSummary() : null;
+            var battleTrialRows = hasV16 ? new List<string>() : null;
             foreach (SimulationStrategyFactory factory in factories)
             {
+                bool isV16 = factory.StrategyVersion == HeuristicStrategy.Version16;
+                var trialConfig = isV16 ? new SimulationRunnerConfiguration(session, 100, 10, 100000,
+                    flags.Full, checkpointId + "|" + StrategyIdentity(factory, session), eventItem) : runnerConfig;
+                var trialRunner = isV16 ? new SimulationRunner(trialConfig) : runner;
                 foreach (long index in indices)
                 {
                     if (EditorUtility.DisplayCancelableProgressBar("NST Simulation", factory.StrategyId + " / TrialIndex " + index + " / " + completed + "/" + planned, (float)completed / Math.Max(1, planned)))
@@ -145,28 +182,55 @@ public sealed class NSTCustomTrialTools : EditorWindow
                     var trialWatch = Stopwatch.StartNew();
                     ulong trialSeed = TrialSeedGenerator.CreateTrialSeed(baseSeed, checked((ulong)index));
                     SimulationTrialResult result;
-                    activeDecisionTraceTrial = captureHeuristicDecisionTrace && factory.StrategyId == HeuristicStrategy.StableId ? index : -1;
-                    try { result = runner.RunTrial(index, trialSeed, factory.Create()); }
-                    finally { activeDecisionTraceTrial = -1; }
+                    var strategy = factory.Create();
+                    var battleTrial = isV16 ? new V16BattleSummary() : null;
+                    bool supported = strategy is HeuristicStrategy;
+                    var capture = new DecisionTraceCapture(output, factory.StrategyId, factory.StrategyVersion,
+                        index, trialSeed, flags.Capture, flags.Full, supported);
+                    if (strategy is HeuristicStrategy heuristic)
+                    {
+                        if (factory.StrategyVersion == HeuristicStrategy.Version15)
+                            heuristic.ConfigureV15TraceDetails(v15Details);
+                        if (isV16) heuristic.ConfigureV16Diagnostics(v16Details, sample =>
+                        {
+                            battleTrial.Record(sample);
+                            battleSummary.Record(sample);
+                        });
+                        capture.Register(heuristic.ConfigureDecisionTrace);
+                    }
+                    result = trialRunner.RunTrial(index, trialSeed, strategy);
                     trialWatch.Stop();
+                    capture.Complete(result.DecisionCount);
+                    captures.Add(capture);
+                    if (isV16) battleTrialRows.AddRange(battleTrial.ToCsv("Trial", index, trialSeed));
                     var row = new Row(result, trialWatch.Elapsed.TotalSeconds); results.Add(row); completed++;
                     row.Original = CompareOriginal(result, batchId, roster);
-                    if (fullDiagnostics)
+                    if (flags.Full)
                     {
                         bool selected = specific || replayIndices.Contains(index) ||
-                            (replayScope == ReplayScope.Abnormal && result.Status == SimulationTrialStatus.Stopped) ||
-                            (replayScope == ReplayScope.Rejected && result.RejectedActionCount > 0);
-                        WriteDetails(output, row, factory, runnerConfig, session, batchId, roster, eventItem,
-                            selected && strategyRerun, selected && actionReplay, writeActionHistory,
-                            writeDecisionDetails, writeFinalState, validatePool, measurePerformance);
+                            (flags.Scope == ReplayScope.Abnormal && result.Status == SimulationTrialStatus.Stopped) ||
+                            (flags.Scope == ReplayScope.Rejected && result.RejectedActionCount > 0);
+                        WriteDetails(output, row, factory, trialConfig, session, batchId, roster, eventItem,
+                            selected && flags.Rerun, selected && flags.Replay, flags.History,
+                            flags.Decisions, flags.Final, flags.Pool, flags.Timing);
                     }
                 }
                 if (cancelled) break;
             }
             timer.Stop();
-            Export(output, results, planned, completed, indices.Count, cancelled, baseSeed, batchId, roster, eventItem, timer.Elapsed, specific || fullDiagnostics);
+            Export(output, results, planned, completed, indices.Count, cancelled, baseSeed, batchId, roster, eventItem, timer.Elapsed, specific || flags.Full);
+            if (hasV16)
+                File.WriteAllLines(Path.Combine(output, "v16_battle_summary.csv"),
+                    new[] { V16BattleSummary.CsvHeader }.Concat(battleTrialRows).Concat(battleSummary.ToCsv("Batch")),
+                    new UTF8Encoding(false));
+            File.WriteAllLines(Path.Combine(output, "decision_trace_summary.csv"),
+                new[] { DecisionTraceCapture.CsvHeader }.Concat(captures.Select(x => x.ToCsv())), new UTF8Encoding(false));
+            string traceSummary = DecisionTraceCapture.BatchSummary(captures, out bool traceWarning);
+            File.AppendAllText(summaryPath, settings + traceSummary, new UTF8Encoding(false));
+            string traceNotice = traceWarning ? "\nCandidate trace incomplete. See decision_trace_summary.csv." : string.Empty;
+            if (traceWarning) Debug.LogWarning("NST candidate trace incomplete. See decision_trace_summary.csv: " + output);
             Debug.Log("NST " + (cancelled ? "Cancelled" : "Completed") + " " + completed + "/" + planned + " Trial/Strategy runs: " + output);
-            EditorUtility.DisplayDialog("NST", (cancelled ? "Cancelled" : "Completed") + ": " + completed + " of " + planned + " runs.\n" + output, "OK");
+            EditorUtility.DisplayDialog("NST", (cancelled ? "Cancelled" : "Completed") + ": " + completed + " of " + planned + " runs.\n" + output + traceNotice, "OK");
         }
         catch (Exception e) { Debug.LogError("NST Trial tool failed.\n" + e); EditorUtility.DisplayDialog("NST", e.Message, "OK"); }
         finally { EditorUtility.ClearProgressBar(); if (opened && scene.IsValid() && scene.isLoaded) EditorSceneManager.CloseScene(scene, true); running = false; }
@@ -262,20 +326,9 @@ public sealed class NSTCustomTrialTools : EditorWindow
         return set;
     }
 
-    private List<SimulationStrategyFactory> MakeFactories(GameSessionConfiguration session, string output, bool captureDecisionTrace)
+    private List<SimulationStrategyFactory> MakeFactories(GameSessionConfiguration session, StrategySet strategies)
     {
         var list = new List<SimulationStrategyFactory>();
-        Func<string, Action<string>> makeTraceSink = version =>
-        {
-            if (!captureDecisionTrace) return null;
-            return trace =>
-            {
-                long trial = activeDecisionTraceTrial;
-                if (trial < 0) return;
-                string name = "HeuristicStrategy_v" + version + "_trial_" + trial.ToString(CultureInfo.InvariantCulture) + "_decision_trace.txt";
-                File.AppendAllText(Path.Combine(output, name), trace + Environment.NewLine + "--- decision ---" + Environment.NewLine, new UTF8Encoding(false));
-            };
-        };
         bool includeRandom = strategies == StrategySet.Random || strategies == StrategySet.Both;
         bool includeV7 = strategies == StrategySet.HeuristicV7 || strategies == StrategySet.Both || strategies == StrategySet.HeuristicV7AndV8;
         bool includeV8 = strategies == StrategySet.HeuristicV8 || strategies == StrategySet.HeuristicV7AndV8 || strategies == StrategySet.HeuristicV8AndV9;
@@ -284,21 +337,29 @@ public sealed class NSTCustomTrialTools : EditorWindow
         bool includeV11 = strategies == StrategySet.HeuristicV11 || strategies == StrategySet.HeuristicV10AndV11 || strategies == StrategySet.HeuristicV11AndV12;
         bool includeV12 = strategies == StrategySet.HeuristicV12 || strategies == StrategySet.HeuristicV11AndV12 || strategies == StrategySet.HeuristicV12AndV13;
         bool includeV13 = strategies == StrategySet.HeuristicV13 || strategies == StrategySet.HeuristicV12AndV13 || strategies == StrategySet.HeuristicV13AndV14;
-        bool includeV14 = strategies == StrategySet.HeuristicV14 || strategies == StrategySet.HeuristicV13AndV14;
+        bool includeV14 = strategies == StrategySet.HeuristicV14 || strategies == StrategySet.HeuristicV13AndV14 ||
+            strategies == StrategySet.HeuristicV14AndV15;
+        bool includeV15 = strategies == StrategySet.HeuristicV15 || strategies == StrategySet.HeuristicV14AndV15 ||
+            strategies == StrategySet.HeuristicV15AndV16;
+        bool includeV16 = strategies == StrategySet.HeuristicV16 || strategies == StrategySet.HeuristicV15AndV16;
         if (strategies == StrategySet.HeuristicV9AndV10) includeV9 = true;
         if (strategies == StrategySet.HeuristicV10AndV11) includeV10 = true;
         if (includeRandom) list.Add(new SimulationStrategyFactory(RandomStrategy.StableId, RandomStrategy.StableVersion, () => NSTSimulationBatchMenu.CreateRandomStrategy(session)));
-        if (includeV7) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.StableVersion, () => NSTSimulationBatchMenu.CreateHeuristicStrategy(session, makeTraceSink(HeuristicStrategy.StableVersion))));
-        if (includeV8) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version8, () => NSTSimulationBatchMenu.CreateHeuristicStrategyV8(session, makeTraceSink(HeuristicStrategy.Version8))));
-        if (includeV9) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version9, () => NSTSimulationBatchMenu.CreateHeuristicStrategyV9(session, makeTraceSink(HeuristicStrategy.Version9))));
-        if (includeV10) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version10, () => NSTSimulationBatchMenu.CreateHeuristicStrategyV10(session, makeTraceSink(HeuristicStrategy.Version10))));
-        if (includeV11) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version11, () => NSTSimulationBatchMenu.CreateHeuristicStrategyV11(session, makeTraceSink(HeuristicStrategy.Version11))));
+        if (includeV7) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.StableVersion, () => NSTSimulationBatchMenu.CreateHeuristicStrategy(session)));
+        if (includeV8) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version8, () => NSTSimulationBatchMenu.CreateHeuristicStrategyV8(session)));
+        if (includeV9) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version9, () => NSTSimulationBatchMenu.CreateHeuristicStrategyV9(session)));
+        if (includeV10) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version10, () => NSTSimulationBatchMenu.CreateHeuristicStrategyV10(session)));
+        if (includeV11) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version11, () => NSTSimulationBatchMenu.CreateHeuristicStrategyV11(session)));
         if (includeV12) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version12,
-            () => HeuristicStrategy.CreateV12(NSTSimulationBatchMenu.CreateHeuristicStrategyV11Settings(session), makeTraceSink(HeuristicStrategy.Version12))));
+            () => HeuristicStrategy.CreateV12(NSTSimulationBatchMenu.CreateHeuristicStrategyV11Settings(session))));
         if (includeV13) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version13,
-            () => HeuristicStrategy.CreateV13(V13Settings(session), makeTraceSink(HeuristicStrategy.Version13))));
+            () => HeuristicStrategy.CreateV13(V13Settings(session))));
         if (includeV14) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version14,
-            () => HeuristicStrategy.CreateV14(V14Settings(session), makeTraceSink(HeuristicStrategy.Version14))));
+            () => HeuristicStrategy.CreateV14(V14Settings(session))));
+        if (includeV15) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version15,
+            () => HeuristicStrategy.CreateV15(V15Settings(session))));
+        if (includeV16) list.Add(new SimulationStrategyFactory(HeuristicStrategy.StableId, HeuristicStrategy.Version16,
+            () => HeuristicStrategy.CreateV16(new HeuristicV16Settings(V15Settings(session)))));
         return list;
     }
 
@@ -317,11 +378,18 @@ public sealed class NSTCustomTrialTools : EditorWindow
             identity+="-"+HeuristicStrategy.GetV13ConfigurationIdentity(V13Settings(session));
         if(factory.StrategyId==HeuristicStrategy.StableId&&factory.StrategyVersion==HeuristicStrategy.Version14)
             identity+="-"+HeuristicStrategy.GetV14ConfigurationIdentity(V14Settings(session));
+        if(factory.StrategyId==HeuristicStrategy.StableId&&factory.StrategyVersion==HeuristicStrategy.Version15)
+            identity+="-"+HeuristicStrategy.GetV15ConfigurationIdentity(V15Settings(session));
+        if(factory.StrategyId==HeuristicStrategy.StableId&&factory.StrategyVersion==HeuristicStrategy.Version16)
+            identity+="-"+HeuristicStrategy.GetV16ConfigurationIdentity(new HeuristicV16Settings(V15Settings(session)));
         return identity;
     }
 
     private static HeuristicV14Settings V14Settings(GameSessionConfiguration session) =>
         new HeuristicV14Settings(selectDHealAmount: session.StageConfig.SelectDHealAmount);
+
+    private static HeuristicV15Settings V15Settings(GameSessionConfiguration session) =>
+        new HeuristicV15Settings(preparation: V14Settings(session));
 
     private static HeuristicStrategySettings V13Settings(GameSessionConfiguration session) =>
         HeuristicStrategy.CreateV13Settings(session.ShopRerollGoldCost,

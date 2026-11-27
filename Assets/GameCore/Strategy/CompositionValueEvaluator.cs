@@ -142,12 +142,23 @@ namespace ProjectNST.GameCore.Strategy
         private readonly GameObservation _observation;
         private readonly double? _handDuplicateWeight;
         private readonly Dictionary<string, HandPowerGroup> _handGroups;
+        private readonly bool _includeLegacySynergy;
         private CharacterPurchasePreview _purchasePreview;
 
         public CompositionEvaluation Baseline { get; }
+        internal (int Calculated, int Reused, int Entries) MergePlanCounts => _purchasePreview?.PlanCounts ?? default;
 
         public CompositionValueEvaluator(GameObservation observation, double handReserveWeight = 0.35,
             HeuristicStrategySettings settings = null, double? handDuplicateWeight = null)
+            : this(observation, handReserveWeight, settings, handDuplicateWeight, true)
+        {
+        }
+
+        private readonly bool _includeTemporaryBonuses;
+
+        internal CompositionValueEvaluator(GameObservation observation, double handReserveWeight,
+            HeuristicStrategySettings settings, double? handDuplicateWeight, bool includeLegacySynergy,
+            bool permanentStatsOnly = false)
         {
             if (observation == null) throw new ArgumentNullException(nameof(observation));
             if (double.IsNaN(handReserveWeight) || double.IsInfinity(handReserveWeight) || handReserveWeight < 0)
@@ -158,6 +169,8 @@ namespace ProjectNST.GameCore.Strategy
             _settings = settings ?? new HeuristicStrategySettings(characterStarValue: 0.75,
                 includeTemporaryCharacterBonuses: true);
             _observation = observation;
+            _includeTemporaryBonuses = !permanentStatsOnly && _settings.IncludeTemporaryCharacterBonuses;
+            _includeLegacySynergy = includeLegacySynergy;
             _handReserveWeight = handReserveWeight;
             _board = HeuristicStrategy.BoardCharacters(observation.Board);
             _hand = new (CharacterObservation, bool)[observation.Hand.SlotCount];
@@ -207,7 +220,7 @@ namespace ProjectNST.GameCore.Strategy
             return ComparePurchasePreview(_purchasePreview.PreviewHypothetical(definition, runCost, price, gold, placement));
         }
 
-        private PurchaseCompositionEvaluation ComparePurchasePreview(CharacterPurchasePreviewResult preview)
+        internal PurchaseCompositionEvaluation ComparePurchasePreview(CharacterPurchasePreviewResult preview)
         {
             if (!preview.Succeeded)
                 return new PurchaseCompositionEvaluation(PurchaseCompositionFailure.PreviewUnavailable, preview,
@@ -260,7 +273,7 @@ namespace ProjectNST.GameCore.Strategy
             double attribute = before.AttributeSynergy, partial = before.UnitPartialConnectivity;
             double completed = before.CompletedUnitSynergy;
             double quality = Baseline.BoardQuality + combatDelta;
-            if (boardGeometryChanged)
+            if (_includeLegacySynergy && boardGeometryChanged)
                 quality = MeasureProjectedSynergy(preview, combat, out attribute, out partial, out completed);
 
             HeuristicStrategy.EvaluateMergeProgress(preview.StarsBefore.OneStar, preview.StarsBefore.TwoStar, _settings,
@@ -284,7 +297,7 @@ namespace ProjectNST.GameCore.Strategy
                 if (ReferenceEquals(entry.Roll, roll))
                     return CharacterPowerEvaluator.Evaluate(entry.Stats.ExpectedAttack.Value, entry.Stats.ExpectedDefense.Value,
                         roll.TemporaryAttackBonus, roll.TemporaryDefenseBonus, roll.Star, _settings.AttackValue,
-                        _settings.DefenseValue, _settings.CharacterStarValue, _settings.IncludeTemporaryCharacterBonuses);
+                        _settings.DefenseValue, _settings.CharacterStarValue, _includeTemporaryBonuses);
             throw new InvalidOperationException("The projected slot refers to a stat roll missing from the purchase plan.");
         }
 
@@ -445,7 +458,7 @@ namespace ProjectNST.GameCore.Strategy
                     combat += Power(character);
                     boardCount++;
                 }
-                if (synergyChanged)
+                if (_includeLegacySynergy && synergyChanged)
                     boardQuality = _handGroups == null
                         ? HeuristicStrategy.AddBoardSynergy(_board, _columns, _synergy,
                             _settings, combat, out attribute, out partial, out completed)
@@ -470,7 +483,7 @@ namespace ProjectNST.GameCore.Strategy
                 _board.Length - boardCount, emptyHand);
         }
 
-        private static double HandCapacityScore(int emptyHand) =>
+        internal static double HandCapacityScore(int emptyHand) =>
             emptyHand == 0 ? FullHandValue : emptyHand == 1 ? OneEmptyHandSlotValue : 0;
 
         private double HandGroupDelta(string definitionId, CharacterPurchasePreviewResult preview = null,
@@ -518,7 +531,43 @@ namespace ProjectNST.GameCore.Strategy
 
         private double Power(CharacterObservation character) =>
             CharacterPowerEvaluator.Evaluate(character, _settings.AttackValue, _settings.DefenseValue,
-                _settings.CharacterStarValue, _settings.IncludeTemporaryCharacterBonuses);
+                _settings.CharacterStarValue, _includeTemporaryBonuses);
+
+        internal CompositionValue ProjectPermanentCharacterChange(Items.ItemCharacterChange change)
+        {
+            var old = change.Before;
+            var baseline = Baseline.Value;
+            double power = CharacterPowerEvaluator.Evaluate(change.Attack.Value, change.Defense.Value,
+                0, 0, change.Star, _settings.AttackValue, _settings.DefenseValue, _settings.CharacterStarValue, false);
+            double combat = baseline.BoardCombat;
+            double reserve = baseline.HandReserve;
+            if (old.LocationKind == ObservationLocationKind.Board)
+                combat += power - Power(old);
+            else if (_handGroups == null)
+                reserve += _handReserveWeight * (power - Power(old));
+            else
+            {
+                var projected = new HandPowerGroup();
+                foreach (var slot in _hand)
+                {
+                    var character = slot.Character;
+                    if (character?.DefinitionId == old.DefinitionId)
+                        projected.Add(ReferenceEquals(character, old) ? power : Power(character));
+                }
+                reserve += ReserveValue(projected) - ReserveValue(_handGroups[old.DefinitionId]);
+            }
+
+            _mergeCounts.TryGetValue(old.DefinitionId, out var counts);
+            HeuristicStrategy.EvaluateMergeProgress(counts.OneStar, counts.TwoStar, _settings,
+                out double oldOne, out double oldTwo);
+            HeuristicStrategy.EvaluateMergeProgress(
+                counts.OneStar - (old.Star == 1 ? 1 : 0) + (change.Star == 1 ? 1 : 0),
+                counts.TwoStar - (old.Star == 2 ? 1 : 0) + (change.Star == 2 ? 1 : 0),
+                _settings, out double newOne, out double newTwo);
+            return new CompositionValue(combat, 0, 0, 0, reserve,
+                baseline.OneStarMergeProgress + (newOne - oldOne),
+                baseline.TwoStarMergeProgress + (newTwo - oldTwo), baseline.Capacity);
+        }
 
         private void CountMergeCharacter(CharacterObservation character)
         {

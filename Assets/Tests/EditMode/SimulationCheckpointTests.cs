@@ -148,6 +148,28 @@ namespace ProjectNST.GameCore.Tests
         }
 
         [Test]
+        public void V14CandidateTraceDoesNotChangeCheckpointFingerprintAfterAction()
+        {
+            var configuration = ConfigurationWithStage(OneEncounterConfig());
+            var baselineSession = GameSession.Create(configuration, 88235);
+            var tracedSession = GameSession.Create(configuration, 88235);
+            var baseline = HeuristicStrategy.CreateV14();
+            var traced = HeuristicStrategy.CreateV14();
+            int traces = 0;
+            traced.ConfigureDecisionTrace(_ => traces++, (_, error) => Assert.Fail(error.Message));
+            var context = new StrategyContext(baseline.StrategyId, baseline.Version, 0, 0,
+                new ActionId("trace-checkpoint/action"), StrategyState.EmptyFor(baseline.StrategyId, baseline.Version), null);
+            var baselineAction = baseline.ChooseAction(baselineSession.GetObservation().Observation, context).Action;
+            var tracedAction = traced.ChooseAction(tracedSession.GetObservation().Observation, context).Action;
+
+            Assert.That(baselineSession.ExecuteAction(baselineAction).Succeeded, Is.True);
+            Assert.That(tracedSession.ExecuteAction(tracedAction).Succeeded, Is.True);
+            Assert.That(traces, Is.EqualTo(1));
+            Assert.That(SimulationStateFingerprint.Create(tracedSession.CurrentState),
+                Is.EqualTo(SimulationStateFingerprint.Create(baselineSession.CurrentState)));
+        }
+
+        [Test]
         public void V14CheckpointRestoresAndRecordedActionsReplay()
         {
             var enemy = new EnemyDefinition("v14-replay-enemy", "Replay enemy", 0, 0, 1,

@@ -7,6 +7,7 @@ using ProjectNST.GameCore.Economy;
 using ProjectNST.GameCore.Observation;
 using ProjectNST.GameCore.Stages;
 using ProjectNST.GameCore.Strategy;
+using ProjectNST.GameCore.Battle;
 
 namespace ProjectNST.GameCore.Shop
 {
@@ -48,10 +49,11 @@ namespace ProjectNST.GameCore.Shop
         public string UnavailableReason { get; }
         public decimal Benefit { get; }
         public decimal Probability { get; }
+        internal IntegratedCompositionValue? IntegratedDelta { get; }
 
         internal ShopPurchaseOpportunity(string offerId, string definitionId, int cost,
             ShopPurchaseOpportunityStatus status, decimal benefit, CharacterLocation? placement,
-            decimal probability, string unavailableReason)
+            decimal probability, string unavailableReason, IntegratedCompositionValue? integratedDelta = null)
         {
             OfferId = offerId;
             DefinitionId = definitionId;
@@ -61,6 +63,7 @@ namespace ProjectNST.GameCore.Shop
             Placement = placement;
             Probability = probability;
             UnavailableReason = unavailableReason;
+            IntegratedDelta = integratedDelta;
         }
     }
 
@@ -103,6 +106,12 @@ namespace ProjectNST.GameCore.Shop
         public ShopOpportunityMass? FutureMass { get; }
         public int HypotheticalPreviewCount { get; }
         public IReadOnlyList<ShopPurchaseOpportunity> Details { get; }
+        internal int? CurrentOffers { get; set; }
+        internal int? CurrentPlacements { get; set; }
+        internal int? FuturePlacements { get; set; }
+        internal int? CdfValues { get; set; }
+        internal int? FormationEntries { get; set; }
+        internal IReadOnlyList<(string Id, decimal Original, decimal? Contribution)> CurrentPlacementDetails { get; set; }
 
         internal ShopOpportunityResult(ShopOpportunityStatus status, string reason, ObservationShopKind? shopKind,
             int gold, int? price, int? remaining, decimal discount, EconomyValueComparison? economy,
@@ -145,6 +154,32 @@ namespace ProjectNST.GameCore.Shop
         internal ShopOpportunityResult EvaluateShared(GameObservation observation, CompositionValueEvaluator sharedComposition,
             EconomyValueEvaluator sharedEconomy, EconomyValueEvaluator.Baseline sharedBefore,
             Func<BuyCharacterAction, PurchaseCompositionEvaluation> currentPurchase, bool includeDetails = false)
+            => EvaluateCore(observation, sharedComposition, sharedEconomy, sharedBefore, currentPurchase,
+                null, null, includeDetails);
+
+        internal ShopOpportunityResult EvaluateIntegrated(GameObservation observation,
+            IntegratedCompositionValueEvaluator composition, EconomyValueEvaluator economy,
+            EconomyValueEvaluator.Baseline before, Func<BuyCharacterAction, IntegratedPurchaseEvaluation> current,
+            bool includeDetails)
+            => EvaluateCore(observation, null, economy, before, null, composition, current, includeDetails);
+
+        internal (ShopOpportunityResult Original, ShopOpportunityResult Corrected) EvaluateWithBattle(GameObservation observation,
+            IntegratedCompositionValueEvaluator composition, EconomyValueEvaluator economy,
+            EconomyValueEvaluator.Baseline before, Func<BuyCharacterAction, IntegratedPurchaseEvaluation> current,
+            bool includeDetails, Func<CharacterPurchasePreviewResult, BattleValueCandidateSource, string, decimal?> correction)
+        {
+            ShopOpportunityResult corrected = null;
+            var original = EvaluateCore(observation, null, economy, before, null, composition, current, includeDetails,
+                correction, value => corrected = value);
+            return (original, corrected);
+        }
+
+        private ShopOpportunityResult EvaluateCore(GameObservation observation, CompositionValueEvaluator sharedComposition,
+            EconomyValueEvaluator sharedEconomy, EconomyValueEvaluator.Baseline sharedBefore,
+            Func<BuyCharacterAction, PurchaseCompositionEvaluation> currentPurchase,
+            IntegratedCompositionValueEvaluator integrated, Func<BuyCharacterAction, IntegratedPurchaseEvaluation> integratedCurrent,
+            bool includeDetails, Func<CharacterPurchasePreviewResult, BattleValueCandidateSource, string, decimal?> correction = null,
+            Action<ShopOpportunityResult> publishCorrected = null)
         {
             if (observation == null) throw new ArgumentNullException(nameof(observation));
             var shop = observation.Shop;
@@ -200,18 +235,30 @@ namespace ProjectNST.GameCore.Shop
             // All empty Hand slots are equivalent to the formation evaluator and merge ignores Hand destination.
             var handSlot = observation.Hand.Slots.Where(s => s.Kind == HandSlotContentKind.Empty)
                 .OrderBy(s => s.SlotIndex).FirstOrDefault();
-            var formationSettings = HeuristicStrategy.CreateV13Settings();
-            var composition = sharedComposition ?? new CompositionValueEvaluator(observation, formationSettings.CompositionHandReserveWeight,
-                formationSettings, formationSettings.CompositionHandDuplicateWeight);
-            var formationCache = new Dictionary<(string, int, CharacterLocationKind, int), PurchaseCompositionEvaluation>();
+            var composition = sharedComposition;
+            if (integrated == null && composition == null)
+            {
+                var formationSettings = HeuristicStrategy.CreateV13Settings();
+                composition = new CompositionValueEvaluator(observation, formationSettings.CompositionHandReserveWeight,
+                    formationSettings, formationSettings.CompositionHandDuplicateWeight);
+            }
+            var formationCache = new Dictionary<(string, int, CharacterLocationKind, int),
+                (CharacterPurchasePreviewResult Preview, PurchaseCompositionFailure Failure, double? Legacy,
+                    decimal? Integrated, IntegratedCompositionValue? Delta)>();
             var fundsCache = new Dictionary<(int, int), decimal>();
+            bool complete = correction != null;
+            int currentOffers = 0, currentPlacements = 0, futurePlacements = 0;
+            var currentDetails = correction != null && includeDetails ? new List<(string, decimal, decimal?)>() : null;
+            var correctedDetails = correction != null && includeDetails ? new List<ShopPurchaseOpportunity>() : null;
 
             ShopPurchaseOpportunity EvaluateOffer(string offerId, string id, int cost, int offerPrice,
-                EconomyValueEvaluator.Baseline funds, decimal probability)
+                EconomyValueEvaluator.Baseline funds, decimal probability,
+                out List<(CharacterPurchasePreviewResult Preview, decimal Benefit, CharacterLocation Placement, IntegratedCompositionValue? Delta)> pending)
             {
+                pending = null;
                 ShopPurchaseOpportunity Entry(ShopPurchaseOpportunityStatus status, decimal benefit = 0m,
-                    CharacterLocation? placement = null, string reason = null) =>
-                    new ShopPurchaseOpportunity(offerId, id, cost, status, benefit, placement, probability, reason);
+                    CharacterLocation? placement = null, string reason = null, IntegratedCompositionValue? delta = null) =>
+                    new ShopPurchaseOpportunity(offerId, id, cost, status, benefit, placement, probability, reason, delta);
                 if (offerPrice != cost)
                     return Entry(ShopPurchaseOpportunityStatus.Unavailable, reason: "Character price does not equal its public RunCost.");
                 if (funds.Before.Gold < offerPrice) return Entry(ShopPurchaseOpportunityStatus.InsufficientGold);
@@ -223,6 +270,7 @@ namespace ProjectNST.GameCore.Shop
 
                 CharacterLocation? bestPlacement = null;
                 decimal bestBenefit = 0m;
+                IntegratedCompositionValue? bestDelta = null;
                 bool reachable = false;
                 string unavailableReason = null;
                 foreach (var placement in placements)
@@ -230,17 +278,28 @@ namespace ProjectNST.GameCore.Shop
                     var key = (id, cost, placement.Kind, placement.SlotIndex);
                     if (!formationCache.TryGetValue(key, out var formation))
                     {
-                        if (offerId == null)
+                        if (offerId == null) previews++;
+                        if (integrated != null)
                         {
-                            previews++;
-                            formation = composition.CompareHypotheticalPurchase(roster[id], cost, offerPrice,
-                                funds.Before.Gold, placement);
+                            var purchase = offerId == null
+                                ? integrated.CompareHypotheticalPurchase(roster[id], cost, offerPrice, funds.Before.Gold, placement)
+                                : integratedCurrent(new BuyCharacterAction(new ActionId("shop-opportunity"), offerId,
+                                    new GameActionLocation(placement.Kind, placement.SlotIndex)));
+                            formation = (purchase.Preview, purchase.Failure, null, purchase.TotalDelta, purchase.Delta);
                         }
                         else
                         {
-                            var action = new BuyCharacterAction(new ActionId("shop-opportunity"), offerId,
-                                new GameActionLocation(placement.Kind, placement.SlotIndex));
-                            formation = currentPurchase == null ? composition.ComparePurchase(action) : currentPurchase(action);
+                            PurchaseCompositionEvaluation purchase;
+                            if (offerId == null)
+                                purchase = composition.CompareHypotheticalPurchase(roster[id], cost, offerPrice,
+                                    funds.Before.Gold, placement);
+                            else
+                            {
+                                var action = new BuyCharacterAction(new ActionId("shop-opportunity"), offerId,
+                                    new GameActionLocation(placement.Kind, placement.SlotIndex));
+                                purchase = currentPurchase == null ? composition.ComparePurchase(action) : currentPurchase(action);
+                            }
+                            formation = (purchase.Preview, purchase.Failure, purchase.TotalDelta, null, null);
                         }
                         formationCache.Add(key, formation);
                     }
@@ -254,7 +313,12 @@ namespace ProjectNST.GameCore.Shop
                     }
                     if (preview.After.OverLevelCount > preview.Before.OverLevelCount) continue;
                     reachable = true;
-                    if (!formation.TotalDelta.HasValue)
+                    if (correction != null)
+                    {
+                        if (offerId == null) futurePlacements++;
+                        else currentPlacements++;
+                    }
+                    if (!formation.Legacy.HasValue && !formation.Integrated.HasValue)
                     {
                         unavailableReason = formation.Failure.ToString();
                         continue;
@@ -265,26 +329,66 @@ namespace ProjectNST.GameCore.Shop
                         purchaseDelta = funds.CompareGoldChange(-offerPrice).TotalDelta;
                         fundsCache.Add(fundsKey, purchaseDelta);
                     }
-                    decimal benefit = Settings.CompositionWeight * (decimal)formation.TotalDelta.Value + purchaseDelta;
+                    decimal benefit = Settings.CompositionWeight * (formation.Integrated ?? (decimal)formation.Legacy.Value) + purchaseDelta;
+                    if (complete)
+                    {
+                        pending ??= new List<(CharacterPurchasePreviewResult, decimal, CharacterLocation, IntegratedCompositionValue?)>();
+                        pending.Add((preview, benefit, placement, formation.Delta));
+                    }
                     if (benefit > bestBenefit)
                     {
                         bestBenefit = benefit;
                         bestPlacement = placement;
+                        bestDelta = formation.Delta;
                     }
                 }
                 if (unavailableReason != null)
                     return Entry(ShopPurchaseOpportunityStatus.Unavailable, reason: unavailableReason);
                 if (!reachable) return Entry(ShopPurchaseOpportunityStatus.NoReachablePlacement);
-                return bestPlacement.HasValue ? Entry(ShopPurchaseOpportunityStatus.Positive, bestBenefit, bestPlacement)
+                return bestPlacement.HasValue ? Entry(ShopPurchaseOpportunityStatus.Positive, bestBenefit, bestPlacement, delta: bestDelta)
                     : Entry(ShopPurchaseOpportunityStatus.NonPositive);
             }
 
+            ShopPurchaseOpportunity Correct(ShopPurchaseOpportunity candidate,
+                List<(CharacterPurchasePreviewResult Preview, decimal Benefit, CharacterLocation Placement, IntegratedCompositionValue? Delta)> pending)
+            {
+                if (!complete || pending == null || (candidate.Status != ShopPurchaseOpportunityStatus.Positive &&
+                    candidate.Status != ShopPurchaseOpportunityStatus.NonPositive)) return candidate;
+                decimal bestValue = 0m;
+                CharacterLocation? placement = null;
+                IntegratedCompositionValue? delta = null;
+                var source = candidate.OfferId == null ? BattleValueCandidateSource.FutureShop : BattleValueCandidateSource.CurrentShop;
+                foreach (var row in pending)
+                {
+                    string id = FormattableString.Invariant($"{candidate.OfferId ?? candidate.DefinitionId}/{candidate.Cost}/{row.Placement.Kind}/{row.Placement.SlotIndex}");
+                    var extra = correction(row.Preview, source, id);
+                    if (source == BattleValueCandidateSource.CurrentShop) currentDetails?.Add((id, row.Benefit, extra));
+                    if (!extra.HasValue)
+                    {
+                        complete = false;
+                        return candidate;
+                    }
+                    decimal value = row.Benefit + extra.Value;
+                    if (value <= bestValue) continue;
+                    bestValue = value;
+                    placement = row.Placement;
+                    delta = row.Delta;
+                }
+                return new ShopPurchaseOpportunity(candidate.OfferId, candidate.DefinitionId, candidate.Cost,
+                    placement.HasValue ? ShopPurchaseOpportunityStatus.Positive : ShopPurchaseOpportunityStatus.NonPositive,
+                    bestValue, placement, candidate.Probability, null, delta);
+            }
+
             string currentFailure = null;
+            var pendingCurrent = correction == null ? null :
+                new List<(ShopPurchaseOpportunity Candidate, List<(CharacterPurchasePreviewResult, decimal, CharacterLocation, IntegratedCompositionValue?)> Pending)>();
             foreach (var offer in visibleOffers.Where(o => o.Status == ShopOfferStatus.Available)
                 .OrderBy(o => o.OfferId, StringComparer.Ordinal))
             {
+                if (correction != null) currentOffers++;
                 var candidate = EvaluateOffer(offer.OfferId, offer.DefinitionId, offer.CharacterCost.Value,
-                    offer.DisplayPrice, beforeGold, 0m);
+                    offer.DisplayPrice, beforeGold, 0m, out var pending);
+                pendingCurrent?.Add((candidate, pending));
                 details?.Add(candidate);
                 if (candidate.Status == ShopPurchaseOpportunityStatus.Unavailable)
                     currentFailure ??= offer.OfferId + ": " + candidate.UnavailableReason;
@@ -292,24 +396,61 @@ namespace ProjectNST.GameCore.Shop
             }
             if (currentFailure != null) return Result(ShopOpportunityStatus.CurrentOfferUnavailable, currentFailure);
             current = best?.Benefit ?? 0m;
+            ShopPurchaseOpportunity correctedBest = null;
+            if (pendingCurrent != null)
+                foreach (var row in pendingCurrent)
+                {
+                    var candidate = Correct(row.Candidate, row.Pending);
+                    correctedDetails?.Add(candidate);
+                    if (candidate.Benefit > (correctedBest?.Benefit ?? 0m)) correctedBest = candidate;
+                }
 
             var outcomes = new List<(decimal Benefit, decimal Probability)>(distribution.Outcomes.Count);
             var mass = new decimal[5];
+            var correctedOutcomes = complete ? new List<(decimal Benefit, decimal Probability)>(distribution.Outcomes.Count) : null;
+            var correctedMass = complete ? new decimal[5] : null;
             if (shop.SlotCount > 0)
             {
                 foreach (var outcome in distribution.Outcomes)
                 {
                     var candidate = EvaluateOffer(null, outcome.DefinitionId, outcome.Cost, outcome.Cost,
-                        afterGold, outcome.SlotProbability);
+                        afterGold, outcome.SlotProbability, out var pending);
                     outcomes.Add((candidate.Benefit, candidate.Probability));
                     mass[(int)candidate.Status] += candidate.Probability;
                     details?.Add(candidate);
+                    if (complete)
+                    {
+                        var revised = Correct(candidate, pending);
+                        correctedDetails?.Add(revised);
+                        correctedOutcomes.Add((revised.Benefit, revised.Probability));
+                        correctedMass[(int)revised.Status] += revised.Probability;
+                    }
                 }
                 future = ShopOpportunityMath.ExpectedMaximum(outcomes, shop.SlotCount);
             }
             else future = 0m;
             futureMass = new ShopOpportunityMass(mass);
-            return Result(ShopOpportunityStatus.Evaluated);
+            void SetDiagnostics(ShopOpportunityResult result, List<(decimal Benefit, decimal Probability)> source)
+            {
+                result.CurrentOffers = currentOffers;
+                result.CurrentPlacements = currentPlacements;
+                result.FuturePlacements = futurePlacements;
+                result.FormationEntries = formationCache.Count;
+                result.CdfValues = source.Where(x => x.Probability > 0m).Select(x => x.Benefit).Distinct().Count();
+                result.CurrentPlacementDetails = currentDetails?.AsReadOnly();
+            }
+            if (complete)
+            {
+                var revised = new ShopOpportunityResult(ShopOpportunityStatus.Evaluated, null, shop.Kind, gold, price,
+                    remaining, Settings.FutureDiscount, rerollEconomy, correctedBest, correctedBest?.Benefit ?? 0m,
+                    shop.SlotCount > 0 ? ShopOpportunityMath.ExpectedMaximum(correctedOutcomes, shop.SlotCount) : 0m,
+                    distribution, new ShopOpportunityMass(correctedMass), previews, correctedDetails);
+                if (includeDetails) SetDiagnostics(revised, correctedOutcomes);
+                publishCorrected(revised);
+            }
+            var original = Result(ShopOpportunityStatus.Evaluated);
+            if (correction != null && includeDetails) SetDiagnostics(original, outcomes);
+            return original;
         }
     }
 }

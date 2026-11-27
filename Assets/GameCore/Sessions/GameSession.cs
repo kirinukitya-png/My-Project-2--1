@@ -153,7 +153,7 @@ namespace ProjectNST.GameCore.Sessions
                     _state.EnemyPreparation, _state.Battle, GetObservableBattleResult(_state),
                     _configuration.CharacterStatSettings, _configuration.CharacterShopConfig,
                     _configuration.StageRewardConfig, _configuration.ShopRerollGoldCost,
-                    _configuration.SelectedRosterObservation)
+                    _configuration.SelectedRosterObservation, _configuration.BattleTargetDefinitions)
                 {
                     CachedCharacterStats = _configuration.PublicCharacterStats,
                     CachedRosterRules = _configuration.RosterRules
@@ -504,7 +504,7 @@ namespace ProjectNST.GameCore.Sessions
                 state.EnemyBoard, state.EnemyPreparation, state.Battle,
                 GetObservableBattleResult(state), _configuration.CharacterStatSettings,
                 _configuration.CharacterShopConfig, _configuration.StageRewardConfig,
-                _configuration.ShopRerollGoldCost, _configuration.SelectedRosterObservation)
+                _configuration.ShopRerollGoldCost, _configuration.SelectedRosterObservation, _configuration.BattleTargetDefinitions)
             {
                 CachedCharacterStats = _configuration.PublicCharacterStats,
                 CachedRosterRules = _configuration.RosterRules
@@ -614,7 +614,7 @@ namespace ProjectNST.GameCore.Sessions
                 configuration.EnemyDefinitions, state.EnemyBoard, state.EnemyPreparation,
                 state.Battle, GetObservableBattleResult(state), configuration.CharacterStatSettings,
                 configuration.CharacterShopConfig, configuration.StageRewardConfig,
-                configuration.ShopRerollGoldCost, configuration.SelectedRosterObservation)
+                configuration.ShopRerollGoldCost, configuration.SelectedRosterObservation, configuration.BattleTargetDefinitions)
             {
                 CachedCharacterStats = configuration.PublicCharacterStats,
                 CachedRosterRules = configuration.RosterRules

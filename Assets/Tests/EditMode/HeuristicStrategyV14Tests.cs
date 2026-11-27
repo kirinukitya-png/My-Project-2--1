@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using NUnit.Framework;
 using ProjectNST.GameCore.Actions;
+using ProjectNST.GameCore.Battle;
 using ProjectNST.GameCore.Board;
 using ProjectNST.GameCore.Characters;
 using ProjectNST.GameCore.Economy;
@@ -22,7 +23,8 @@ namespace ProjectNST.GameCore.Tests
             StageChoice choice = StageChoice.SelectA, BoardState board = null, HandState hand = null,
             CharacterDefinition[] defs = null, CharacterInstance[] owned = null, ShopOffer[] offers = null,
             CharacterStatDefinition stats = null, ItemDefinition[] items = null, int gain = 1, int[] curve = null,
-            int[] quotas = null, int[] weights = null)
+            int[] quotas = null, int[] weights = null, int rerollCost = 1, EnemyDefinition battleEnemy = null,
+            BattleTargetDefinition[] battleTargets = null, int enemyCount = 1)
         {
             defs ??= Array.Empty<CharacterDefinition>();
             var cfg = Config(1);
@@ -34,12 +36,21 @@ namespace ProjectNST.GameCore.Tests
                 offers ?? Array.Empty<ShopOffer>(), 3, 1, 1);
             var config = new CharacterShopConfiguration(quotas ?? new[] { defs.Length, 0, 0, 0, 0 },
                 new[] { 15, 15, 15, 15, 15 }, new[] { weights ?? new[] { 1, 0, 0, 0, 0 } }, new[] { 3 });
+            var enemies = EnemyBoardState.CreateEmpty();
+            for (int slot = 0; battleEnemy != null && slot < enemyCount; slot++)
+            {
+                Assert.That(EnemyInstanceFactory.TryCreate(battleEnemy, stage.EncounterIndex, slot, 0, 0, 0, 0, 0, 0,
+                    out var foe, out _), Is.True);
+                enemies = enemies.TryPlace(foe).NextState;
+            }
             var source = new ObservationSource(stage, cfg, new EconomyState(gold, xp, level, curve.Length + 1, gold, xp, level, 30, 30),
                 economy, board ?? BoardState.CreateStandard(), hand ?? HandState.CreateStandard(),
                 new CharacterOwnershipState(owned ?? Array.Empty<CharacterInstance>()), defs, defs, defs,
-                items ?? Array.Empty<ItemDefinition>(), shop, new ItemEffectState(), enemyDefinitions: Array.Empty<EnemyDefinition>(),
-                enemyBoard: EnemyBoardState.CreateEmpty(), characterStatSettings: stats, characterShopConfig: config,
-                stageRewardConfig: new StageRewardConfiguration(5, 2), shopRerollGoldCost: 1);
+                items ?? Array.Empty<ItemDefinition>(), shop, new ItemEffectState(),
+                enemyDefinitions: battleEnemy == null ? Array.Empty<EnemyDefinition>() : new[] { battleEnemy },
+                enemyBoard: enemies, characterStatSettings: stats, characterShopConfig: config,
+                stageRewardConfig: new StageRewardConfiguration(5, 2), shopRerollGoldCost: rerollCost,
+                battleTargetDefinitions: battleTargets ?? (battleEnemy == null ? null : new[] { EnemyTargetProbabilityEvaluatorTests.Definition(1) }));
             var result = ObservationBuilder.Build(source);
             Assert.That(result.Succeeded, Is.True, string.Join(";", result.Errors));
             return result.Observation;

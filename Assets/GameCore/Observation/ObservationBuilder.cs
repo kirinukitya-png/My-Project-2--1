@@ -33,6 +33,7 @@ namespace ProjectNST.GameCore.Observation
         public EnemyBoardState EnemyBoard { get; }
         public EnemyPreparationState EnemyPreparation { get; }
         public BattleState Battle { get; }
+        internal IReadOnlyList<BattleTargetDefinition> BattleTargetDefinitions { get; }
         public BattleResult BattleResult { get; }
         public CharacterStatDefinition CharacterStatSettings { get; }
         public CharacterShopConfiguration CharacterShopConfig { get; }
@@ -57,7 +58,8 @@ namespace ProjectNST.GameCore.Observation
             CharacterShopConfiguration characterShopConfig = null,
             StageRewardConfiguration stageRewardConfig = null,
             int? shopRerollGoldCost = null,
-            IReadOnlyList<RosterDefinitionObservation> selectedRosterObservation = null)
+            IReadOnlyList<RosterDefinitionObservation> selectedRosterObservation = null,
+            IReadOnlyList<BattleTargetDefinition> battleTargetDefinitions = null)
         {
             Stage=stage; StageConfig=stageConfig; Economy=economy; EconomyConfig=economyConfig;
             Board=board; Hand=hand; Ownership=ownership; CharacterDefinitions=characterDefinitions;
@@ -68,6 +70,7 @@ namespace ProjectNST.GameCore.Observation
             CharacterStatSettings=characterStatSettings; CharacterShopConfig=characterShopConfig;
             StageRewardConfig=stageRewardConfig; ShopRerollGoldCost=shopRerollGoldCost;
             SelectedRosterObservation=selectedRosterObservation;
+            BattleTargetDefinitions=battleTargetDefinitions;
         }
     }
 
@@ -385,7 +388,8 @@ namespace ProjectNST.GameCore.Observation
                         errors.Add("Battle enemy references unknown DefinitionId '" + unit.DefinitionId + "'.");
                         continue;
                     }
-                    result.Add(new EnemyObservation(unit, definition));
+                    result.Add(new EnemyObservation(unit, definition,
+                        EnemyTargetObservation.Resolve(definition.TargetIds, source.BattleTargetDefinitions)));
                 }
                 return result.ToArray();
             }
@@ -403,7 +407,8 @@ namespace ProjectNST.GameCore.Observation
                     errors.Add("Enemy board references unknown DefinitionId '" + instance.DefinitionId + "'.");
                     continue;
                 }
-                result.Add(new EnemyObservation(instance, definition, source.EnemyPreparation));
+                result.Add(new EnemyObservation(instance, definition, source.EnemyPreparation,
+                    EnemyTargetObservation.Resolve(definition.TargetIds, source.BattleTargetDefinitions)));
             }
             return result.ToArray();
         }

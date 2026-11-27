@@ -1,0 +1,440 @@
+Strategy=HeuristicStrategy v7
+BaseSeed=12345 TrialIndex=6
+TrialSeed=4636112666557124712
+TrialSeedAlgorithm=SplitMix64-v1
+RosterFingerprint=composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383
+BatchConfigurationId=unity-shop-100-v1|roster:composition-roster-v1-f0fc7fe3d4bfa6559c023dbab171503ec099eda4c99a8373ce2471d79ac66383|event-item:Item006|strategies:HeuristicStrategy-v7|pool-accounting:v2
+EventItemDefinitionId=Item006
+Stop=game_over Detail=Run ended in GameOver.
+Stage=3 Round=4 Phase=GameOver
+HP=0 Gold=15 Level=6 XP=3
+Decisions=58 PhaseDecisions=1 Rejected=0
+FinalStateFingerprint=66eb326b5e06d1502c772811a54c06cb8e7b3e0bf12b0f6403b56f4dc08fe1c6
+StrategyRerun=Not selected
+ActionReplay=Not selected
+Candidate scores/decision-time candidates=Unavailable; Strategy was not called a second time for logging.
+Detailed init/strategy/dispatch/battle timings=Unavailable in current Runner API.
+TrialElapsedSeconds=4.1805381
+Roster Cost assignment:
+  character-data:710dfde0ec1d4b44b44f568086831312 cost=1
+  character-data:3510c2096e94459e9fae034465364186 cost=3
+  character-data:31e185eec748485cbbd272dad17b1f6e cost=2
+  character-data:ecc8561063394e6a8c0e9a26adcd0ce5 cost=5
+  character-data:da882de76e1f4d76946951e167465f05 cost=5
+  character-data:f4a589af297f457d90fdda08ac4d97d9 cost=2
+  character-data:ba20fc7fb2d7466ca0d8e23577496060 cost=3
+  character-data:f0cdbe7ff7764dd8a3cafe0b576b0f85 cost=2
+  character-data:7e290880568f41b682511e38318ed09a cost=1
+  character-data:34d50c59b20a42ecb051ee734bfed03f cost=4
+  character-data:2ace6fbc1bee498083d3080c5754c401 cost=3
+  character-data:507d64629f4543029f37d9ff6c730257 cost=2
+  character-data:14b7487ab20249c1a6223cac4d1652a2 cost=3
+  character-data:932fa32419264532aaf154bd873fa997 cost=2
+  character-data:4bc149c8bce845b3b25a32a28dbf71e8 cost=4
+  character-data:0e5714b0606b4fc09e126f75acfd6ffd cost=4
+  character-data:63e470f8515641dd84fbcbe91c94a29b cost=5
+  character-data:203bd50997254704b70090e6a87c07da cost=4
+  character-data:283c9b5a31744c5eb05127e91e94684b cost=1
+  character-data:567a39521b87465ea9ef6ab99d9bcb6d cost=4
+  character-data:80b87e0bdd4b4d10ac3ec46082bd44be cost=1
+  character-data:7da124c2904a443b8918f5bceb71e69f cost=5
+  character-data:21889b7d18fb4e6e9fe9bc58d1439ca1 cost=1
+  character-data:cd5d320fb3c84a57a928f0b6f0533c6e cost=1
+  character-data:25ed6f872e764400b1bfd57b5f98a9e3 cost=5
+  character-data:91c7d01bdcc04eddbfddc1acd83599f3 cost=3
+  character-data:0612954dc45544bebd147b91259ad495 cost=5
+  character-data:9c9aba4550c54ebd90baa5b20cbb8eb1 cost=4
+  character-data:eb03bff3735f456a9d4fc657480514ce cost=2
+  character-data:52d661a10b364454a500085b06c21866 cost=3
+Board occupied=6 Hand used=5 StartBattle legal probe=false (not Preparation)
+Pool validation: Valid
+Original retained Batch comparison=Not provided
+Captured execution records (decision-time candidate lists are unavailable through the current Strategy API):
+#0 decision=0 event=Action phase=Preparation action=BuyCharacter(offer=character-s1-r1-g0-slot0,placement=Board:0) status=Succeeded rejection=none before=bf4fe12cef4795e750aa1de4d4fac17558af8b00a5bb80fcfbcbe50e1e8fec7f after=8a85bbc670e18b2e4b5aadc0f97039e341956814c1f3c5f5104b1e6133467d8c
+  before-state: phase=Preparation encounter=0 gold=7 level=1 xp=0 hp=30/30 board=[0:empty,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=0 gold=6 level=1 xp=0 hp=30/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=123.3.
+#1 decision=1 event=Action phase=Preparation action=StartBattle status=Succeeded rejection=none before=8a85bbc670e18b2e4b5aadc0f97039e341956814c1f3c5f5104b1e6133467d8c after=a9416132544e063f6bd44cea952ecc687ac40a017dcbc6775ffff7741c747f81
+  before-state: phase=Preparation encounter=0 gold=6 level=1 xp=0 hp=30/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Battle encounter=0 gold=6 level=1 xp=0 hp=30/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=40.1.
+#2 decision=2 event=BattleAdvance phase=Battle action=NoAction status=battle:Victory rejection=none before=a9416132544e063f6bd44cea952ecc687ac40a017dcbc6775ffff7741c747f81 after=95b2db801b3771f772c5bf36c16187bd8f99a3b267856094b1ec543c2c49e12d
+  before-state: phase=Battle encounter=0 gold=6 level=1 xp=0 hp=30/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=RewardPending encounter=0 gold=6 level=1 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: 
+#3 decision=2 event=ResolveVictoryReward phase=RewardPending action=NoAction status=stage:Progressed:None rejection=none before=95b2db801b3771f772c5bf36c16187bd8f99a3b267856094b1ec543c2c49e12d after=3361316a07599d0db64c716044b1b9ec17fee8302f1f51c2dcfa8d622b83659e
+  before-state: phase=RewardPending encounter=0 gold=6 level=1 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=EventPending encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: 
+#4 decision=2 event=Action phase=EventPending action=UseEventItem(BoardCharacter:0) status=Succeeded rejection=none before=3361316a07599d0db64c716044b1b9ec17fee8302f1f51c2dcfa8d622b83659e after=65c9d83e2975956a98dca6e38a3f9a21588b1dc4dfb7f729359d59315851e92d
+  before-state: phase=EventPending encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=EventPending encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: Uses the Event Item on a public eligible target. Score=30.
+#5 decision=3 event=Action phase=EventPending action=EndEvent status=Succeeded rejection=none before=65c9d83e2975956a98dca6e38a3f9a21588b1dc4dfb7f729359d59315851e92d after=1b6213e778445f530da52e9c3717c444401c24ce0a3f9fa21e29b957d5d581d9
+  before-state: phase=EventPending encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=AwaitingEncounterStart encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: No eligible Event Item target; end the event. Score=30.
+#6 decision=4 event=AdvanceToNextStage phase=AwaitingEncounterStart action=NoAction status=stage:Progressed:None rejection=none before=1b6213e778445f530da52e9c3717c444401c24ce0a3f9fa21e29b957d5d581d9 after=f355f43d53fbf67caee6e43f5607008715c4d6744bdc0e6e8ca96ef66d1ea5e2
+  before-state: phase=AwaitingEncounterStart encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: 
+#7 decision=4 event=Action phase=Preparation action=BuyCharacter(offer=character-s1-r2-g0-slot0,placement=Board:1) status=Succeeded rejection=none before=f355f43d53fbf67caee6e43f5607008715c4d6744bdc0e6e8ca96ef66d1ea5e2 after=b4621adacd8c28e199eefe2aa982f497c4e366e01d1456904f6a8c9e7ae7984c
+  before-state: phase=Preparation encounter=1 gold=10 level=2 xp=0 hp=28/30 board=[0:C1,1:empty,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=1 gold=9 level=2 xp=0 hp=28/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=65.72999999999999.
+#8 decision=5 event=Action phase=Preparation action=StartBattle status=Succeeded rejection=none before=b4621adacd8c28e199eefe2aa982f497c4e366e01d1456904f6a8c9e7ae7984c after=f8971e4874dd2c18cd39def4302d1d447d68ef076eec44e191b7c3c5c94b2711
+  before-state: phase=Preparation encounter=1 gold=9 level=2 xp=0 hp=28/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Battle encounter=1 gold=9 level=2 xp=0 hp=28/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=45.3.
+#9 decision=6 event=BattleAdvance phase=Battle action=NoAction status=battle:Victory rejection=none before=f8971e4874dd2c18cd39def4302d1d447d68ef076eec44e191b7c3c5c94b2711 after=3e1a4fda2443c3b611f6e133162b07a1353b54fed0e317d5d1c1de5cd443c027
+  before-state: phase=Battle encounter=1 gold=9 level=2 xp=0 hp=28/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=RewardPending encounter=1 gold=9 level=2 xp=0 hp=28/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: 
+#10 decision=6 event=ResolveVictoryReward phase=RewardPending action=NoAction status=stage:Progressed:None rejection=none before=3e1a4fda2443c3b611f6e133162b07a1353b54fed0e317d5d1c1de5cd443c027 after=77dd4fd287279de691cd73c5e72ff4778cd827604bce1d8f9a0c6dbba1f5c9f9
+  before-state: phase=RewardPending encounter=1 gold=9 level=2 xp=0 hp=28/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=AwaitingEncounterStart encounter=2 gold=13 level=2 xp=1 hp=28/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: 
+#11 decision=6 event=AdvanceToNextStage phase=AwaitingEncounterStart action=NoAction status=stage:Progressed:None rejection=none before=77dd4fd287279de691cd73c5e72ff4778cd827604bce1d8f9a0c6dbba1f5c9f9 after=768c20090a8a6da5e05d77a901a3ca845b02548c01ab4c5c695af0d74b1e42ea
+  before-state: phase=AwaitingEncounterStart encounter=2 gold=13 level=2 xp=1 hp=28/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=2 gold=13 level=2 xp=1 hp=28/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: 
+#12 decision=6 event=Action phase=Preparation action=StartBattle status=Succeeded rejection=none before=768c20090a8a6da5e05d77a901a3ca845b02548c01ab4c5c695af0d74b1e42ea after=e807b1af63958a81d24de859b9b10cf5d61ed87159dad077705d31067bf598b2
+  before-state: phase=Preparation encounter=2 gold=13 level=2 xp=1 hp=28/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Battle encounter=2 gold=13 level=2 xp=1 hp=28/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=41.55.
+#13 decision=7 event=BattleAdvance phase=Battle action=NoAction status=battle:Victory rejection=none before=e807b1af63958a81d24de859b9b10cf5d61ed87159dad077705d31067bf598b2 after=e4f1f48d7bc691396a809a3f8b200309998b8bba0031bc24f15217f40998eb62
+  before-state: phase=Battle encounter=2 gold=13 level=2 xp=1 hp=28/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=RewardPending encounter=2 gold=13 level=2 xp=1 hp=25/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: 
+#14 decision=7 event=ResolveVictoryReward phase=RewardPending action=NoAction status=stage:Progressed:None rejection=none before=e4f1f48d7bc691396a809a3f8b200309998b8bba0031bc24f15217f40998eb62 after=1d301b5a83e5927fe7213b4cc19835da965151538e8fe24b093ab0a8d9be14d0
+  before-state: phase=RewardPending encounter=2 gold=13 level=2 xp=1 hp=25/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=AwaitingEncounterStart encounter=3 gold=18 level=3 xp=0 hp=25/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: 
+#15 decision=7 event=AdvanceToNextStage phase=AwaitingEncounterStart action=NoAction status=stage:Progressed:None rejection=none before=1d301b5a83e5927fe7213b4cc19835da965151538e8fe24b093ab0a8d9be14d0 after=4417748e01018c5a779c8495ffb22e93aeb80d077744427fac4777530bead472
+  before-state: phase=AwaitingEncounterStart encounter=3 gold=18 level=3 xp=0 hp=25/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=3 gold=18 level=3 xp=0 hp=25/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: 
+#16 decision=7 event=Action phase=Preparation action=BuyCharacter(offer=character-s1-r4-g0-slot0,placement=Board:2) status=Succeeded rejection=none before=4417748e01018c5a779c8495ffb22e93aeb80d077744427fac4777530bead472 after=18b58765ef4011813a0dc1da2cbf96d0012081bb27e354a4178537e396b10890
+  before-state: phase=Preparation encounter=3 gold=18 level=3 xp=0 hp=25/30 board=[0:C1,1:C2,2:empty,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=3 gold=17 level=3 xp=0 hp=25/30 board=[0:C1,1:C2,2:C3,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=66.37.
+#17 decision=8 event=Action phase=Preparation action=MoveOrSwapBoard(0->5) status=Succeeded rejection=none before=18b58765ef4011813a0dc1da2cbf96d0012081bb27e354a4178537e396b10890 after=1395999a6c8bbfcb80af96b17e8fed4936489b0f76dbec3d0b1ed1f1bd64e6a7
+  before-state: phase=Preparation encounter=3 gold=17 level=3 xp=0 hp=25/30 board=[0:C1,1:C2,2:C3,3:empty,4:empty,5:empty,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=3 gold=17 level=3 xp=0 hp=25/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: Relocation improves visible power or synergy placement. Score=256.
+#18 decision=9 event=Action phase=Preparation action=StartBattle status=Succeeded rejection=none before=1395999a6c8bbfcb80af96b17e8fed4936489b0f76dbec3d0b1ed1f1bd64e6a7 after=48bc2e7cc08003c7f536bfb92193ca0d7c28ce63006ecbb050be89e19a509e97
+  before-state: phase=Preparation encounter=3 gold=17 level=3 xp=0 hp=25/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Battle encounter=3 gold=17 level=3 xp=0 hp=25/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=48.05.
+#19 decision=10 event=BattleAdvance phase=Battle action=NoAction status=battle:Victory rejection=none before=48bc2e7cc08003c7f536bfb92193ca0d7c28ce63006ecbb050be89e19a509e97 after=837a3b5c4db01f7eb1323f8f874d1ed2e8de0c216fb5b44b380da485df00551c
+  before-state: phase=Battle encounter=3 gold=17 level=3 xp=0 hp=25/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=RewardPending encounter=3 gold=17 level=3 xp=0 hp=18/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: 
+#20 decision=10 event=ResolveVictoryReward phase=RewardPending action=NoAction status=stage:Progressed:None rejection=none before=837a3b5c4db01f7eb1323f8f874d1ed2e8de0c216fb5b44b380da485df00551c after=bd0723e337d05aa076dcefff042ea8fd82b068735a545cab260907f07f9110df
+  before-state: phase=RewardPending encounter=3 gold=17 level=3 xp=0 hp=18/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=AwaitingEncounterStart encounter=4 gold=24 level=3 xp=2 hp=18/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: 
+#21 decision=10 event=AdvanceToNextStage phase=AwaitingEncounterStart action=NoAction status=stage:Progressed:None rejection=none before=bd0723e337d05aa076dcefff042ea8fd82b068735a545cab260907f07f9110df after=fb0268f7e5be5c6c10df24ec4b5d0d1b630f5b801bb8707a0e8f733a55990762
+  before-state: phase=AwaitingEncounterStart encounter=4 gold=24 level=3 xp=2 hp=18/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=AwaitingStageChoice encounter=4 gold=24 level=3 xp=2 hp=18/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: 
+#22 decision=10 event=Action phase=AwaitingStageChoice action=SelectStageChoice(SelectD) status=Succeeded rejection=none before=fb0268f7e5be5c6c10df24ec4b5d0d1b630f5b801bb8707a0e8f733a55990762 after=3b67b41ffc56cc02da702774ef777291dbad2eafa988618d172c1188890368b2
+  before-state: phase=AwaitingStageChoice encounter=4 gold=24 level=3 xp=2 hp=18/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=4 gold=24 level=3 xp=2 hp=28/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: Values effective visible HP recovery. Score=30.
+#23 decision=11 event=Action phase=Preparation action=BuyExperience status=Succeeded rejection=none before=3b67b41ffc56cc02da702774ef777291dbad2eafa988618d172c1188890368b2 after=cb4e793a9b73e181babb94ae00f5b76d0a95f79c9a60c0897efa293c42909efa
+  before-state: phase=Preparation encounter=4 gold=24 level=3 xp=2 hp=28/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=4 gold=20 level=4 xp=0 hp=28/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: Public XP is near a level-up threshold. Score=26.6.
+#24 decision=12 event=Action phase=Preparation action=BuyCharacter(offer=character-s1-r5-g0-slot2,placement=Board:0) status=Succeeded rejection=none before=cb4e793a9b73e181babb94ae00f5b76d0a95f79c9a60c0897efa293c42909efa after=d069cd5e7eaf410c25244b66be4d971e87241450f65aef054409576b04a0e635
+  before-state: phase=Preparation encounter=4 gold=20 level=4 xp=0 hp=28/30 board=[0:empty,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=4 gold=19 level=4 xp=0 hp=28/30 board=[0:C4,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=66.53.
+#25 decision=13 event=Action phase=Preparation action=MoveOrSwapBoard(0->4) status=Succeeded rejection=none before=d069cd5e7eaf410c25244b66be4d971e87241450f65aef054409576b04a0e635 after=963380eac33505e5e25ace4bb798ffe9e02f8a3f65ed74b0cde822ac525cc9e9
+  before-state: phase=Preparation encounter=4 gold=19 level=4 xp=0 hp=28/30 board=[0:C4,1:C2,2:C3,3:empty,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=4 gold=19 level=4 xp=0 hp=28/30 board=[0:empty,1:C2,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  strategy: Relocation improves visible power or synergy placement. Score=64.
+#26 decision=14 event=Action phase=Preparation action=BuyCharacter(offer=character-s1-r5-g0-slot1,placement=Hand:0) status=Succeeded rejection=none before=963380eac33505e5e25ace4bb798ffe9e02f8a3f65ed74b0cde822ac525cc9e9 after=bb5c40b085802ace51cad57be8b50c5ab675ba19ab5535d6518573bcef44a9cc
+  before-state: phase=Preparation encounter=4 gold=19 level=4 xp=0 hp=28/30 board=[0:empty,1:C2,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=4 gold=18 level=4 xp=0 hp=28/30 board=[0:empty,1:C2,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:empty,2:empty,3:empty,4:empty]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=24.45.
+#27 decision=15 event=Action phase=Preparation action=BuyCharacter(offer=character-s1-r5-g0-slot0,placement=Board:0) status=Succeeded rejection=none before=bb5c40b085802ace51cad57be8b50c5ab675ba19ab5535d6518573bcef44a9cc after=690e769c41fab2ff9e559a32ea0bed7bc0edf7f3a07adcb21f66022e560cd722
+  before-state: phase=Preparation encounter=4 gold=18 level=4 xp=0 hp=28/30 board=[0:empty,1:C2,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=4 gold=14 level=4 xp=0 hp=28/30 board=[0:C6,1:C2,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:empty,2:empty,3:empty,4:empty]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=23.080000000000002.
+#28 decision=16 event=Action phase=Preparation action=MoveBoardToHand(0->1) status=Succeeded rejection=none before=690e769c41fab2ff9e559a32ea0bed7bc0edf7f3a07adcb21f66022e560cd722 after=15410f06b14c377d6daea1580e3fd7181597a43221488ec34601f58bc33d997f
+  before-state: phase=Preparation encounter=4 gold=14 level=4 xp=0 hp=28/30 board=[0:C6,1:C2,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:empty,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=4 gold=14 level=4 xp=0 hp=28/30 board=[0:empty,1:C2,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C6,2:empty,3:empty,4:empty]
+  strategy: Board exceeds Level; move a Board character into an empty Hand slot to reduce the excess without selling it. Score=64.799999999999955.
+#29 decision=17 event=Action phase=Preparation action=MoveBoardToHand(1->1) status=Succeeded rejection=none before=15410f06b14c377d6daea1580e3fd7181597a43221488ec34601f58bc33d997f after=6aa5ffee1aeb2cebbfb772d443dbdcfaecc2763a2ffbc27b31a35c8f26a9d9fb
+  before-state: phase=Preparation encounter=4 gold=14 level=4 xp=0 hp=28/30 board=[0:empty,1:C2,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C6,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=4 gold=14 level=4 xp=0 hp=28/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: Transfer improves visible formation or reduces Board population above Level. Score=97.600000000000023.
+#30 decision=18 event=Action phase=Preparation action=BuyExperience status=Succeeded rejection=none before=6aa5ffee1aeb2cebbfb772d443dbdcfaecc2763a2ffbc27b31a35c8f26a9d9fb after=5aaa2b9f2c2ea1c7064fb8cfe7cd017fae4a5d2f82960c923e94060a1a3e491d
+  before-state: phase=Preparation encounter=4 gold=14 level=4 xp=0 hp=28/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=4 gold=10 level=4 xp=1 hp=28/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: Values public XP progress against its configured cost. Score=10.6.
+#31 decision=19 event=StrategyNoAction phase=Preparation action=NoAction status=no-action rejection=none before=5aaa2b9f2c2ea1c7064fb8cfe7cd017fae4a5d2f82960c923e94060a1a3e491d after=5aaa2b9f2c2ea1c7064fb8cfe7cd017fae4a5d2f82960c923e94060a1a3e491d
+  before-state: phase=Preparation encounter=4 gold=10 level=4 xp=1 hp=28/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=4 gold=10 level=4 xp=1 hp=28/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: No positive-value preparation action is visible; Runner may detect the stall.
+#32 decision=19 event=ResolveEnemylessStage phase=Preparation action=NoAction status=stage:Progressed:None rejection=none before=5aaa2b9f2c2ea1c7064fb8cfe7cd017fae4a5d2f82960c923e94060a1a3e491d after=4ed49acbd134e2de0b1e12c6d348dd4ac351841bffd4a2adc879fcba62f1d4e5
+  before-state: phase=Preparation encounter=4 gold=10 level=4 xp=1 hp=28/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=AwaitingEncounterStart encounter=5 gold=10 level=4 xp=1 hp=28/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#33 decision=20 event=AdvanceToNextStage phase=AwaitingEncounterStart action=NoAction status=stage:Progressed:None rejection=none before=4ed49acbd134e2de0b1e12c6d348dd4ac351841bffd4a2adc879fcba62f1d4e5 after=f0d2e343d5a8c77ec03cefe8fa049cbc1f9a58b757cb8bc41ff8fa8ebcacd12f
+  before-state: phase=AwaitingEncounterStart encounter=5 gold=10 level=4 xp=1 hp=28/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=5 gold=10 level=4 xp=1 hp=28/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#34 decision=20 event=Action phase=Preparation action=StartBattle status=Succeeded rejection=none before=f0d2e343d5a8c77ec03cefe8fa049cbc1f9a58b757cb8bc41ff8fa8ebcacd12f after=97a78311f33c2d3a558f419f486fc6362eaf96ac4f7a69abcf03762579ebef9d
+  before-state: phase=Preparation encounter=5 gold=10 level=4 xp=1 hp=28/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Battle encounter=5 gold=10 level=4 xp=1 hp=28/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=51.55.
+#35 decision=21 event=BattleAdvance phase=Battle action=NoAction status=battle:Victory rejection=none before=97a78311f33c2d3a558f419f486fc6362eaf96ac4f7a69abcf03762579ebef9d after=9c4c8a4635a0350509c3df6a684d97f2d9c7b31fb19172562767b5db3b5bfd95
+  before-state: phase=Battle encounter=5 gold=10 level=4 xp=1 hp=28/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=RewardPending encounter=5 gold=10 level=4 xp=1 hp=23/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#36 decision=21 event=ResolveVictoryReward phase=RewardPending action=NoAction status=stage:Progressed:None rejection=none before=9c4c8a4635a0350509c3df6a684d97f2d9c7b31fb19172562767b5db3b5bfd95 after=a3e2b130d8d7e684529d4488d8e40cad53d67edc12f12073666b6aab55d5f4ec
+  before-state: phase=RewardPending encounter=5 gold=10 level=4 xp=1 hp=23/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=AwaitingEncounterStart encounter=6 gold=14 level=4 xp=2 hp=23/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#37 decision=21 event=AdvanceToNextStage phase=AwaitingEncounterStart action=NoAction status=stage:Progressed:None rejection=none before=a3e2b130d8d7e684529d4488d8e40cad53d67edc12f12073666b6aab55d5f4ec after=f6ad88e609131ed2f1c1da82049029e2ac94d7931582a0db94eac79d3545d862
+  before-state: phase=AwaitingEncounterStart encounter=6 gold=14 level=4 xp=2 hp=23/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=6 gold=14 level=4 xp=2 hp=23/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#38 decision=21 event=Action phase=Preparation action=StartBattle status=Succeeded rejection=none before=f6ad88e609131ed2f1c1da82049029e2ac94d7931582a0db94eac79d3545d862 after=18a4b14e4a08f80d5f9e55d3dbe89e4c0390e03ee11fec5cf0acc8f51e738160
+  before-state: phase=Preparation encounter=6 gold=14 level=4 xp=2 hp=23/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Battle encounter=6 gold=14 level=4 xp=2 hp=23/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=51.55.
+#39 decision=22 event=BattleAdvance phase=Battle action=NoAction status=battle:Victory rejection=none before=18a4b14e4a08f80d5f9e55d3dbe89e4c0390e03ee11fec5cf0acc8f51e738160 after=8d5bca6395fd9533c75c2162438acaf8e2acf929d9f4c02ce69f66f532de393e
+  before-state: phase=Battle encounter=6 gold=14 level=4 xp=2 hp=23/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=RewardPending encounter=6 gold=14 level=4 xp=2 hp=19/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#40 decision=22 event=ResolveVictoryReward phase=RewardPending action=NoAction status=stage:Progressed:None rejection=none before=8d5bca6395fd9533c75c2162438acaf8e2acf929d9f4c02ce69f66f532de393e after=d22997cf6575ecb615ab2927ccd11d710c7a4a1f888a12b46eb88f973337ae95
+  before-state: phase=RewardPending encounter=6 gold=14 level=4 xp=2 hp=19/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=AwaitingEncounterStart encounter=7 gold=19 level=4 xp=3 hp=19/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#41 decision=22 event=AdvanceToNextStage phase=AwaitingEncounterStart action=NoAction status=stage:Progressed:None rejection=none before=d22997cf6575ecb615ab2927ccd11d710c7a4a1f888a12b46eb88f973337ae95 after=8935fcc27825431e83f3640e3830ca95b87a71b63472932a7bb48eccc2d795d8
+  before-state: phase=AwaitingEncounterStart encounter=7 gold=19 level=4 xp=3 hp=19/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=7 gold=19 level=4 xp=3 hp=19/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#42 decision=22 event=Action phase=Preparation action=StartBattle status=Succeeded rejection=none before=8935fcc27825431e83f3640e3830ca95b87a71b63472932a7bb48eccc2d795d8 after=e98b4f557a91f7de4651159878a0ad5069624c3fe11609ea5461a2ca0b908ff6
+  before-state: phase=Preparation encounter=7 gold=19 level=4 xp=3 hp=19/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Battle encounter=7 gold=19 level=4 xp=3 hp=19/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=51.55.
+#43 decision=23 event=BattleAdvance phase=Battle action=NoAction status=battle:Victory rejection=none before=e98b4f557a91f7de4651159878a0ad5069624c3fe11609ea5461a2ca0b908ff6 after=1a793d5baa5c2711b0f17e3aa792fe2ee05e3625fe5725f57d3cbf5ceb3383d2
+  before-state: phase=Battle encounter=7 gold=19 level=4 xp=3 hp=19/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=RewardPending encounter=7 gold=19 level=4 xp=3 hp=17/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#44 decision=23 event=ResolveVictoryReward phase=RewardPending action=NoAction status=stage:Progressed:None rejection=none before=1a793d5baa5c2711b0f17e3aa792fe2ee05e3625fe5725f57d3cbf5ceb3383d2 after=a6258c60dfe13de1d71d08d3c76a54013fbe6920829ababaab289fd79dc71472
+  before-state: phase=RewardPending encounter=7 gold=19 level=4 xp=3 hp=17/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=EventPending encounter=8 gold=24 level=5 xp=0 hp=17/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#45 decision=23 event=Action phase=EventPending action=UseEventItem(BoardCharacter:1) status=Succeeded rejection=none before=a6258c60dfe13de1d71d08d3c76a54013fbe6920829ababaab289fd79dc71472 after=069ef7e464a58a165b0dc9751a2896b0c2cd000f29d1b44036a77fdad63e51fc
+  before-state: phase=EventPending encounter=8 gold=24 level=5 xp=0 hp=17/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=EventPending encounter=8 gold=24 level=5 xp=0 hp=17/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: Uses the Event Item on a public eligible target. Score=30.
+#46 decision=24 event=Action phase=EventPending action=EndEvent status=Succeeded rejection=none before=069ef7e464a58a165b0dc9751a2896b0c2cd000f29d1b44036a77fdad63e51fc after=17dcf2f6d176577d67427e40a6dfe427bb2aca83dea1025e91cc2245e9b0df73
+  before-state: phase=EventPending encounter=8 gold=24 level=5 xp=0 hp=17/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=AwaitingEncounterStart encounter=8 gold=24 level=5 xp=0 hp=17/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: No eligible Event Item target; end the event. Score=30.
+#47 decision=25 event=AdvanceToNextStage phase=AwaitingEncounterStart action=NoAction status=stage:Progressed:None rejection=none before=17dcf2f6d176577d67427e40a6dfe427bb2aca83dea1025e91cc2245e9b0df73 after=31c0f8212d9b8604b84ada97a3524ddc19c41e8a3140a1fbf3721dad8c26c6f9
+  before-state: phase=AwaitingEncounterStart encounter=8 gold=24 level=5 xp=0 hp=17/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=8 gold=24 level=5 xp=0 hp=17/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#48 decision=25 event=Action phase=Preparation action=MoveHandToBoard(0->3) status=Succeeded rejection=none before=31c0f8212d9b8604b84ada97a3524ddc19c41e8a3140a1fbf3721dad8c26c6f9 after=b9b35546815188324e5ef30cce0b3fa3c0b8058af190a732f75816bbd76737fc
+  before-state: phase=Preparation encounter=8 gold=24 level=5 xp=0 hp=17/30 board=[0:empty,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=8 gold=24 level=5 xp=0 hp=17/30 board=[0:empty,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: Transfer improves visible formation or reduces Board population above Level. Deploys an available Hand character into unused Level capacity. Score=283.60000000000014.
+#49 decision=26 event=Action phase=Preparation action=StartBattle status=Succeeded rejection=none before=b9b35546815188324e5ef30cce0b3fa3c0b8058af190a732f75816bbd76737fc after=2aa8f3b7fbe1d82f19846793e9c51449516ed7007f145d353292ba86f3f00649
+  before-state: phase=Preparation encounter=8 gold=24 level=5 xp=0 hp=17/30 board=[0:empty,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Battle encounter=8 gold=24 level=5 xp=0 hp=17/30 board=[0:empty,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=57.3.
+#50 decision=27 event=BattleAdvance phase=Battle action=NoAction status=battle:Victory rejection=none before=2aa8f3b7fbe1d82f19846793e9c51449516ed7007f145d353292ba86f3f00649 after=d4ae1f7236c9894af6d1bbd99eb1e2f83f50898ed77f9370b305517163937c59
+  before-state: phase=Battle encounter=8 gold=24 level=5 xp=0 hp=17/30 board=[0:empty,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=RewardPending encounter=8 gold=24 level=5 xp=0 hp=10/30 board=[0:empty,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#51 decision=27 event=ResolveVictoryReward phase=RewardPending action=NoAction status=stage:Progressed:None rejection=none before=d4ae1f7236c9894af6d1bbd99eb1e2f83f50898ed77f9370b305517163937c59 after=dde9f41dfd754d95f79680bda08661c7df2495696999452566ffca2211a8da63
+  before-state: phase=RewardPending encounter=8 gold=24 level=5 xp=0 hp=10/30 board=[0:empty,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=AwaitingEncounterStart encounter=9 gold=32 level=5 xp=2 hp=10/30 board=[0:empty,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#52 decision=27 event=AdvanceToNextStage phase=AwaitingEncounterStart action=NoAction status=stage:Progressed:None rejection=none before=dde9f41dfd754d95f79680bda08661c7df2495696999452566ffca2211a8da63 after=b2e47cd421343bcb5b6405cd90c04c356dfec9892f5b477acb31be3df3b8bbf2
+  before-state: phase=AwaitingEncounterStart encounter=9 gold=32 level=5 xp=2 hp=10/30 board=[0:empty,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=AwaitingStageChoice encounter=9 gold=32 level=5 xp=2 hp=10/30 board=[0:empty,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: 
+#53 decision=27 event=Action phase=AwaitingStageChoice action=SelectStageChoice(SelectD) status=Succeeded rejection=none before=b2e47cd421343bcb5b6405cd90c04c356dfec9892f5b477acb31be3df3b8bbf2 after=48a56ed2c55432165fcc2c2ef7dcd47ba25d7dd2c4f28ebb8a38f7393cc5b660
+  before-state: phase=AwaitingStageChoice encounter=9 gold=32 level=5 xp=2 hp=10/30 board=[0:empty,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=9 gold=32 level=5 xp=2 hp=20/30 board=[0:empty,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: Values effective visible HP recovery. Score=30.
+#54 decision=28 event=Action phase=Preparation action=BuyCharacter(offer=character-s2-r5-g0-slot0,placement=Board:0) status=Succeeded rejection=none before=48a56ed2c55432165fcc2c2ef7dcd47ba25d7dd2c4f28ebb8a38f7393cc5b660 after=9487011e4f8906111839341df6d42451d6b36f384feea070e1802abea7b7c7e0
+  before-state: phase=Preparation encounter=9 gold=32 level=5 xp=2 hp=20/30 board=[0:empty,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=9 gold=30 level=5 xp=2 hp=20/30 board=[0:C7,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=25.060000000000002.
+#55 decision=29 event=Action phase=Preparation action=MoveBoardToHand(3->0) status=Succeeded rejection=none before=9487011e4f8906111839341df6d42451d6b36f384feea070e1802abea7b7c7e0 after=26731d4ddb36bafb0c34763b7682f40c3de34379b5c7d25f05b59972cc2c0b72
+  before-state: phase=Preparation encounter=9 gold=30 level=5 xp=2 hp=20/30 board=[0:C7,1:C6,2:C3,3:C5,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:empty,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=9 gold=30 level=5 xp=2 hp=20/30 board=[0:C7,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: Board exceeds Level; move a Board character into an empty Hand slot to reduce the excess without selling it. Score=50.399999999999977.
+#56 decision=30 event=Action phase=Preparation action=BuyCharacter(offer=character-s2-r5-g0-slot1,placement=Board:3) status=Succeeded rejection=none before=26731d4ddb36bafb0c34763b7682f40c3de34379b5c7d25f05b59972cc2c0b72 after=eed4197a8f531e9d7f114e1bf5dda2d12456113b1ba231238d7f0b9d337c09c4
+  before-state: phase=Preparation encounter=9 gold=30 level=5 xp=2 hp=20/30 board=[0:C7,1:C6,2:C3,3:empty,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=9 gold=28 level=5 xp=2 hp=20/30 board=[0:C7,1:C6,2:C3,3:C8,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=24.900000000000002.
+#57 decision=31 event=Action phase=Preparation action=MoveBoardToHand(4->2) status=Succeeded rejection=none before=eed4197a8f531e9d7f114e1bf5dda2d12456113b1ba231238d7f0b9d337c09c4 after=0b8c17539caecb9fa219fa3172d00a0221223b9cd810d61ef2f59b1cfbc0fece
+  before-state: phase=Preparation encounter=9 gold=28 level=5 xp=2 hp=20/30 board=[0:C7,1:C6,2:C3,3:C8,4:C4,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:empty,3:empty,4:empty]
+  after-state: phase=Preparation encounter=9 gold=28 level=5 xp=2 hp=20/30 board=[0:C7,1:C6,2:C3,3:C8,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:empty,4:empty]
+  strategy: Board exceeds Level; move a Board character into an empty Hand slot to reduce the excess without selling it. Score=-100.
+#58 decision=32 event=Action phase=Preparation action=MoveOrSwapBoard(1->4) status=Succeeded rejection=none before=0b8c17539caecb9fa219fa3172d00a0221223b9cd810d61ef2f59b1cfbc0fece after=84969d648f4b653884c6ccc355df15f432b4a76d8162dc8ddae2f18a258560cd
+  before-state: phase=Preparation encounter=9 gold=28 level=5 xp=2 hp=20/30 board=[0:C7,1:C6,2:C3,3:C8,4:empty,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:empty,4:empty]
+  after-state: phase=Preparation encounter=9 gold=28 level=5 xp=2 hp=20/30 board=[0:C7,1:empty,2:C3,3:C8,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:empty,4:empty]
+  strategy: Relocation improves visible power or synergy placement. Score=48.
+#59 decision=33 event=Action phase=Preparation action=MoveOrSwapBoard(3->1) status=Succeeded rejection=none before=84969d648f4b653884c6ccc355df15f432b4a76d8162dc8ddae2f18a258560cd after=da6b652f53dcf2134d5b3c3b3d71934dfa25bf36973c074b2480e0f0b9eee0ed
+  before-state: phase=Preparation encounter=9 gold=28 level=5 xp=2 hp=20/30 board=[0:C7,1:empty,2:C3,3:C8,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:empty,4:empty]
+  after-state: phase=Preparation encounter=9 gold=28 level=5 xp=2 hp=20/30 board=[0:C7,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:empty,4:empty]
+  strategy: Relocation improves visible power or synergy placement. Score=32.
+#60 decision=34 event=Action phase=Preparation action=BuyCharacter(offer=character-s2-r5-g0-slot2,placement=Hand:3) status=Succeeded rejection=none before=da6b652f53dcf2134d5b3c3b3d71934dfa25bf36973c074b2480e0f0b9eee0ed after=96183a0358fa74a46372930209423d5952e712d492beacd5a666618f89dd67cd
+  before-state: phase=Preparation encounter=9 gold=28 level=5 xp=2 hp=20/30 board=[0:C7,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:empty,4:empty]
+  after-state: phase=Preparation encounter=9 gold=26 level=5 xp=2 hp=20/30 board=[0:C7,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:empty]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=24.740000000000002.
+#61 decision=35 event=Action phase=Preparation action=BuyExperience status=Succeeded rejection=none before=96183a0358fa74a46372930209423d5952e712d492beacd5a666618f89dd67cd after=badc644c9dc3797a70ae57d8c2081b7c8b5662d593c81222ea75f4d286d79faf
+  before-state: phase=Preparation encounter=9 gold=26 level=5 xp=2 hp=20/30 board=[0:C7,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:empty]
+  after-state: phase=Preparation encounter=9 gold=22 level=5 xp=3 hp=20/30 board=[0:C7,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:empty]
+  strategy: Values public XP progress against its configured cost. Score=10.6.
+#62 decision=36 event=Action phase=Preparation action=RerollShop(Character) status=Succeeded rejection=none before=badc644c9dc3797a70ae57d8c2081b7c8b5662d593c81222ea75f4d286d79faf after=64010e4e36ed502ed3eb1d560bf5395071941422c1f97d2bcb19170282986ff9
+  before-state: phase=Preparation encounter=9 gold=22 level=5 xp=3 hp=20/30 board=[0:C7,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:empty]
+  after-state: phase=Preparation encounter=9 gold=21 level=5 xp=3 hp=20/30 board=[0:C7,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:empty]
+  strategy: Reroll is affordable; future offers are not predicted. Score=8.6900000000000013.
+#63 decision=37 event=Action phase=Preparation action=BuyCharacter(offer=character-s2-r5-g1-slot0,placement=Board:3) status=Succeeded rejection=none before=64010e4e36ed502ed3eb1d560bf5395071941422c1f97d2bcb19170282986ff9 after=3d7ddd9f87f76ccd0754b51ad3562386e4bfac53320a9e7fd00cd7a79362086e
+  before-state: phase=Preparation encounter=9 gold=21 level=5 xp=3 hp=20/30 board=[0:C7,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:empty]
+  after-state: phase=Preparation encounter=9 gold=19 level=5 xp=3 hp=20/30 board=[0:C7,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:empty]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=24.18.
+#64 decision=38 event=Action phase=Preparation action=MoveBoardToHand(3->4) status=Succeeded rejection=none before=3d7ddd9f87f76ccd0754b51ad3562386e4bfac53320a9e7fd00cd7a79362086e after=b5adc146c1564017cf0b0f6ba60d556f1a909640d89ab63760fb59a9602ed194
+  before-state: phase=Preparation encounter=9 gold=19 level=5 xp=3 hp=20/30 board=[0:C7,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:empty]
+  after-state: phase=Preparation encounter=9 gold=19 level=5 xp=3 hp=20/30 board=[0:C7,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  strategy: Board exceeds Level; move a Board character into an empty Hand slot to reduce the excess without selling it. Score=-100.
+#65 decision=39 event=Action phase=Preparation action=BuyCharacter(offer=character-s2-r5-g1-slot1,placement=Board:3) status=Succeeded rejection=none before=b5adc146c1564017cf0b0f6ba60d556f1a909640d89ab63760fb59a9602ed194 after=2d408b090984863bad8569b929889b25f293e2c9212a0444a16a110e5ff18309
+  before-state: phase=Preparation encounter=9 gold=19 level=5 xp=3 hp=20/30 board=[0:C7,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  after-state: phase=Preparation encounter=9 gold=15 level=5 xp=3 hp=20/30 board=[0:C7,1:C8,2:C3,3:C11,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=23.16.
+#66 decision=40 event=Action phase=Preparation action=SellCharacter(C7) status=Succeeded rejection=none before=2d408b090984863bad8569b929889b25f293e2c9212a0444a16a110e5ff18309 after=63c9f5fd905f17fd473ca3148e42b599dcd36a05e12e5bda5fafbc0f5b748596
+  before-state: phase=Preparation encounter=9 gold=15 level=5 xp=3 hp=20/30 board=[0:C7,1:C8,2:C3,3:C11,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  after-state: phase=Preparation encounter=9 gold=17 level=5 xp=3 hp=20/30 board=[0:empty,1:C8,2:C3,3:C11,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  strategy: Board exceeds Level and no empty Hand transfer or immediately effective level-up is available; sell the Board character with the smallest visible power/synergy loss. Score=-52.400000000000006.
+#67 decision=41 event=Action phase=Preparation action=MoveOrSwapBoard(3->0) status=Succeeded rejection=none before=63c9f5fd905f17fd473ca3148e42b599dcd36a05e12e5bda5fafbc0f5b748596 after=27b84d1172b855cccc4fba8ae912b84ea9d87e1b6c82f3db28cbbc1588ee67c5
+  before-state: phase=Preparation encounter=9 gold=17 level=5 xp=3 hp=20/30 board=[0:empty,1:C8,2:C3,3:C11,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  after-state: phase=Preparation encounter=9 gold=17 level=5 xp=3 hp=20/30 board=[0:C11,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  strategy: Relocation improves visible power or synergy placement. Score=64.000000000000114.
+#68 decision=42 event=Action phase=Preparation action=BuyCharacter(offer=character-s2-r5-g1-slot2,placement=Board:3) status=Succeeded rejection=none before=27b84d1172b855cccc4fba8ae912b84ea9d87e1b6c82f3db28cbbc1588ee67c5 after=55fa2728ec47acde2bd5ae4bf93b5a55919f4171fb8f969c68f77c38b5c93c03
+  before-state: phase=Preparation encounter=9 gold=17 level=5 xp=3 hp=20/30 board=[0:C11,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  after-state: phase=Preparation encounter=9 gold=15 level=5 xp=3 hp=20/30 board=[0:C11,1:C8,2:C3,3:C12,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=23.86.
+#69 decision=43 event=Action phase=Preparation action=SellCharacter(C11) status=Succeeded rejection=none before=55fa2728ec47acde2bd5ae4bf93b5a55919f4171fb8f969c68f77c38b5c93c03 after=d61317d2166cbeb69b51230e528453c10572b2a3bd64b96a0f2be044ccc5cf31
+  before-state: phase=Preparation encounter=9 gold=15 level=5 xp=3 hp=20/30 board=[0:C11,1:C8,2:C3,3:C12,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  after-state: phase=Preparation encounter=9 gold=19 level=5 xp=3 hp=20/30 board=[0:empty,1:C8,2:C3,3:C12,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  strategy: Board exceeds Level and no empty Hand transfer or immediately effective level-up is available; sell the Board character with the smallest visible power/synergy loss. Score=-44.599999999999994.
+#70 decision=44 event=Action phase=Preparation action=MoveOrSwapBoard(3->0) status=Succeeded rejection=none before=d61317d2166cbeb69b51230e528453c10572b2a3bd64b96a0f2be044ccc5cf31 after=0097e25ed1231427058803c03789a593f806353718a7124cf2cdb040a0006634
+  before-state: phase=Preparation encounter=9 gold=19 level=5 xp=3 hp=20/30 board=[0:empty,1:C8,2:C3,3:C12,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  after-state: phase=Preparation encounter=9 gold=19 level=5 xp=3 hp=20/30 board=[0:C12,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  strategy: Relocation improves visible power or synergy placement. Score=144.00000000000011.
+#71 decision=45 event=Action phase=Preparation action=BuyExperience status=Succeeded rejection=none before=0097e25ed1231427058803c03789a593f806353718a7124cf2cdb040a0006634 after=f227b9c4260016eec492911ae483c73f356f2180040d0199c0cb5f2f9adb1187
+  before-state: phase=Preparation encounter=9 gold=19 level=5 xp=3 hp=20/30 board=[0:C12,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  after-state: phase=Preparation encounter=9 gold=15 level=5 xp=4 hp=20/30 board=[0:C12,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  strategy: Values public XP progress against its configured cost. Score=10.6.
+#72 decision=46 event=Action phase=Preparation action=RerollShop(Character) status=Succeeded rejection=none before=f227b9c4260016eec492911ae483c73f356f2180040d0199c0cb5f2f9adb1187 after=0127cce5df0c097fd24a2b4e4a4319127da4832a909c294f15c2c616d5cf71f9
+  before-state: phase=Preparation encounter=9 gold=15 level=5 xp=4 hp=20/30 board=[0:C12,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  after-state: phase=Preparation encounter=9 gold=14 level=5 xp=4 hp=20/30 board=[0:C12,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  strategy: Reroll is affordable; future offers are not predicted. Score=8.13.
+#73 decision=47 event=Action phase=Preparation action=BuyExperience status=Succeeded rejection=none before=0127cce5df0c097fd24a2b4e4a4319127da4832a909c294f15c2c616d5cf71f9 after=b3b4086260efd45a1f7485a4f436b95311c4cac5cb8357cdfde565a90f3a23f9
+  before-state: phase=Preparation encounter=9 gold=14 level=5 xp=4 hp=20/30 board=[0:C12,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  after-state: phase=Preparation encounter=9 gold=10 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  strategy: Public XP is near a level-up threshold. Score=26.6.
+#74 decision=48 event=Action phase=Preparation action=MoveHandToBoard(4->3) status=Succeeded rejection=none before=b3b4086260efd45a1f7485a4f436b95311c4cac5cb8357cdfde565a90f3a23f9 after=eae60e537a2f3b509737875ad434e66dfaa8e7f12e3097551f665ee05f42d6c0
+  before-state: phase=Preparation encounter=9 gold=10 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:empty,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:C:C10]
+  after-state: phase=Preparation encounter=9 gold=10 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:empty]
+  strategy: Transfer improves visible formation or reduces Board population above Level. Deploys an available Hand character into unused Level capacity. Score=394.
+#75 decision=49 event=Action phase=Preparation action=BuyCharacter(offer=character-s2-r5-g2-slot1,placement=Hand:4) status=Succeeded rejection=none before=eae60e537a2f3b509737875ad434e66dfaa8e7f12e3097551f665ee05f42d6c0 after=229fa3a078ca8d8bd5f74d209a5d6c6df18b67bbf338911b3b8fa114d8373073
+  before-state: phase=Preparation encounter=9 gold=10 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C9,4:empty]
+  after-state: phase=Preparation encounter=9 gold=8 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:empty,4:empty]
+  strategy: Visible copies suggest a possible merge; actual eligibility remains with Dispatcher. Score=98.3.
+#76 decision=50 event=Action phase=Preparation action=BuyCharacter(offer=character-s2-r5-g2-slot0,placement=Board:6) status=Succeeded rejection=none before=229fa3a078ca8d8bd5f74d209a5d6c6df18b67bbf338911b3b8fa114d8373073 after=5ed94f9e2e27b03440231f7f3c542aef19b0db741feb589e5cbb90ddded60484
+  before-state: phase=Preparation encounter=9 gold=8 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:empty,4:empty]
+  after-state: phase=Preparation encounter=9 gold=6 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:C13,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:empty,4:empty]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=22.6.
+#77 decision=51 event=Action phase=Preparation action=MoveBoardToHand(6->3) status=Succeeded rejection=none before=5ed94f9e2e27b03440231f7f3c542aef19b0db741feb589e5cbb90ddded60484 after=e82da60e2aa93123b18b106314756593ce3e98329b8ec1c0ff7f631eac578f62
+  before-state: phase=Preparation encounter=9 gold=6 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:C13,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:empty,4:empty]
+  after-state: phase=Preparation encounter=9 gold=6 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:empty]
+  strategy: Board exceeds Level; move a Board character into an empty Hand slot to reduce the excess without selling it. Score=77.599999999999909.
+#78 decision=52 event=Action phase=Preparation action=BuyCharacter(offer=character-s2-r5-g2-slot2,placement=Hand:4) status=Succeeded rejection=none before=e82da60e2aa93123b18b106314756593ce3e98329b8ec1c0ff7f631eac578f62 after=4b13b7eee2787f103e2673b3b21b761a4336f11f476d03bde38f29f31cab16df
+  before-state: phase=Preparation encounter=9 gold=6 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:empty]
+  after-state: phase=Preparation encounter=9 gold=4 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: Visible offer is affordable; shop Character stats and tags are not exposed in GameObservation. Score=22.6.
+#79 decision=53 event=StrategyNoAction phase=Preparation action=NoAction status=no-action rejection=none before=4b13b7eee2787f103e2673b3b21b761a4336f11f476d03bde38f29f31cab16df after=4b13b7eee2787f103e2673b3b21b761a4336f11f476d03bde38f29f31cab16df
+  before-state: phase=Preparation encounter=9 gold=4 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=Preparation encounter=9 gold=4 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: No positive-value preparation action is visible; Runner may detect the stall.
+#80 decision=53 event=ResolveEnemylessStage phase=Preparation action=NoAction status=stage:Progressed:None rejection=none before=4b13b7eee2787f103e2673b3b21b761a4336f11f476d03bde38f29f31cab16df after=e6a9a0409634b9dabda6d1b8a6c5883abbaf7fb58b8948e63c5a0ad9aeddcaea
+  before-state: phase=Preparation encounter=9 gold=4 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=AwaitingEncounterStart encounter=10 gold=4 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: 
+#81 decision=54 event=AdvanceToNextStage phase=AwaitingEncounterStart action=NoAction status=stage:Progressed:None rejection=none before=e6a9a0409634b9dabda6d1b8a6c5883abbaf7fb58b8948e63c5a0ad9aeddcaea after=794c64069febb23aea1b19ba8b27d22663c19d05a8bedf02d7a6aa1d3c566b1f
+  before-state: phase=AwaitingEncounterStart encounter=10 gold=4 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=Preparation encounter=10 gold=4 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: 
+#82 decision=54 event=Action phase=Preparation action=StartBattle status=Succeeded rejection=none before=794c64069febb23aea1b19ba8b27d22663c19d05a8bedf02d7a6aa1d3c566b1f after=b6d5b1cef0b7127849963789701a94a0c2f7661fb7fb1e74400305afd9277686
+  before-state: phase=Preparation encounter=10 gold=4 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=Battle encounter=10 gold=4 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=61.15.
+#83 decision=55 event=BattleAdvance phase=Battle action=NoAction status=battle:Victory rejection=none before=b6d5b1cef0b7127849963789701a94a0c2f7661fb7fb1e74400305afd9277686 after=8194be9ce2387e8459a50f9b4555dfd9faebba562be3c9ad8327d7cd02f2c68e
+  before-state: phase=Battle encounter=10 gold=4 level=6 xp=0 hp=20/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=RewardPending encounter=10 gold=4 level=6 xp=0 hp=15/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: 
+#84 decision=55 event=ResolveVictoryReward phase=RewardPending action=NoAction status=stage:Progressed:None rejection=none before=8194be9ce2387e8459a50f9b4555dfd9faebba562be3c9ad8327d7cd02f2c68e after=c43fff3470e1187f006f7c5572805f3d52b42daef603944aef4cc15fc9607994
+  before-state: phase=RewardPending encounter=10 gold=4 level=6 xp=0 hp=15/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=AwaitingEncounterStart encounter=11 gold=7 level=6 xp=1 hp=15/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: 
+#85 decision=55 event=AdvanceToNextStage phase=AwaitingEncounterStart action=NoAction status=stage:Progressed:None rejection=none before=c43fff3470e1187f006f7c5572805f3d52b42daef603944aef4cc15fc9607994 after=0197a4e6905a50e85d20da15b567edc80121ad7e346f5fca236fe2261cb4bd83
+  before-state: phase=AwaitingEncounterStart encounter=11 gold=7 level=6 xp=1 hp=15/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=Preparation encounter=11 gold=7 level=6 xp=1 hp=15/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: 
+#86 decision=55 event=Action phase=Preparation action=StartBattle status=Succeeded rejection=none before=0197a4e6905a50e85d20da15b567edc80121ad7e346f5fca236fe2261cb4bd83 after=46860f23fabe8377092ea16f15025ab2880d8fe39a5135711a900ab1bf62de70
+  before-state: phase=Preparation encounter=11 gold=7 level=6 xp=1 hp=15/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=Battle encounter=11 gold=7 level=6 xp=1 hp=15/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=61.45.
+#87 decision=56 event=BattleAdvance phase=Battle action=NoAction status=battle:Victory rejection=none before=46860f23fabe8377092ea16f15025ab2880d8fe39a5135711a900ab1bf62de70 after=18afec8d6b88a65ada21545658ed263596dc74da1ca60d09eaf4197aed196b4b
+  before-state: phase=Battle encounter=11 gold=7 level=6 xp=1 hp=15/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=RewardPending encounter=11 gold=7 level=6 xp=1 hp=14/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: 
+#88 decision=56 event=ResolveVictoryReward phase=RewardPending action=NoAction status=stage:Progressed:None rejection=none before=18afec8d6b88a65ada21545658ed263596dc74da1ca60d09eaf4197aed196b4b after=8248ecec016d021c55bb519a138d91c1a19fab442e0240177f904df3bc5b5ea0
+  before-state: phase=RewardPending encounter=11 gold=7 level=6 xp=1 hp=14/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=AwaitingEncounterStart encounter=12 gold=11 level=6 xp=2 hp=14/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: 
+#89 decision=56 event=AdvanceToNextStage phase=AwaitingEncounterStart action=NoAction status=stage:Progressed:None rejection=none before=8248ecec016d021c55bb519a138d91c1a19fab442e0240177f904df3bc5b5ea0 after=e33ecca8a9133c5c10b776008072b91e71ca04b4972a2d90b449357e3e6ddaa5
+  before-state: phase=AwaitingEncounterStart encounter=12 gold=11 level=6 xp=2 hp=14/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=Preparation encounter=12 gold=11 level=6 xp=2 hp=14/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: 
+#90 decision=56 event=Action phase=Preparation action=StartBattle status=Succeeded rejection=none before=e33ecca8a9133c5c10b776008072b91e71ca04b4972a2d90b449357e3e6ddaa5 after=dd0c9cffff7b6e76981a49248807b5682d4ebbe1f26136277b48f7cfa2c8be38
+  before-state: phase=Preparation encounter=12 gold=11 level=6 xp=2 hp=14/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=Battle encounter=12 gold=11 level=6 xp=2 hp=14/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=61.55.
+#91 decision=57 event=BattleAdvance phase=Battle action=NoAction status=battle:Victory rejection=none before=dd0c9cffff7b6e76981a49248807b5682d4ebbe1f26136277b48f7cfa2c8be38 after=008ce7f90739e96d726703f6adf61a15c4f4c59d16b41f7dad2b0d6c6a42c69c
+  before-state: phase=Battle encounter=12 gold=11 level=6 xp=2 hp=14/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=RewardPending encounter=12 gold=11 level=6 xp=2 hp=10/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: 
+#92 decision=57 event=ResolveVictoryReward phase=RewardPending action=NoAction status=stage:Progressed:None rejection=none before=008ce7f90739e96d726703f6adf61a15c4f4c59d16b41f7dad2b0d6c6a42c69c after=75e5ca15f3ef5fc77eee3bc1a12d635574c627eb9b9e5bac5c38e120f2e088f7
+  before-state: phase=RewardPending encounter=12 gold=11 level=6 xp=2 hp=10/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=AwaitingEncounterStart encounter=13 gold=15 level=6 xp=3 hp=10/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: 
+#93 decision=57 event=AdvanceToNextStage phase=AwaitingEncounterStart action=NoAction status=stage:Progressed:None rejection=none before=75e5ca15f3ef5fc77eee3bc1a12d635574c627eb9b9e5bac5c38e120f2e088f7 after=9504ed3574f820a3a4ebc4557db48e6d5faec578f287720a60e57c0453d85613
+  before-state: phase=AwaitingEncounterStart encounter=13 gold=15 level=6 xp=3 hp=10/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=Preparation encounter=13 gold=15 level=6 xp=3 hp=10/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: 
+#94 decision=57 event=Action phase=Preparation action=StartBattle status=Succeeded rejection=none before=9504ed3574f820a3a4ebc4557db48e6d5faec578f287720a60e57c0453d85613 after=feb2e9bd82f195f6334e6a87fb854b9ab6147c546b7a5224f9139707639003e4
+  before-state: phase=Preparation encounter=13 gold=15 level=6 xp=3 hp=10/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=Battle encounter=13 gold=15 level=6 xp=3 hp=10/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: No valuable public strengthening action remains; finish preparation using current Board readiness and decision urgency. Score=61.55.
+#95 decision=58 event=BattleAdvance phase=Battle action=NoAction status=battle:Defeat rejection=none before=feb2e9bd82f195f6334e6a87fb854b9ab6147c546b7a5224f9139707639003e4 after=66eb326b5e06d1502c772811a54c06cb8e7b3e0bf12b0f6403b56f4dc08fe1c6
+  before-state: phase=Battle encounter=13 gold=15 level=6 xp=3 hp=10/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=GameOver encounter=13 gold=15 level=6 xp=3 hp=0/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: 
+#96 decision=58 event=TrialEnd phase=GameOver action=NoAction status=trial-end:GameOver rejection=none before=66eb326b5e06d1502c772811a54c06cb8e7b3e0bf12b0f6403b56f4dc08fe1c6 after=66eb326b5e06d1502c772811a54c06cb8e7b3e0bf12b0f6403b56f4dc08fe1c6
+  before-state: phase=GameOver encounter=13 gold=15 level=6 xp=3 hp=0/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  after-state: phase=GameOver encounter=13 gold=15 level=6 xp=3 hp=0/30 board=[0:C12,1:C8,2:C3,3:C10,4:C6,5:C1,6:empty,7:empty,8:empty] hand=[0:C:C5,1:C:C2,2:C:C4,3:C:C13,4:C:C14]
+  strategy: 

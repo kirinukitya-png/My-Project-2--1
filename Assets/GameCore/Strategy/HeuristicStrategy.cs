@@ -208,12 +208,12 @@ namespace ProjectNST.GameCore.Strategy
         private readonly HeuristicStrategySettings _settings;
         private readonly string _version;
         private readonly RandomStrategy _candidateSource;
-        private readonly Action<string> _decisionDiagnosticSink;
+        private Action<string> _decisionDiagnosticSink;
         private readonly ProjectNST.GameCore.Sessions.SimulationProfileCollector _profiler;
         public string StrategyId=>StableId;
         public string Version=>_version;
         public HeuristicStrategySettings Settings=>_settings;
-        private bool UsesUnifiedComposition => _version == Version13 || _version == Version14;
+        private bool UsesUnifiedComposition => _version == Version13 || UsesV14Preparation;
         private bool UsesComposition => _version == Version12 || UsesUnifiedComposition;
         private bool UsesV10PurchaseRules => _version == Version10 || _version == Version11 || _version == Version12;
 
@@ -367,8 +367,10 @@ namespace ProjectNST.GameCore.Strategy
             if(context==null)throw new ArgumentNullException(nameof(context));
             if(!context.IsFor(this))throw new ArgumentException("Context belongs to another Strategy.",nameof(context));
             _profiler?.Add("Strategy.ChooseActionCalls");
-            if (_version == Version14 && observation.Stage.Phase == ObservationPhase.Preparation)
+            if (UsesV14Preparation && observation.Stage.Phase == ObservationPhase.Preparation)
                 return ChooseV14Preparation(observation, context);
+            if (_v16 != null && _v16Telemetry != null)
+                SendV16Telemetry(ObserveV16(observation, null, null, false, null, null));
             Payload state=ReadState(context.State);
             bool preparation=observation.Stage.Phase==ObservationPhase.Preparation;
             int priorPreparationDecisions=state.Decisions;
@@ -489,6 +491,27 @@ namespace ProjectNST.GameCore.Strategy
                 resetReason,generated,evaluations,excluded,false,selectionReason);
         }
 
+        private Action<bool, Exception> _decisionTraceErrorSink;
+
+        /// <summary>Attaches per-instance diagnostics before execution. The error flag identifies a sink failure.</summary>
+        public void ConfigureDecisionTrace(Action<string> sink, Action<bool, Exception> errorSink)
+        {
+            _decisionDiagnosticSink = sink ?? throw new ArgumentNullException(nameof(sink));
+            _decisionTraceErrorSink = errorSink;
+        }
+
+        private void ReportDecisionTraceError(bool sinkFailure, Exception error)
+        {
+            try { _decisionTraceErrorSink?.Invoke(sinkFailure, error); }
+            catch { /* A diagnostics observer cannot alter a decision. */ }
+        }
+
+        private void SendDecisionTrace(string text)
+        {
+            try { _decisionDiagnosticSink(text); }
+            catch (Exception error) { ReportDecisionTraceError(true, error); }
+        }
+
         private StrategyDecision PublishDecisionDiagnostic(StrategyDecision decision,GameObservation observation,
             StrategyContext context,Payload before,int previousDecisions,int currentDecisions,string resetReason,
             IReadOnlyList<HeuristicActionEvaluation> generated,IReadOnlyList<HeuristicActionEvaluation> filtered,
@@ -501,10 +524,21 @@ namespace ProjectNST.GameCore.Strategy
                 text.AppendLine("Strategy="+StrategyId+" Version="+Version+" TrialIndex="+context.TrialIndex+" DecisionIndex="+context.DecisionStep)
                     .AppendLine("Stage="+observation.Stage.StageNumber+" Round="+observation.Stage.RoundNumber+" EncounterIndex="+observation.Stage.EncounterIndex+" Phase="+observation.Stage.Phase+" Choice="+(observation.Stage.Choice.HasValue?observation.Stage.Choice.Value.ToString():"None")+" EnemyCategory="+(observation.Stage.EnemyCategory.HasValue?observation.Stage.EnemyCategory.Value.ToString():"None"))
                     .AppendLine("PhaseDecisionCount=Unavailable (not present in StrategyContext); StrategyPreparationDecisionBefore="+previousDecisions+" After="+currentDecisions+" Limit="+_settings.PreparationDecisionLimit)
-                    .AppendLine("VisibleObservationFingerprint="+(_version == Version14 ? GetV14ObservationFingerprint(observation) : CreateVisibleObservationFingerprint(observation,_settings.IncludeTemporaryCharacterBonuses,_version))+" (hash of Strategy-visible data only).")
+                    .AppendLine("VisibleObservationFingerprint="+(_v16 != null ? GetV16ObservationFingerprint(observation, _v16) : _v15 != null ? GetV15ObservationFingerprint(observation, _v15) : _version == Version14 ? GetV14ObservationFingerprint(observation) : CreateVisibleObservationFingerprint(observation,_settings.IncludeTemporaryCharacterBonuses,_version))+" (hash of Strategy-visible data only).")
                     .AppendLine("StrategyStateBefore="+(context.State?.Payload??"Unavailable"))
                     .AppendLine("PreviousEncounter="+(before.HasEncounter?before.EncounterIndex.ToString(CultureInfo.InvariantCulture):"Unavailable")+" CurrentEncounter="+observation.Stage.EncounterIndex+" PreviousPhase="+(before.HasIdentity?before.Phase.ToString():"Unavailable")+" CurrentPhase="+observation.Stage.Phase+" CounterReset="+(observation.Stage.Phase==ObservationPhase.Preparation&&(!before.HasEncounter||before.EncounterIndex!=observation.Stage.EncounterIndex))+" ResetReason="+resetReason+" PreviousAction="+(before.LastAction??""))
                     .AppendLine("GeneratedCandidateCount="+generated.Count+" FilteredCandidateCount="+filtered.Count+" ExcludedCandidateCount="+excluded.Count);
+                if (_v16 != null)
+                {
+                    text.AppendLine("TraceFormat=v16-1 BattleStatus=NonPreparation");
+                    AppendV15PublicState(text, observation, includeHeader: false);
+                }
+                else if (_v15 != null)
+                {
+                    AppendV15PublicState(text, observation);
+                    text.AppendLine("CurrentComposition=Unavailable (not scored in this phase)")
+                        .AppendLine("Shop current=Unavailable future=Unavailable");
+                }
                 foreach(HeuristicActionEvaluation item in generated)
                 {
                     string signature=Signature(item.Action);
@@ -536,9 +570,9 @@ namespace ProjectNST.GameCore.Strategy
                 foreach(string item in excluded)text.AppendLine("Excluded="+item);
                 text.AppendLine("FinalAction="+(decision.Action==null?"NoAction":DescribeCandidate(decision.Action))+" FinalReason="+selectionReason)
                     .AppendLine("StrategyStateAfter="+(decision.NextState?.Payload??"Unavailable"));
-                _decisionDiagnosticSink(text.ToString());
+                SendDecisionTrace(text.ToString());
             }
-            catch { /* Diagnostic sinks must never affect Strategy output. */ }
+            catch (Exception error) { ReportDecisionTraceError(false, error); }
             return decision;
         }
 
@@ -780,7 +814,7 @@ namespace ProjectNST.GameCore.Strategy
 
         /// <summary>Candidate list is exactly the existing RandomStrategy public candidate generator; only ranking differs.</summary>
         public IReadOnlyList<HeuristicActionEvaluation> GetEvaluations(GameObservation observation,ActionId actionId)
-            => _version == Version14 && observation != null && observation.Stage.Phase == ObservationPhase.Preparation
+            => UsesV14Preparation && observation != null && observation.Stage.Phase == ObservationPhase.Preparation
                 ? InspectV14Preparation(observation, actionId)
                 : GetEvaluations(observation,actionId,new Payload(0,string.Empty,false,-1,ObservationPhase.AwaitingStageChoice,false),0,out _);
 

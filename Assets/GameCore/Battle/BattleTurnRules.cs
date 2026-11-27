@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using ProjectNST.GameCore.Synergy;
 
 namespace ProjectNST.GameCore.Battle
 {
@@ -98,7 +99,7 @@ namespace ProjectNST.GameCore.Battle
         {
             if (ally == null || ally.Side != BattleUnitSide.Ally)
                 throw new ArgumentException("An ally BattleUnitState is required.", nameof(ally));
-            return Math.Max(1, Math.Min(3, ally.Star));
+            return UnitMovePriority.ParticipationLimit(ally.Star);
         }
 
         public static int GetParticipationCount(BattleState state, string instanceId)

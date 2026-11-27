@@ -242,8 +242,7 @@ namespace ProjectNST.GameCore.Items
                         if (!nextEconomy.HasHealth)
                             return Fail(ItemEffectFailure.HealthUnavailable, board, hand, ownership,
                                 economy, effectState, stage, eventItem, statsRandomState);
-                        long hp = (long)nextEconomy.CurrentHP - effect.Value;
-                        int clamped = (int)Math.Max(0L, Math.Min(nextEconomy.MaximumHP, hp));
+                        int clamped = ApplyPlayerHpEffect(nextEconomy.CurrentHP, nextEconomy.MaximumHP, effect.Value);
                         long actualDelta = (long)clamped - nextEconomy.CurrentHP;
                         if (actualDelta < int.MinValue || actualDelta > int.MaxValue)
                             return Fail(ItemEffectFailure.ArithmeticOverflow, board, hand, ownership,
@@ -304,7 +303,7 @@ namespace ProjectNST.GameCore.Items
                     return instance.TryApplyItemStatDelta(0, effect.Value, temporary)
                         ? ItemEffectFailure.None : ItemEffectFailure.ArithmeticOverflow;
                 case ItemEffectKind.Star:
-                    if (instance.Star >= effect.Value || (instance.HasTemporaryStar && !temporary))
+                    if (!CanChangeStar(instance.Star, instance.HasTemporaryStar, effect.Value, temporary))
                         return ItemEffectFailure.CharacterNotEligible;
                     if (!TryFindDefinition(definitions, instance.DefinitionId, out CharacterDefinition definition))
                         return ItemEffectFailure.MissingCharacterDefinition;
@@ -316,6 +315,12 @@ namespace ProjectNST.GameCore.Items
                     return ItemEffectFailure.UnsupportedEffect;
             }
         }
+
+        internal static int ApplyPlayerHpEffect(int hp, int maximumHP, int damage) =>
+            (int)Math.Max(0L, Math.Min(maximumHP, (long)hp - damage));
+
+        internal static bool CanChangeStar(int currentStar, bool hasTemporaryStar, int newStar, bool temporary) =>
+            currentStar < newStar && (!hasTemporaryStar || temporary);
 
         private static bool IsValidDefinition(ItemDefinition item)
         {
@@ -329,7 +334,7 @@ namespace ProjectNST.GameCore.Items
             return item.Target != ItemEffectTarget.Unspecified;
         }
 
-        private static bool IsSupported(ItemEffectTarget target, ItemEffectKind effect)
+        internal static bool IsSupported(ItemEffectTarget target, ItemEffectKind effect)
         {
             switch (target)
             {

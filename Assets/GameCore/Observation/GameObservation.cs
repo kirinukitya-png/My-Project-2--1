@@ -35,6 +35,10 @@ namespace ProjectNST.GameCore.Observation
         public IReadOnlyList<string> Attributes { get; }
         public ObservationLocationKind LocationKind { get; }
         public int SlotIndex { get; }
+        private readonly bool _temporaryStar;
+
+        // Use an accessor to preserve the existing property-based observation fingerprint.
+        public bool IsStarTemporary() => _temporaryStar;
 
         internal CharacterObservation(CharacterInstanceView instance, CharacterDefinition definition,
             ObservationLocationKind locationKind, int slotIndex)
@@ -44,6 +48,7 @@ namespace ProjectNST.GameCore.Observation
             Attack = instance.Attack; Defense = instance.Defense;
             TemporaryAttackBonus = instance.TemporaryAttackBonus;
             TemporaryDefenseBonus = instance.TemporaryDefenseBonus;
+            _temporaryStar = instance.HasTemporaryStar;
             // CharacterDefinition owns defensive copies wrapped as read-only collections.
             // Sharing those immutable definition values avoids two arrays and two wrappers
             // per observed character without sharing mutable instance state.
@@ -560,8 +565,14 @@ namespace ProjectNST.GameCore.Observation
         public IReadOnlyList<string> CipEffects { get; }
         public IReadOnlyList<string> AeEffects { get; }
         public IReadOnlyList<string> PigEffects { get; }
-        internal EnemyObservation(BattleUnitState unit, EnemyDefinition definition)
+        private readonly EnemyTargetObservation _initialTarget;
+
+        // An explicit accessor preserves the existing property-based observation fingerprints.
+        public EnemyTargetObservation GetInitialTarget() => _initialTarget;
+
+        internal EnemyObservation(BattleUnitState unit, EnemyDefinition definition, EnemyTargetObservation initialTarget)
         {
+            _initialTarget = initialTarget;
             SlotIndex = unit.SlotIndex; InstanceId = unit.InstanceId; DefinitionId = unit.DefinitionId;
             DisplayName = definition.DisplayName;
             Attack = unit.Attack; Defense = unit.Defense; HP = unit.CurrentHP; MaximumHP = unit.MaxHP;
@@ -572,8 +583,10 @@ namespace ProjectNST.GameCore.Observation
             CipEffects = unit.CipEffectIds; AeEffects = unit.AeEffectIds; PigEffects = unit.PigEffectIds;
         }
 
-        internal EnemyObservation(EnemyInstance instance, EnemyDefinition definition, EnemyPreparationState prep)
+        internal EnemyObservation(EnemyInstance instance, EnemyDefinition definition, EnemyPreparationState prep,
+            EnemyTargetObservation initialTarget)
         {
+            _initialTarget = initialTarget;
             SlotIndex = instance.SlotIndex; InstanceId = instance.InstanceId; DefinitionId = instance.DefinitionId;
             DisplayName = definition.DisplayName;
             SlotBonusAttack = prep == null ? 0 : prep.GetAttackBonus(SlotIndex);

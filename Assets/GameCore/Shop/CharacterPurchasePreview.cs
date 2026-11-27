@@ -119,6 +119,7 @@ namespace ProjectNST.GameCore.Shop
 
     public sealed class CharacterPurchasePreviewResult
     {
+        internal GameObservation SourceObservation { get; }
         /// <summary>Whether the visible occupancy can be projected. The dispatcher validates the transaction.</summary>
         public bool Succeeded => Failure == CharacterPurchasePreviewFailure.None;
         public CharacterPurchasePreviewFailure Failure { get; }
@@ -139,8 +140,9 @@ namespace ProjectNST.GameCore.Shop
             CharacterLocation requested, PurchaseOccupancy before, PurchaseStarCounts stars,
             CharacterLocation? final = null, PurchaseStatRoll character = null,
             IReadOnlyList<PurchaseMergePreviewStage> stages = null, IReadOnlyList<PurchaseSlotChange> changes = null,
-            PurchaseOccupancy? after = null, PurchaseStarCounts? starsAfter = null)
+            PurchaseOccupancy? after = null, PurchaseStarCounts? starsAfter = null, GameObservation sourceObservation = null)
         {
+            SourceObservation = sourceObservation;
             Failure = failure;
             DefinitionId = definitionId;
             RequestedLocation = requested;
@@ -163,6 +165,8 @@ namespace ProjectNST.GameCore.Shop
         private readonly GameObservation _observation;
         private readonly PurchaseOccupancy _before;
         private readonly Dictionary<string, MergePlan> _plans = new Dictionary<string, MergePlan>(StringComparer.Ordinal);
+        private int _planHits;
+        internal (int Calculated, int Reused, int Entries) PlanCounts => (_plans.Count, _planHits, _plans.Count);
 
         public CharacterPurchasePreview(GameObservation observation)
         {
@@ -204,7 +208,8 @@ namespace ProjectNST.GameCore.Shop
 
         private CharacterPurchasePreviewResult Failure(CharacterPurchasePreviewFailure failure, string definitionId,
             CharacterLocation requested, PurchaseStarCounts stars = default) =>
-            new CharacterPurchasePreviewResult(failure, definitionId, requested, _before, stars);
+            new CharacterPurchasePreviewResult(failure, definitionId, requested, _before, stars,
+                sourceObservation: _observation);
 
         private CharacterPurchasePreviewResult PreviewCore(string definitionId, int runCost, int price, int gold,
             CharacterLocation requested, IReadOnlyList<string> units, IReadOnlyList<string> attributes)
@@ -243,7 +248,11 @@ namespace ProjectNST.GameCore.Shop
 
         private MergePlan GetPlan(string definitionId)
         {
-            if (_plans.TryGetValue(definitionId, out MergePlan plan)) return plan;
+            if (_plans.TryGetValue(definitionId, out MergePlan plan))
+            {
+                _planHits++;
+                return plan;
+            }
 
             // ObservationBuilder produces slot-ordered Board and Hand snapshots.
             var candidates = _observation.Board.Slots.Select(slot => slot.Character)
@@ -312,7 +321,7 @@ namespace ProjectNST.GameCore.Shop
             var after = new PurchaseOccupancy(board, _observation.Board.Slots.Count, _before.Level,
                 hand, _observation.Hand.SlotCount);
             return new CharacterPurchasePreviewResult(CharacterPurchasePreviewFailure.None, definitionId,
-                requested, _before, plan.Stars, final, character, plan.Stages, changes.AsReadOnly(), after, stars);
+                requested, _before, plan.Stars, final, character, plan.Stages, changes.AsReadOnly(), after, stars, _observation);
         }
 
         private CharacterObservation CharacterAt(CharacterLocation location) => location.Kind == CharacterLocationKind.Board
